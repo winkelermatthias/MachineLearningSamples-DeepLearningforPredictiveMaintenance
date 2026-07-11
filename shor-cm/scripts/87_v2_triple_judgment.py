@@ -39,8 +39,8 @@ ACCEPT = {"SHAFT": {"SHAFT"}, "HALF": {"HALF"},
           "NEIGHBOR": {"NEIGHBOR"}}
 
 
-def judge_patterns(pf, pa, pc, f0, truth):
-    led = PS.pattern_ledger_peaks(pf, pa, pc, f0)
+def judge_patterns(pf, pa, pc, f0, truth, spec=None):
+    led = PS.pattern_ledger_peaks(pf, pa, pc, f0, spec=spec)
     lab_of = {}
     for d in led:
         for g in d["freqs_hz"]:
@@ -90,6 +90,7 @@ def one_run(i):
     f0 = m["f_shaft"]
     meta = {"component": "motor" if m["component"] == "motor" else "pump"}
     pf, pa, pc = PS.spectral_peaks(x, V2.FS)
+    spec = PS.spectrum(x, V2.FS)
 
     f, A = BS._spec(x, V2.FS)
     extra = BS.twolf_ladder(x, V2.FS, m["component"] == "motor")
@@ -125,10 +126,10 @@ def one_run(i):
         out[f"{arm}_f_hat"] = cands[0]["hz"]
         out[f"{arm}_conf"] = cands[0]["confidence"]
 
-    for k, v in judge_patterns(pf, pa, pc, f0, truth).items():
+    for k, v in judge_patterns(pf, pa, pc, f0, truth, spec).items():
         out[f"pt_{k}"] = v
     for k, v in judge_patterns(pf, pa, pc, out["sheet_f_hat"],
-                               truth).items():
+                               truth, spec).items():
         out[f"pe_{k}"] = v
 
     led_t = SC.ledger(x, V2.FS, f0, spr=256, uns_hi=16.0)

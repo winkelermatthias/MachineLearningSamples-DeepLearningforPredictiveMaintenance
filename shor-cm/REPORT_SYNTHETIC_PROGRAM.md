@@ -624,6 +624,27 @@ against free disk — currently 30 GB, so extract per-class and delete
 zips) and the reverse-validation gate are the next loop iteration the
 moment it's reachable. No substitute data was used, per CLAUDE.md.
 
+## Iteration 10: arbitration on the corpus scoreboard; GEAR line paused
+
+Re-judging the full 2,000-run corpus with the octave arbitration in the
+sheet arm (plus guided sub-guard sideband extraction, T41):
+
+| metric | iter 7 | iter 10 |
+|---|---|---|
+| sheet speed top-1 / top-3 | 0.482 / 0.741 | **0.565 / 0.771** |
+| octave-error rate | 0.169 | **0.104** |
+| joint blind (top-1 AND ML fault) | 0.415 | **0.487** |
+| joint, kinematic-sheet condition | 0.450 | **0.524** |
+
+Guided GEAR extraction itself: PARTIAL again (rec_gmf 0.144 → 0.152,
+second consecutive marginal on that metric) — per the loop
+constitution this line is PAUSED; the measured limiter is mesh
+anchoring below the peak guard for weak meshes, not the sidebands.
+
+**Loop scoreboard after 10 iterations**: end-to-end blind-cascade joint
+success **0.21 → 0.49** (0.52 with the kinematic sheet), on a
+population that grew from one archetype to seven along the way.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND

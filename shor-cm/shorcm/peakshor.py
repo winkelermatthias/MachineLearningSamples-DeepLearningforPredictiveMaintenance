@@ -53,6 +53,16 @@ def spectral_peaks(x, fs, fmax=2000.0, n_peaks=45, guard=4.0, halfwin=30):
     return pf, pa, pc
 
 
+def spectrum(x, fs, fmax=2000.0):
+    """Full-resolution amplitude spectrum up to fmax: (freqs, amps)."""
+    x = np.asarray(x, float)
+    w = np.hanning(len(x))
+    A = np.abs(np.fft.rfft((x - x.mean()) * w)) / (w.sum() / 2)
+    f = np.fft.rfftfreq(len(x), 1 / fs)
+    imax = int(fmax / (f[1] - f[0]))
+    return f[:imax], A[:imax]
+
+
 def _is_hum(f, tol=1.5):
     return any(abs(f - h) < tol for h in GRID_HUM)
 
@@ -351,7 +361,7 @@ def estimate_speed_sheet(x, fs, sheet, meta=None, top=3,
 
 # ---------------- multi-periodicity pattern ledger ----------------
 
-def pattern_ledger_peaks(pf, pa, pc, f0, qmax=8, rtol=0.012):
+def pattern_ledger_peaks(pf, pa, pc, f0, qmax=8, rtol=0.012, spec=None):
     """Greedy assignment of every peak to a named pattern family.
     Families: SHAFT (integer orders of f0), HALF (q=2 ladder), RATIONAL
     (other small-q), HUM (grid values), NEARRAT (unsnapped 1.8..9),
@@ -387,6 +397,7 @@ def pattern_ledger_peaks(pf, pa, pc, f0, qmax=8, rtol=0.012):
     # GEAR: strongest high-order peak (order > 11) with a sideband fan
     # at some spacing delta in (0.15, 1.25) orders; mesh + matched
     # sidebands are labeled GEAR before the leftover pass runs.
+    guided_gear = []                     # (freq, amp) found below guard
     for _mesh_pass in range(2):          # up to TWO meshes (2-stage box)
         hi_idx = [i for i in range(n)
                   if order[i] > 11 and label[i] == "OTHER"]
@@ -395,18 +406,47 @@ def pattern_ledger_peaks(pf, pa, pc, f0, qmax=8, rtol=0.012):
         i_m = max(hi_idx, key=lambda i: pa[i])
         if pa[i_m] <= 3 * np.median(pa):
             break
-        best, best_cnt = None, 0
-        for dlt in np.arange(0.15, 1.26, 0.02):
+        best, best_cnt, best_dlt = None, 0, None
+        for dlt in np.arange(0.15, 3.55, 0.02):
             got = [i for i in range(n) if i != i_m and any(
                 abs(abs(order[i] - order[i_m]) - k * dlt)
                 < max(0.012 * order[i_m], 0.01)
                 for k in (1, 2, 3))]
             if len(got) > best_cnt:
-                best, best_cnt = got, len(got)
-        if best_cnt < 2:
+                best, best_cnt, best_dlt = got, len(got), dlt
+        # guided sub-guard search: mesh sidebands often sit below the
+        # global peak guard; with the mesh anchored, look them up
+        # DIRECTLY in the spectrum at expected positions, lower bar
+        if spec is not None and best_dlt is None:
+            best_dlt = 1.0               # default: input-shaft spacing
+        if best is not None and best_dlt:
+            # refine the spacing from the matched members' true offsets:
+            # the scan's coarse tolerance lets an off-grid dlt win first
+            ks = []
+            for i in best:
+                d = abs(order[i] - order[i_m])
+                k = max(round(d / best_dlt), 1)
+                ks.append(d / k)
+            best_dlt = float(np.median(ks))
+        if spec is not None:
+            fz, Az = spec
+            dfz = fz[1] - fz[0]
+            g_hz = pf[i_m]
+            for k in (1, 2, 3, 4):
+                for sgn in (-1, 1):
+                    fq = g_hz + sgn * k * best_dlt * f0
+                    j = int(round(fq / dfz))
+                    if not (10 < j < len(Az) - 10):
+                        continue
+                    loc = np.median(Az[j - 60:j + 60]) + 1e-15
+                    aq = Az[max(j - 2, 0):j + 3].max()
+                    if aq > 2.5 * loc and not any(
+                            abs(fq - p) < 2 * dfz for p in pf):
+                        guided_gear.append((float(fq), float(aq)))
+        if best_cnt < 2 and len(guided_gear) < 2:
             break
         label[i_m] = "GEAR"
-        for i in best:
+        for i in (best or []):
             if label[i] == "OTHER":
                 label[i] = "GEAR"
     # second periodicity on leftovers -> NEIGHBOR. Candidates come from
@@ -424,16 +464,22 @@ def pattern_ledger_peaks(pf, pa, pc, f0, qmax=8, rtol=0.012):
                 if (abs(o - round(o)) <= max(rtol * o, 0.01)
                         and round(o) >= 1 and pc[i] >= 0.45):
                     label[i] = "NEIGHBOR"
-    e_tot = pa.sum() + 1e-12
+    e_tot = pa.sum() + sum(a for _, a in guided_gear) + 1e-12
     fams = {}
     for i in range(n):
         fams.setdefault(label[i], []).append(i)
     ledger = []
     for fam, idx in sorted(fams.items()):
         idx = np.array(idx)
-        ledger.append({"family": fam, "n": int(len(idx)),
-                       "energy_share": float(pa[idx].sum() / e_tot),
-                       "freqs_hz": [round(float(v), 2) for v in pf[idx]],
-                       "amps": [round(float(v), 3) for v in pa[idx]]})
+        freqs = [round(float(v), 2) for v in pf[idx]]
+        amps = [round(float(v), 3) for v in pa[idx]]
+        e = float(pa[idx].sum())
+        if fam == "GEAR" and guided_gear:
+            freqs += [round(f, 2) for f, _ in guided_gear]
+            amps += [round(a, 3) for _, a in guided_gear]
+            e += sum(a for _, a in guided_gear)
+        ledger.append({"family": fam, "n": len(freqs),
+                       "energy_share": e / e_tot,
+                       "freqs_hz": freqs, "amps": amps})
     ledger.sort(key=lambda d: -d["energy_share"])
     return ledger
