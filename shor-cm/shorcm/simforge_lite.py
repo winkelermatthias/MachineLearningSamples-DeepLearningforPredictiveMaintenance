@@ -49,7 +49,17 @@ def sample_machine(rng):
     }
 
 
-def synth_run(m, rng):
+def synth_run(m, rng, truth=None):
+    """truth: optional list; if given, every generated component family is
+    appended as {"family", "freqs_hz", "amps", "drifting"} — exact
+    composition ground truth for O2 judgment. Appending never touches the
+    rng stream, so waveforms stay bit-identical with or without it."""
+    def note(family, freqs, amps, drifting=False):
+        if truth is not None:
+            truth.append({"family": family,
+                          "freqs_hz": [float(f) for f in freqs],
+                          "amps": [float(a) for a in amps],
+                          "drifting": bool(drifting)})
     n = int(DUR * FS)
     t = np.arange(n) / FS
     f0 = m["f_shaft"]
@@ -60,41 +70,56 @@ def synth_run(m, rng):
     x = 0.30 * rng.standard_normal(n)
 
     # shaft family, always some residual imbalance
-    x += (0.25 + (1.3 * m["severity"] if m["fault"] == "imbalance" else 0)) \
-        * np.cos(phase + u())
+    a1 = 0.25 + (1.3 * m["severity"] if m["fault"] == "imbalance" else 0)
+    x += a1 * np.cos(phase + u())
     x += 0.08 * np.cos(2 * phase + u())
+    a2, a3 = 0.08, 0.0
     if m["fault"] == "misalignment":
         x += 0.9 * m["severity"] * np.cos(2 * phase + u()) \
            + 0.35 * m["severity"] * np.cos(3 * phase + u())
+        a2 += 0.9 * m["severity"]
+        a3 = 0.35 * m["severity"]
+    note("SHAFT", [f0, 2 * f0] + ([3 * f0] if a3 else []),
+         [a1, a2] + ([a3] if a3 else []))
     if m["fault"] == "looseness":
         for k in (0.5, 1.5, 2.5, 3.5):
             x += 0.45 * m["severity"] * np.cos(k * phase + u()) / (k + .5)
+        note("HALF", [k * f0 for k in (0.5, 1.5, 2.5, 3.5)],
+             [0.45 * m["severity"] / (k + .5) for k in (0.5, 1.5, 2.5, 3.5)])
     if m["fault"] == "bearing":
         bo = m["bearing"][int(rng.integers(3))]  # BPFO/BPFI/BSF
         bslip = rng.uniform(0.005, 0.02)
         rw = np.cumsum(rng.normal(0, 0.6 / np.sqrt(FS / f0), n))
         x += 0.8 * m["severity"] * np.cos(bo * (1 + bslip) * phase + rw)
         x += 0.35 * m["severity"] * np.cos(2 * bo * (1 + bslip) * phase + 2 * rw)
+        note("BEARING", [bo * (1 + bslip) * f0, 2 * bo * (1 + bslip) * f0],
+             [0.8 * m["severity"], 0.35 * m["severity"]], drifting=True)
     if m["component"] == "pump":
         x += 0.3 * np.cos(m["vanes"] * phase + u())
+        note("VANE", [m["vanes"] * f0], [0.3])
 
     # electrical: full on motor, -25 dB on pump end
     eg = 1.0 if m["component"] == "motor" else 10 ** (-25 / 20)
     two_fe = 2 * m["f_e"]
     x += eg * 0.5 * np.cos(2 * np.pi * two_fe * t + u())
     x += eg * 0.12 * np.cos(2 * np.pi * m["f_e"] * t + u())
+    note("ELEC", [two_fe, m["f_e"]], [eg * 0.5, eg * 0.12])
     fc = m["carrier"]
     for k in (-2, -1, 0, 1, 2):          # HF carrier +/- k*2LF sidebands
         amp = eg * (0.25 if k == 0 else 0.15 / abs(k))
         x += amp * np.cos(2 * np.pi * (fc + k * two_fe) * t + u())
+    note("ELEC_HF", [fc + k * two_fe for k in (-2, -1, 0, 1, 2)],
+         [eg * (0.25 if k == 0 else 0.15 / abs(k)) for k in (-2, -1, 0, 1, 2)])
 
     # plant environment: grid hum family + one neighbor machine
     hum = 2 * m["lf_grid"]
     for k in (1, 2):
         x += 0.10 / k * np.cos(2 * np.pi * k * hum * t + u())
+    note("HUM", [hum, 2 * hum], [0.10, 0.05])
     fn = rng.uniform(5, 70)
     for k in (1, 2, 3):
         x += 0.12 / k * np.cos(2 * np.pi * k * fn * t + u())
+    note("NEIGHBOR", [fn, 2 * fn, 3 * fn], [0.12, 0.06, 0.04])
 
     # one random resonance shaping the floor
     from scipy.signal import sosfilt, butter

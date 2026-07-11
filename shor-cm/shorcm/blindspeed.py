@@ -150,12 +150,16 @@ def estimate_speed(x, fs, meta=None, use_ladder=True, use_structure=True,
                    top=3):
     """meta: {'component': 'motor'|'pump'} from asset names, optional."""
     f, A = _spec(x, fs)
-    cands = comb_candidates(f, A)
-    cands += cepstrum_candidate(x, fs)
-    cands += envelope_candidate(x, fs)
+    # ladder candidates FIRST: the octave expansion + first-wins dedupe +
+    # full[:18] truncation below silently discarded them when appended
+    # last (measured: identical output with/without ladder on 2000 runs).
+    cands = []
     if use_ladder:
         is_motor = meta is None or meta.get("component") == "motor"
         cands += twolf_ladder(x, fs, is_motor)
+    cands += comb_candidates(f, A)
+    cands += cepstrum_candidate(x, fs)
+    cands += envelope_candidate(x, fs)
     # octave neighbors, dedupe within 1.5%, plausibility clip
     full = []
     for c in cands:
