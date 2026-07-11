@@ -565,6 +565,25 @@ runs (bit-identical seeds):
 +17 pp top-1 across the board — the single largest speed gain of the
 program, and it comes from metadata every deployment has.
 
+## Iteration 7: the sheet propagated through the whole cascade — PROMOTED
+
+The sheet arm became the deployment condition of the v2 triple
+judgment (patterns and fault ledger now evaluated at the
+sheet-conditioned speed), full 2,000-run population:
+
+| metric | before (blind union) | with kinematic sheet |
+|---|---|---|
+| speed top-1 / top-3 | 0.370 / 0.631 | **0.482 / 0.741** |
+| octave-error rate | 0.198 | 0.169 |
+| fault ML acc / mF1, end-to-end | 0.684 / 0.659 | **0.722 / 0.701** |
+| joint (speed top-1 AND ML fault) | 0.318 | **0.415** |
+
+Every stage moved together, confirming the cascade coupling in the
+favorable direction this time. Loop scoreboard after 7 iterations:
+end-to-end blind-cascade joint success 0.207 (iteration 1 equivalent)
+→ 0.318 (v2 baseline) → **0.415**, on a population that got strictly
+harder along the way.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND

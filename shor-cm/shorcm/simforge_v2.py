@@ -344,6 +344,34 @@ def synth_run(m, rng, truth=None, omega1x=1.0):
     return x
 
 
+def kinematic_sheet(m):
+    """Deployment metadata for a machine: what the asset registry knows
+    (transmission ratio, mesh teeth, passage count, planetary set) —
+    never the operating speed or the fault."""
+    s = {}
+    if m["archetype"] == "fan_belt":
+        s["ratio"] = m["belt_ratio"] * (1 - 0.012)   # nominal mid-slip
+        s["passage"] = m.get("blades")
+    elif m["archetype"] == "pump_gearbox1":
+        s["ratio"] = m["z1"] / m["z2"]
+        s["mesh"] = m["z1"]
+        s["passage"] = m.get("vanes")
+    elif m["archetype"] == "fan_gearbox2":
+        s["ratio"] = m["z1"] / m["z2"]
+        s["mesh"] = m["z1"]
+        s["passage"] = m.get("blades")
+    elif m["archetype"] == "pump_planetary":
+        s["planetary"] = (m["Zs"], m["Zp"], m["Zr"], m["Np"])
+        s["passage"] = m.get("vanes")
+    elif m["archetype"] == "pump_direct":
+        s["passage"] = m.get("vanes")
+    elif m["archetype"] == "fan_direct":
+        s["passage"] = m.get("blades")
+    elif m["archetype"] == "blower_roots":
+        s["passage"] = 2 * m.get("lobes", 2)
+    return s
+
+
 def rng_for_run(i):
     return np.random.default_rng(np.random.SeedSequence((BASE_SEED2, i)))
 
