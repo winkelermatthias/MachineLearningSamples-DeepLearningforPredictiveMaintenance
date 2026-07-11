@@ -129,12 +129,26 @@ def one_machine(i):
                "sev": mm["severity"], "f_op": mm["f_shaft"],
                "speed_scale": sc,
                "spd_ok": abs(f_hat / mm["f_shaft"] - 1) <= 0.01}
+        bt = next((tt for tt in truth if tt["family"] == "BEARING"), None)
+        o_bt = (bt["freqs_hz"][0] / mm["f_shaft"]) if bt else None
+
+        def pick(en):
+            if en is None:
+                return None
+            if fkey == "NEARRAT":
+                lst = en.get("NEARRAT_LIST", [])
+                if o_bt and lst:
+                    near = [(e, o) for e, o in lst
+                            if abs(o / o_bt - 1) < 0.05]
+                    return near[0][0] if near else 0.0
+                return en["NEARRAT"][0]
+            v = en[fkey]
+            return v[0] if isinstance(v, tuple) else v
+
         if fkey and en_t is not None:
-            v = en_t[fkey]
-            row["e_tracked_true"] = v[0] if isinstance(v, tuple) else v
+            row["e_tracked_true"] = pick(en_t)
         if fkey and en_e is not None:
-            v = en_e[fkey]
-            row["e_tracked_est"] = v[0] if isinstance(v, tuple) else v
+            row["e_tracked_est"] = pick(en_e)
         if tfam:
             row["e_true"] = true_energy(truth, *tfam)
         if en_t is not None:                       # speed-invariance probe
@@ -155,8 +169,13 @@ def one_machine(i):
         tr_l.update(t, en_l, f_lock)
         rows[t]["spd_lock_ok"] = abs(f_lock / f_true_t - 1) <= 0.01
         if fkey and en_l is not None:
-            v = en_l[fkey]
-            rows[t]["e_tracked_lock"] = v[0] if isinstance(v, tuple) else v
+            if fkey == "NEARRAT":
+                lst = en_l.get("NEARRAT_LIST", [])
+                rows[t]["e_tracked_lock"] = lst[0][0] if lst else 0.0
+            else:
+                v = en_l[fkey]
+                rows[t]["e_tracked_lock"] = v[0] if isinstance(v, tuple) \
+                    else v
     res = {"machine": i, "scenario": scn, "fault": m["fault"],
            "archetype": m["archetype"], "population": m["population"],
            "onset": prof[1] if prof else np.nan}
@@ -169,13 +188,23 @@ def one_machine(i):
             any(d["alarm"] for d in tda.values()))
         res[f"{arm}_alarm_keys"] = ",".join(sorted(alarms))
         if fkey:
-            d = tds.get(fkey, {})
+            if fkey == "NEARRAT":
+                keys = [k for k in tds if k.startswith("NEARRAT#")] or ["_"]
+                d = max((tds.get(k, {}) for k in keys),
+                        key=lambda dd: dd.get("rise_db", -99),
+                        default={})
+                da = any(tda.get(k, {}).get("alarm", False) for k in keys)
+                fas = [tr.first_alarm(k) for k in keys if k != "_"]
+                fas = [v for v in fas if v is not None]
+                fa = min(fas) if fas else None
+            else:
+                d = tds.get(fkey, {})
+                da = tda.get(fkey, {}).get("alarm", False)
+                fa = tr.first_alarm(fkey)
             res[f"{arm}_fault_alarm"] = bool(d.get("alarm", False))
-            res[f"{arm}_fault_alarm_adaptive"] = bool(
-                tda.get(fkey, {}).get("alarm", False))
+            res[f"{arm}_fault_alarm_adaptive"] = bool(da)
             res[f"{arm}_fault_rise_db"] = float(d.get("rise_db", np.nan))
             res[f"{arm}_fault_slope"] = float(d.get("slope", np.nan))
-            fa = tr.first_alarm(fkey)
             res[f"{arm}_first_alarm_t"] = fa if fa is not None else np.nan
     return rows, res
 

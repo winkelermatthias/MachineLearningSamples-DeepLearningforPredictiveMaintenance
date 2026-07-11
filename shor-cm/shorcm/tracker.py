@@ -59,6 +59,7 @@ def pattern_energies(x, fs, f_hat, spr=256):
         else:
             clusters.append([(oo, aa)])
     best = (0.0, 0.0)
+    nr_list = []
     do = o[1] - o[0]
     floor_a = float(np.median(A))
     ENBW = 1.5                             # hann noise bandwidth in bins
@@ -82,9 +83,13 @@ def pattern_energies(x, fs, f_hat, spr=256):
             band = A[i0:i1]
             e_c = float(max(np.sum(band ** 2) / 2
                             - len(band) * floor_a ** 2 / 2, 0.0)) / ENBW
+            if e_c > 0:
+                nr_list.append((e_c, o_c))
             if e_c > best[0]:
                 best = (e_c, o_c)
+    nr_list.sort(key=lambda t: -t[0])
     out["NEARRAT"] = best
+    out["NEARRAT_LIST"] = nr_list[:3]
     # GMF: best-modulated high-order line + its sideband fan. Energies
     # are BAND-integrated: at order ~50 even a small residual phase-
     # reference error smears the mesh line Gaussian-in-order (C2), so
@@ -142,14 +147,45 @@ class PatternTracker:
         self.f_ref = f_ref
         self.series = {}                 # key -> list of (t, log10 E)
         self.meta = {}                   # key -> last order (NEARRAT/GMF)
+        self.nearrat = []                # instance registry:
+                                         # [{"order": o, "pts": [(t, logE)]}]
+
+    def _update_nearrat(self, t, lst):
+        """Multi-instance drifting-tone registry: a constant confuser and
+        a growing bearing keep SEPARATE identities instead of fighting
+        over one slot (association resets destroyed series continuity)."""
+        for e, o_c in lst:
+            if e <= 0:
+                continue
+            inst = None
+            if self.nearrat:
+                cand = min(self.nearrat,
+                           key=lambda d: abs(np.log(o_c / d["order"])))
+                if abs(o_c / cand["order"] - 1) <= 0.04:
+                    inst = cand
+            if inst is not None:
+                inst["pts"].append((t, np.log10(e)))
+                inst["order"] = 0.7 * inst["order"] + 0.3 * o_c
+            else:
+                if len(self.nearrat) >= 3:
+                    self.nearrat.sort(key=lambda d: len(d["pts"]))
+                    self.nearrat.pop(0)
+                self.nearrat.append({"order": float(o_c),
+                                     "pts": [(t, np.log10(e))]})
 
     def update(self, t, energies, f_hat):
         if energies is None:
             return
         if self.f_ref is None:
             self.f_ref = f_hat
+        if "NEARRAT_LIST" in energies:
+            self._update_nearrat(t, energies["NEARRAT_LIST"])
         for k, v in energies.items():
-            if k in ("NEARRAT", "GMF"):
+            if k == "NEARRAT_LIST":
+                continue
+            if k == "NEARRAT":
+                continue                 # handled by the instance registry
+            if k in ("GMF",):
                 e, o_c = v
                 if e <= 0:
                     continue
@@ -174,7 +210,10 @@ class PatternTracker:
         global 6 dB. Keys with tight baselines alarm earlier; noisy keys
         pay a higher bar."""
         out = {}
-        for k, pts in self.series.items():
+        items = list(self.series.items()) + [
+            (f"NEARRAT#{j}", inst["pts"])
+            for j, inst in enumerate(self.nearrat)]
+        for k, pts in items:
             if len(pts) < min_n:
                 continue
             t = np.array([p[0] for p in pts], float)
@@ -196,7 +235,11 @@ class PatternTracker:
     def first_alarm(self, key, min_n=5):
         """Online detection: earliest t where the key alarms using only
         data up to t. None if never."""
-        pts = self.series.get(key, [])
+        if key.startswith("NEARRAT#"):
+            j = int(key.split("#")[1])
+            pts = self.nearrat[j]["pts"] if j < len(self.nearrat) else []
+        else:
+            pts = self.series.get(key, [])
         for i in range(min_n, len(pts) + 1):
             t = np.array([p[0] for p in pts[:i]], float)
             y = np.array([p[1] for p in pts[:i]], float)

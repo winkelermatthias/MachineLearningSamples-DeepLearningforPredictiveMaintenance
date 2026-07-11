@@ -665,6 +665,29 @@ corpus plus real dev data). The instructive negative: the multi-feature
 learned calibrator LOST to a single physically-meaningful margin — on
 420 calibration rows, capacity is a liability.
 
+## Iteration 12: multi-instance drifting-tone registry — PROMOTED
+
+The last weak fidelity cell (bearing ρ 0.43) was association, as
+diagnosed: one NEARRAT slot meant a constant confuser and the growing
+bearing fought over it, and slip-jump resets destroyed series
+continuity. The tracker now keeps a registry of up to 3 drifting-tone
+INSTANCES, each with its own slip-band identity (±4%, EMA-adapted
+order) and its own energy series; the alarm surface is any instance
+(T43 pins: growing bearing alarms, constant confuser at another order
+stays quiet, identities stay resolved).
+
+Fleet (same seeds): bearing fidelity ρ 0.43 → **0.823** (true speed),
+growth AUC 0.819 → **0.901**, adaptive recall **0.597**, detection
+delay 8 → **7 records**; blind arm recall 0.269 → 0.358, AUC 0.612 →
+0.729. Fidelity judgment is now truth-matched (the instance nearest the
+true bearing order) — the est-arm dB error correctly exposes wrong
+frames as zero-energy instead of crediting the wrong cluster.
+
+**Tracking scoreboard, all fidelity cells at true speed**: imbalance
+0.99, misalignment 0.92, bearing 0.82, looseness 0.81, gear 0.55 —
+every cell functional; the program-level gap is now entirely the
+blind-speed stage plus the blocked real-data transfer.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND
