@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quantum algorithm structure, classical machines</title>
+<style>
+:root{
+  --paper:#FCFCFA; --ink:#17201F; --mut:#5E6B69;
+  --teal:#0FB5A6; --deep:#0A6E66; --amber:#E0A426; --gray:#9AA5A3;
+  --line:#E4E7E6; --card:#FFFFFF;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font:16px/1.6 Onest,Geist,system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased}
+main{max-width:720px;margin:0 auto;padding:0 18px 90px}
+header{padding:44px 0 8px}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--deep);font-weight:600}
+h1{font-size:clamp(28px,6vw,40px);line-height:1.12;margin:.35em 0 .3em;font-weight:800;letter-spacing:-.02em}
+.lede{color:var(--mut);font-size:17px;max-width:56ch}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin:18px 0 6px;font-size:13.5px}
+.key{display:inline-flex;align-items:center;gap:7px;color:var(--mut)}
+.dot{width:11px;height:11px;border-radius:3px}
+h2{font-size:22px;margin:52px 0 6px;font-weight:750;letter-spacing:-.01em}
+h2 .n{color:var(--teal);font-variant-numeric:tabular-nums;margin-right:.4em}
+p{margin:.6em 0}
+.tL{color:var(--deep);border-bottom:2px solid var(--teal);font-weight:600}
+.tU{color:#8a6512;border-bottom:2px solid var(--amber);font-weight:600}
+.tN{color:var(--mut);border-bottom:2px solid var(--gray);font-weight:600}
+.bench{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:16px 16px 12px;margin:16px 0 8px;box-shadow:0 1px 2px rgba(23,32,31,.04)}
+.bench .cap{font-size:13px;color:var(--mut);margin-top:8px}
+.ctl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-size:14px}
+.ctl label{color:var(--mut)}
+button.opt{border:1px solid var(--line);background:#fff;color:var(--ink);
+  padding:6px 12px;border-radius:999px;font:inherit;font-size:13.5px;cursor:pointer}
+button.opt[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:#fff}
+button.opt:focus-visible{outline:2px solid var(--deep);outline-offset:2px}
+input[type=range]{accent-color:var(--teal);width:min(260px,60vw)}
+svg{display:block;width:100%;height:auto}
+.readout{font:600 14px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--deep)}
+.verdict{font:800 15px Onest,system-ui;padding:4px 12px;border-radius:8px}
+.verdict.ok{background:#E5F7F4;color:var(--deep)}
+.verdict.no{background:#FBEFD8;color:#8a6512}
+table{border-collapse:collapse;font-size:14px;width:100%}
+td,th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;
+  font-variant-numeric:tabular-nums}
+th{color:var(--mut);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.06em}
+.mono{font-family:ui-monospace,Menlo,monospace}
+footer{margin-top:64px;color:var(--mut);font-size:13px;border-top:1px solid var(--line);padding-top:14px}
+@media (prefers-reduced-motion:no-preference){
+  .hand{transition:transform .5s cubic-bezier(.3,.7,.2,1)}
+}
+</style></head><body><main>
+
+<header>
+<div class="eyebrow">Lecture notes, computed live by the shor-cm library</div>
+<h1>What Shor and Grover teach a vibration sensor</h1>
+<p class="lede">Quantum algorithms will not run on a bearing. Their internal
+structure, period finding, phase-coherent interference, rational snapping,
+amplitude amplification, transfers completely. Every chart below is real
+output of the pipeline, and one color rule holds everywhere:</p>
+<div class="legend">
+<span class="key"><span class="dot" style="background:var(--teal)"></span>phase-locked to the shaft (imbalance, misalignment, gears)</span>
+<span class="key"><span class="dot" style="background:var(--amber)"></span>real but drifting (bearing tones, 1 to 2% slip)</span>
+<span class="key"><span class="dot" style="background:var(--gray)"></span>noise</span>
+</div>
+</header>
+
+<h2><span class="n">1</span>The shaft is a clock</h2>
+<p>Shor's algorithm finds the period of a<span class="mono"> a^x mod N</span>
+sequence. A rotating machine hands you its period for free: one tachometer
+pulse per revolution. Every fault frequency is best written not in Hz but in
+<b>orders</b>, multiples of shaft speed. Below, 0.25 s of a machine running
+near 30 Hz whose speed wanders by 1.5%: the vibration signal with tacho
+pulses marked, and the speed profile over 8 s.</p>
+<div class="bench"><svg id="svgWave" viewBox="0 0 680 190"></svg>
+<div class="cap">One synthetic run: <span class="tL">1x and 2x locked
+tones</span> plus a <span class="tU">2.998x bearing tone with slip</span> in
+noise. Teal ticks are tacho pulses, the machine's own clock.</div></div>
+
+<h2><span class="n">2</span>Resample by angle, not time</h2>
+<p>Speed wander smears every spectral line in the Hz domain. Angular
+resampling, interpolating the signal onto a grid of equal shaft angle using
+the tacho phase, removes wander exactly. Same signal, two domains:</p>
+<div class="bench">
+<div class="ctl">
+<button class="opt" id="btnHz" aria-pressed="true">Hz domain</button>
+<button class="opt" id="btnOrd" aria-pressed="false">Order domain</button>
+</div>
+<svg id="svgDom" viewBox="0 0 680 220"></svg>
+<div class="cap" id="capDom"></div></div>
+
+<h2><span class="n">3</span>Interference: the Shor trick</h2>
+<p>Shor's speedup comes from interference: amplitudes at the true period add
+constructively, everything else self-cancels. Classically: cut the angular
+signal into blocks of exactly 5 revolutions and average the complex spectra.
+<span class="tL">Locked components</span> keep the same phase in every block
+and survive. <span class="tN">Noise</span> and
+<span class="tU">drifting tones</span> arrive with random phase and cancel as
+1/&radic;N. Drag N:</p>
+<div class="bench">
+<div class="ctl"><label>blocks averaged N =</label>
+<input type="range" id="rngN" min="0" max="4" value="0" step="1">
+<span class="readout" id="outN"></span></div>
+<svg id="svgBlk" viewBox="0 0 680 230"></svg>
+<div class="cap">Solid: coherent (complex) average. Faint: power average,
+which keeps everything. Watch the floor and the amber 2.998x peak sink while
+teal peaks at 1x and 2x stand still.</div></div>
+
+<h2><span class="n">4</span>The coherence ratio, one number per line</h2>
+<p>Divide the two spectra: coherent over power. Near 1 means locked, near 0
+means drifting or noise. This one ratio separates a 3x harmonic from a
+2.998x bearing tone even when frequency resolution cannot tell them apart.
+Pick a machine condition:</p>
+<div class="bench">
+<div class="ctl" id="clsBtns"></div>
+<svg id="svgRat" viewBox="0 0 680 230"></svg>
+<div class="cap">Bars: coherence ratio per order bin (only bins with real
+energy shown solid). The fingerprint is readable by eye: imbalance is one
+teal spike at 1x, misalignment a teal 1-2-3 family, bearing runs show energy
+whose ratio collapses.</div></div>
+
+<h2><span class="n">5</span>Continued fractions: Shor's post-processing</h2>
+<p>Shor's final classical step snaps a noisy phase measurement to an exact
+rational p/q. Fault orders are rationals of small denominator: 1/2 from
+looseness, 2/5 from a cage, 2/1 from misalignment. Bearing orders like
+2.998 are near-rational and refuse to snap, which is itself the signature.
+Slide a measured order and watch the convergents:</p>
+<div class="bench">
+<div class="ctl"><label>measured order</label>
+<input type="range" id="rngCF" min="300" max="3200" value="403" step="1">
+<span class="readout" id="outCF"></span></div>
+<div id="cfTable"></div>
+<div class="cap">Tolerance 0.01, denominator limit q &le; 8, the same rule
+the pipeline uses. Try 0.403, 0.503, 2.001, then park on 2.998.</div></div>
+
+<h2><span class="n">6</span>Grover: rotate until the target aligns</h2>
+<p>Grover's algorithm amplifies a marked state by repeated rotation. Two
+classical descendants close the gap section 3 left open, because coherent
+averaging <em>destroys</em> bearing tones.</p>
+<p><b>6a, slip scan.</b> Hypothesize a slip s, demodulate at
+2.998&middot;(1+s), sweep s. The curve peaks exactly at the true slip: the
+frame has been rotated until the marked component aligns. Peak height
+detects the bearing, peak position measures slip, a free load indicator.</p>
+<div class="bench">
+<div class="ctl" id="slipBtns"></div>
+<svg id="svgSlip" viewBox="0 0 680 210"></svg>
+<div class="cap" id="capSlip"></div></div>
+<p><b>6b, predictive alignment (PPA).</b> A bearing tone's phase random-walks,
+so blocks cancel. But its phase is <em>predictable one block ahead</em>.
+Align each block by the previous block's phase: a real tone survives, noise
+does not. The phasor clock shows 24 block phasors; press align.</p>
+<div class="bench">
+<div class="ctl" id="ppaBtns"><label style="margin-left:auto"></label>
+<button class="opt" id="btnAlign" aria-pressed="false">align by previous block</button></div>
+<svg id="svgPPA" viewBox="0 0 680 260"></svg>
+<div class="cap" id="capPPA"></div></div>
+
+<h2><span class="n">7</span>The gain law, measured</h2>
+<p>Theory: coherent averaging buys signal-to-noise like &radic;N. The
+pipeline's gate test injects a locked 0.4x tone at -20 dB and measures it:</p>
+<div class="bench"><svg id="svgGain" viewBox="0 0 680 210"></svg>
+<div class="cap" id="capGain"></div></div>
+
+<h2><span class="n">8</span>The referee: how the loop measures success</h2>
+<p>An autonomous research loop will fool itself if allowed: iterate long
+enough and any benchmark improves by luck. The promotion gate demands that a
+candidate beat the incumbent with confidence alpha = 0.05 / attempts, so the
+evidence bar rises every time the loop tries something. Below is the actual
+paired-bootstrap delta distribution from iteration 0 (Grover features vs
+ratio features). Drag the attempt counter:</p>
+<div class="bench">
+<div class="ctl"><label>attempts logged in ledger:</label>
+<input type="range" id="rngAtt" min="0" max="40" value="0" step="1">
+<span class="readout" id="outAtt"></span>
+<span class="verdict" id="verdict"></span></div>
+<svg id="svgGate" viewBox="0 0 680 200"></svg>
+<div class="cap">Histogram: 800 bootstrap resamples of the F1 improvement.
+The marker is the alpha-adjusted lower quantile: promotion requires it to
+stay right of zero. The same +6 point improvement that promotes at attempt 1
+is correctly refused at attempt 40, unless it is re-earned on more data.</div>
+</div>
+<p>Everything else in the loop serves the same principle: a hash-sealed 20%
+vault of runs the iterations can never touch (3 lifetime evaluations), an
+append-only ledger where kills count as much as promotions, and guardrails
+that block any promotion that regresses the tacho baseline, skips its
+mechanism test, or cannot run on the edge in under 5 s.</p>
+
+<footer>Generated by scripts/96_build_lecture.py against shorcm at seed
+20260709. Synthetic physics only: the MAFAULDA mirror was unreachable at
+build time, and the program's rules forbid substituting datasets.</footer>
+</main>
+
+<script>
+const D = __DATA__;
+const TEAL="#0FB5A6", DEEP="#0A6E66", AMB="#E0A426", GRAY="#9AA5A3",
+      LINE="#E4E7E6", INK="#17201F", MUT="#5E6B69";
+const S_ = (t,a={})=>{const e=document.createElementNS("http://www.w3.org/2000/svg",t);
+  for(const k in a)e.setAttribute(k,a[k]);return e};
+function frame(svg,W,H,pad){ svg.innerHTML="";
+  const g=S_("g"); svg.appendChild(g);
+  return {g, x:v=>pad.l+(v)*(W-pad.l-pad.r), y:v=>H-pad.b-(v)*(H-pad.t-pad.b), W,H,pad};}
+function line(f,xs,ys,xmin,xmax,ymin,ymax,color,w=1.8,op=1,dash=""){
+  let d="";for(let i=0;i<xs.length;i++){const X=f.x((xs[i]-xmin)/(xmax-xmin)),
+    Y=f.y((ys[i]-ymin)/(ymax-ymin));d+=(i?"L":"M")+X.toFixed(1)+" "+Y.toFixed(1);}
+  f.g.appendChild(S_("path",{d,fill:"none",stroke:color,"stroke-width":w,
+    opacity:op,"stroke-dasharray":dash,"stroke-linejoin":"round"}));}
+function axes(f,xl,yl){ f.g.appendChild(S_("line",{x1:f.pad.l,y1:f.H-f.pad.b,
+  x2:f.W-f.pad.r,y2:f.H-f.pad.b,stroke:LINE,"stroke-width":1.5}));
+  const tx=S_("text",{x:f.W-f.pad.r,y:f.H-6,"text-anchor":"end",fill:MUT,
+    "font-size":"11px"});tx.textContent=xl;f.g.appendChild(tx);
+  if(yl){const ty=S_("text",{x:f.pad.l,y:12,fill:MUT,"font-size":"11px"});
+  ty.textContent=yl;f.g.appendChild(ty);}}
+function label(f,X,Y,txt,color,anchor="middle",size=11,bold=600){
+  const t=S_("text",{x:X,y:Y,"text-anchor":anchor,fill:color,
+   "font-size":size+"px","font-weight":bold});t.textContent=txt;f.g.appendChild(t);}
+
+/* 1 waveform */
+(()=>{const f=frame(document.getElementById("svgWave"),680,190,{l:8,r:8,t:10,b:40});
+const w=D.wave, xmin=w.t[0], xmax=w.t[w.t.length-1];
+const ymin=Math.min(...w.x), ymax=Math.max(...w.x);
+line(f,w.t,w.x,xmin,xmax,ymin,ymax,INK,1.1,.85);
+for(const tk of w.ticks){const X=f.x((tk-xmin)/(xmax-xmin));
+  f.g.appendChild(S_("line",{x1:X,y1:f.H-f.pad.b,x2:X,y2:f.H-f.pad.b-14,
+    stroke:TEAL,"stroke-width":2.4}));}
+axes(f,"time (s), teal ticks = one revolution each","");
+const sp=D.speed, sy=[],sx=sp.t;
+const f2h=34, base=f.pad.t+4;
+const smin=Math.min(...sp.f), smax=Math.max(...sp.f);
+let d="";for(let i=0;i<sx.length;i++){const X=f.x(sx[i]/sp.t[sp.t.length-1]),
+  Y=base+f2h*(1-(sp.f[i]-smin)/(smax-smin));d+=(i?"L":"M")+X+" "+Y;}
+f.g.appendChild(S_("path",{d,fill:"none",stroke:DEEP,"stroke-width":1.4,opacity:.9}));
+label(f,f.pad.l+2,base-3,"shaft speed, 8 s, "+smin.toFixed(1)+" to "+smax.toFixed(1)+" Hz",DEEP,"start",10.5);})();
+
+/* 2 domains */
+(()=>{const svg=document.getElementById("svgDom"), cap=document.getElementById("capDom");
+const bH=document.getElementById("btnHz"), bO=document.getElementById("btnOrd");
+function draw(mode){
+  const f=frame(svg,680,220,{l:10,r:10,t:14,b:34});
+  const d=mode==="hz"?D.domains.hz:D.domains.order;
+  const xmax=mode==="hz"?130:4.3, ymax=Math.max(...d.y)*1.08;
+  line(f,d.x,d.y,0,xmax,0,ymax,mode==="hz"?GRAY:INK,1.3);
+  if(mode==="hz"){
+    for(const [o,c] of [[1,TEAL],[2,TEAL],[2.998,AMB]]){
+      const X=f.x(o*D.domains.f0/xmax);
+      f.g.appendChild(S_("line",{x1:X,x2:X,y1:f.pad.t,y2:f.H-f.pad.b,stroke:c,
+        "stroke-width":1,"stroke-dasharray":"3 4",opacity:.7}));}
+    axes(f,"frequency (Hz)","amplitude");
+    cap.textContent="Hz domain: 1.5% speed wander smears every line into a lump. Dashed guides mark where 1x, 2x and the bearing tone should be.";
+  }else{
+    for(const [o,c,t] of [[1,TEAL,"1x"],[2,TEAL,"2x"],[3.034,AMB,"2.998x(1+slip)"]]){
+      const X=f.x(o/xmax);
+      f.g.appendChild(S_("line",{x1:X,x2:X,y1:f.pad.t,y2:f.H-f.pad.b,stroke:c,
+        "stroke-width":1,"stroke-dasharray":"3 4",opacity:.7}));
+      label(f,X,f.pad.t+10,t,c);}
+    axes(f,"order (multiples of shaft speed)","amplitude");
+    cap.textContent="Order domain after angular resampling: wander gone, lines razor sharp. The bearing line sits just off 3, at 2.998 times (1 + slip). This offset is real physics, not error.";
+  }
+  bH.setAttribute("aria-pressed",mode==="hz");bO.setAttribute("aria-pressed",mode!=="hz");}
+bH.onclick=()=>draw("hz"); bO.onclick=()=>draw("order"); draw("hz");})();
+
+/* 3 blocks slider */
+(()=>{const svg=document.getElementById("svgBlk"), out=document.getElementById("outN"),
+rng=document.getElementById("rngN"), B=D.blocks;rng.max=B.N.length-1;
+function draw(){const i=+rng.value, N=B.N[i];
+  out.textContent=N+" blocks ("+N*5+" revolutions)";
+  const f=frame(svg,680,230,{l:10,r:10,t:14,b:34});
+  const ymax=Math.max(...B.inc[B.inc.length-1])*1.05;
+  line(f,B.orders,B.inc[i],0,4.2,0,ymax,GRAY,1.2,.55);
+  line(f,B.orders,B.coh[i],0,4.2,0,ymax,DEEP,1.9);
+  for(const [o,c,t] of [[1,TEAL,"1x"],[2,TEAL,"2x"],[3.0,AMB,"bearing bin"]])
+    label(f,f.x(o/4.2),f.pad.t+10,t,c);
+  axes(f,"order","amplitude");}
+rng.oninput=draw; draw();})();
+
+/* 4 ratio fingerprints */
+(()=>{const svg=document.getElementById("svgRat"), box=document.getElementById("clsBtns");
+const names=Object.keys(D.ratio.cls);let cur=names[3];
+function draw(){const f=frame(svg,680,230,{l:10,r:10,t:16,b:34});
+  const c=D.ratio.cls[cur], o=D.ratio.orders;
+  const incmax=Math.max(...c.inc), bw=(f.W-20)/o.length*0.72;
+  for(let i=0;i<o.length;i++){
+    const strong=c.inc[i]>0.12*incmax;
+    const X=f.x(o[i]/4.2)-bw/2, H=(f.H-f.pad.t-f.pad.b)*c.ratio[i];
+    const col=c.ratio[i]>0.5?TEAL:AMB;
+    f.g.appendChild(S_("rect",{x:X,y:f.H-f.pad.b-H,width:bw,height:H,
+      fill:strong?col:LINE,opacity:strong?0.95:0.7,rx:1.5}));}
+  f.g.appendChild(S_("line",{x1:f.pad.l,x2:f.W-f.pad.r,
+    y1:f.y(0.5),y2:f.y(0.5),stroke:MUT,"stroke-dasharray":"3 5","stroke-width":1}));
+  label(f,f.W-f.pad.r,f.y(0.5)-5,"ratio 0.5",MUT,"end",10.5);
+  axes(f,"order","coherence ratio, 0 to 1");
+  [...box.children].forEach(b=>b.setAttribute("aria-pressed",b.textContent===cur));}
+for(const n of names){const b=document.createElement("button");
+  b.className="opt";b.textContent=n;b.onclick=()=>{cur=n;draw()};box.appendChild(b);}
+draw();})();
+
+/* 5 continued fractions, live in JS */
+(()=>{const rng=document.getElementById("rngCF"),out=document.getElementById("outCF"),
+tbl=document.getElementById("cfTable");
+function conv(x,qmax){ // continued fraction convergents
+  let a=[],v=x,rows=[],h1=1,h0=0,k1=0,k0=1;
+  for(let i=0;i<8;i++){const ai=Math.floor(v);a.push(ai);
+    const h=ai*h1+h0,k=ai*k1+k0;h0=h1;h1=h;k0=k1;k1=k;
+    rows.push({p:h,q:k,val:h/k,err:Math.abs(h/k-x)});
+    if(Math.abs(v-ai)<1e-9)break; v=1/(v-ai);}
+  return rows;}
+function draw(){const x=+rng.value/1000;out.textContent=x.toFixed(3);
+  const rows=conv(x,8);
+  let snapped=null;
+  for(const r of rows) if(r.q<=8&&r.err<=0.01){snapped=r;break;}
+  let h="<table><tr><th>convergent p/q</th><th>value</th><th>error</th><th>q &le; 8 and err &le; 0.01</th></tr>";
+  for(const r of rows.slice(0,5)){
+    const ok=r.q<=8&&r.err<=0.01;
+    h+=`<tr style="${snapped&&r.p===snapped.p&&r.q===snapped.q?'background:#E5F7F4;font-weight:700':''}">
+    <td class=mono>${r.p}/${r.q}</td><td class=mono>${r.val.toFixed(4)}</td>
+    <td class=mono>${r.err.toExponential(1)}</td><td>${ok?"yes":"no"}</td></tr>`;}
+  h+="</table><p style='margin:8px 0 2px'>"+(snapped
+    ?`snaps to <b style="color:${DEEP}">${snapped.p}/${snapped.q}</b>, a shaft-locked rational: candidate ${snapped.q===2?"looseness family":snapped.q===5?"cage order":"harmonic"}`
+    :`<b style="color:#8a6512">refuses to snap</b>: no small-denominator rational within tolerance. Near-rational and irrational at once, the classic bearing signature`)+"</p>";
+  tbl.innerHTML=h;}
+rng.oninput=draw;draw();})();
+
+/* 6a slip scan */
+(()=>{const svg=document.getElementById("svgSlip"),box=document.getElementById("slipBtns"),
+cap=document.getElementById("capSlip");const names=Object.keys(D.slip);let cur="bearing";
+function draw(){const f=frame(svg,680,210,{l:10,r:10,t:14,b:34});
+  const d=D.slip[cur],ymax=Math.max(...Object.values(D.slip).map(s=>Math.max(...s.a)))*1.05;
+  line(f,d.s,d.a,-3,3,0,ymax,cur==="bearing"?AMB:GRAY,2);
+  f.g.appendChild(S_("line",{x1:f.x(0.5),x2:f.x(0.5),y1:f.pad.t,y2:f.H-f.pad.b,
+    stroke:LINE,"stroke-width":1}));
+  axes(f,"hypothesized slip (%) around order 2.998","tone amplitude");
+  const peakOrder=2.998*(1+d.slip/100);
+  cap.textContent = cur==="bearing"
+    ?`Peak at ${d.slip.toFixed(2)}% slip, sharpness ${d.sharp}x over the floor: bearing found AND its slip measured (true value 1.20%). Peak order ${peakOrder.toFixed(3)}: refuses to snap to any small rational.`
+    :(d.sharp>10
+    ?`${cur}: sharp peak, but look where: slip ${d.slip.toFixed(2)}%, peak order ${peakOrder.toFixed(3)}, exactly 3. A locked 3x harmonic strayed into the scan window. The snap test and the coherence ratio expose it: exact rational and ratio near 1 mean shaft-locked, not bearing.`
+    :`${cur}: flat scan, sharpness only ${d.sharp}x. Nothing near order 2.998 aligns at any slip.`);
+  [...box.children].forEach(b=>b.setAttribute("aria-pressed",b.textContent===cur));}
+for(const n of names){const b=document.createElement("button");
+  b.className="opt";b.textContent=n;b.onclick=()=>{cur=n;draw()};box.appendChild(b);}
+draw();})();
+
+/* 6b PPA phasor clock */
+(()=>{const svg=document.getElementById("svgPPA"),cap=document.getElementById("capPPA"),
+btn=document.getElementById("btnAlign"),box=document.getElementById("ppaBtns");
+const names=["locked","drifting","noise"],cols={locked:TEAL,drifting:AMB,noise:GRAY};
+let cur="drifting",aligned=false;
+function draw(){const f=frame(svg,680,260,{l:0,r:0,t:0,b:0});
+  const d=D.ppa[cur],cx=200,cy=128,R=100;
+  f.g.appendChild(S_("circle",{cx,cy,r:R,fill:"none",stroke:LINE,"stroke-width":1.5}));
+  let zs=d.re.map((re,i)=>[re,d.im[i]]);
+  if(aligned){const out=[];for(let i=1;i<zs.length;i++){
+    const[a,b]=zs[i-1],m=Math.hypot(a,b)||1;const ca=a/m,sa=b/m;
+    const[x,y]=zs[i];out.push([x*ca+y*sa,-x*sa+y*ca]);}zs=out;}
+  const mx=Math.max(...zs.map(z=>Math.hypot(z[0],z[1])),1.4);
+  let sx=0,sy=0;
+  zs.forEach((z,i)=>{sx+=z[0];sy+=z[1];
+    f.g.appendChild(S_("line",{x1:cx,y1:cy,x2:cx+R*z[0]/mx,y2:cy-R*z[1]/mx,
+      stroke:cols[cur],"stroke-width":1.6,opacity:.5,class:"hand"}));});
+  sx/=zs.length;sy/=zs.length;
+  f.g.appendChild(S_("line",{x1:cx,y1:cy,x2:cx+R*sx/mx,y2:cy-R*sy/mx,
+    stroke:INK,"stroke-width":4,"stroke-linecap":"round",class:"hand"}));
+  label(f,410,70,"|mean| naive: "+d.naive,MUT,"start",14,600);
+  label(f,410,98,"|mean| aligned: "+d.aligned,DEEP,"start",14,700);
+  label(f,410,126,"PPA z (drift evidence): "+d.z,d.z>4?"#8a6512":MUT,"start",14,700);
+  label(f,410,160,"black hand = complex mean",MUT,"start",11.5,500);
+  cap.textContent = {locked:"Locked tone: phasors already agree, alignment changes little. Coherent averaging (section 3) was enough.",
+   drifting:"Drifting tone: phasors sweep the circle so the naive mean dies, yet each hand points close to its predecessor. Align, and the mean snaps outward: z-score "+d.z+" against a shuffled-block null.",
+   noise:"Noise: alignment cannot conjure order. z stays near 0, the permutation null holds the false-positive line."}[cur];
+  [...box.querySelectorAll(".cls")].forEach(b=>b.setAttribute("aria-pressed",b.textContent===cur));
+  btn.setAttribute("aria-pressed",aligned);}
+for(const n of names){const b=document.createElement("button");
+  b.className="opt cls";b.textContent=n;b.onclick=()=>{cur=n;draw()};
+  box.insertBefore(b,box.querySelector("label"));}
+btn.onclick=()=>{aligned=!aligned;draw()};draw();})();
+
+/* 7 gain law */
+(()=>{const f=frame(document.getElementById("svgGain"),680,210,{l:46,r:14,t:14,b:38});
+const G=D.gain,lx=G.N.map(Math.log10),ly=G.snr.map(Math.log10);
+const xmin=Math.min(...lx),xmax=Math.max(...lx),ymin=Math.min(...ly)-.05,ymax=Math.max(...ly)+.1;
+const t0x=lx[0],t0y=ly[0];
+line(f,[t0x,xmax],[t0y,t0y+0.5*(xmax-t0x)],xmin,xmax,ymin,ymax,LINE,2,1,"5 5");
+G.N.forEach((n,i)=>{f.g.appendChild(S_("circle",{cx:f.x((lx[i]-xmin)/(xmax-xmin)),
+  cy:f.y((ly[i]-ymin)/(ymax-ymin)),r:5,fill:TEAL}));
+  label(f,f.x((lx[i]-xmin)/(xmax-xmin)),f.H-f.pad.b+16,"N="+n,MUT,"middle",11);});
+axes(f,"blocks averaged (log scale)","SNR (log)");
+document.getElementById("capGain").textContent=
+ "Measured slope "+G.slope+" on a log-log axis, dashed guide is the sqrt(N) theory slope of 0.5. This is gate test T2: if a code change breaks the physics, the suite fails before any real data is touched.";})();
+
+/* 8 referee */
+(()=>{const svg=document.getElementById("svgGate"),rng=document.getElementById("rngAtt"),
+out=document.getElementById("outAtt"),ver=document.getElementById("verdict");
+const ds=D.gate.deltas,n=ds.length;
+const xmin=-0.06,xmax=0.2,bins=44,hist=new Array(bins).fill(0);
+for(const d of ds){const b=Math.floor((d-xmin)/(xmax-xmin)*bins);
+  if(b>=0&&b<bins)hist[b]++;}
+const hmax=Math.max(...hist);
+function draw(){const att=Math.max(1,Math.round(Math.pow(10,+rng.value/20)));
+  out.textContent="alpha = 0.05/"+att+" = "+(0.05/att).toFixed(4);
+  const q=ds[Math.max(0,Math.floor(0.05/att*n))];
+  const promote=q>0;
+  ver.textContent=promote?"PROMOTE":"KILL";ver.className="verdict "+(promote?"ok":"no");
+  const f=frame(svg,680,200,{l:12,r:12,t:12,b:34});
+  const bw=(f.W-24)/bins;
+  hist.forEach((h,i)=>{const X=f.x(i/bins),H=(f.H-f.pad.t-f.pad.b)*h/hmax;
+    const xv=xmin+(i+0.5)/bins*(xmax-xmin);
+    f.g.appendChild(S_("rect",{x:X,y:f.H-f.pad.b-H,width:bw-1.5,height:H,
+      fill:xv<0?GRAY:TEAL,opacity:.75,rx:1}));});
+  const X0=f.x((0-xmin)/(xmax-xmin));
+  f.g.appendChild(S_("line",{x1:X0,x2:X0,y1:f.pad.t,y2:f.H-f.pad.b,stroke:INK,"stroke-width":1.4}));
+  label(f,X0,f.pad.t+2,"0",INK,"middle",11,700);
+  const Xq=f.x((q-xmin)/(xmax-xmin));
+  f.g.appendChild(S_("line",{x1:Xq,x2:Xq,y1:f.pad.t,y2:f.H-f.pad.b,
+    stroke:promote?DEEP:"#8a6512","stroke-width":3}));
+  label(f,Xq,f.H-f.pad.b+16,"lower quantile "+q.toFixed(3),promote?DEEP:"#8a6512","middle",11,700);
+  axes(f,"paired F1 delta, candidate minus incumbent","");}
+rng.oninput=draw;draw();})();
+</script>
+</body></html>

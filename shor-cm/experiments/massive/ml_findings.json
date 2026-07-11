@@ -1,0 +1,188 @@
+{
+ "o1": {
+  "n_runs": 2000,
+  "ece": 0.2162,
+  "by_ablation": {
+   "full": {
+    "top1": 0.228,
+    "top3": 0.5585,
+    "octave": 0.092
+   },
+   "no_ladder": {
+    "top1": 0.228,
+    "top3": 0.5585,
+    "octave": 0.092
+   },
+   "no_structure": {
+    "top1": 0.265,
+    "top3": 0.406,
+    "octave": 0.156
+   }
+  },
+  "by_population_component": {
+   "mains_motor": 0.2151,
+   "mains_pump": 0.2336,
+   "vfd_motor": 0.1778,
+   "vfd_pump": 0.2866
+  },
+  "by_fault_top1": {
+   "bearing": 0.2094,
+   "healthy": 0.3098,
+   "imbalance": 0.3095,
+   "looseness": 0.2377,
+   "misalignment": 0.0764
+  },
+  "conf_correct": 0.451,
+  "conf_wrong": 0.442
+ },
+ "o3": {
+  "conditions": {
+   "all": {
+    "n": 2000,
+    "rules_acc": 0.451,
+    "ml_acc": 0.8765,
+    "rules_macro_f1": 0.4258,
+    "ml_macro_f1": 0.878
+   },
+   "speed_correct": {
+    "n": 456,
+    "rules_acc": 0.693,
+    "ml_acc": 0.9057,
+    "rules_macro_f1": 0.6556,
+    "ml_macro_f1": 0.9098
+   },
+   "speed_wrong": {
+    "n": 1544,
+    "rules_acc": 0.3795,
+    "ml_acc": 0.8679,
+    "rules_macro_f1": 0.3657,
+    "ml_macro_f1": 0.8662
+   }
+  },
+  "promotion_gate_ml_over_rules": {
+   "promote": true,
+   "delta_mean": 0.4527302228563894,
+   "delta_lo_alpha_adj": 0.4335739934902484,
+   "alpha": 0.05,
+   "attempts": 1,
+   "guardrails_ok": true
+  },
+  "top_features": [
+   [
+    "a1",
+    5524.2
+   ],
+   [
+    "e_half",
+    4373.0
+   ],
+   [
+    "a2",
+    3010.0
+   ],
+   [
+    "ratio_1",
+    2929.2
+   ],
+   [
+    "ratio_half",
+    2918.2
+   ],
+   [
+    "ratio_3",
+    2848.8
+   ],
+   [
+    "a3",
+    2789.8
+   ],
+   [
+    "odd_frac",
+    2762.4
+   ]
+  ],
+  "confusion_labels": [
+   "healthy",
+   "imbalance",
+   "misalignment",
+   "looseness",
+   "bearing"
+  ],
+  "confusion": [
+   [
+    335,
+    4,
+    4,
+    5,
+    62
+   ],
+   [
+    11,
+    368,
+    3,
+    4,
+    5
+   ],
+   [
+    4,
+    6,
+    381,
+    11,
+    4
+   ],
+   [
+    9,
+    1,
+    6,
+    366,
+    5
+   ],
+   [
+    84,
+    4,
+    8,
+    7,
+    303
+   ]
+  ]
+ },
+ "o4": {
+  "observational_rho": {
+   "imbalance": {
+    "driver": "a1",
+    "n": 391,
+    "spearman_rho": 0.692
+   },
+   "misalignment": {
+    "driver": "a2_over_a1",
+    "n": 406,
+    "spearman_rho": -0.182
+   },
+   "looseness": {
+    "driver": "e_half",
+    "n": 387,
+    "spearman_rho": 0.277
+   },
+   "bearing": {
+    "driver": "uns_frac",
+    "n": 406,
+    "spearman_rho": 0.039
+   }
+  },
+  "paired_sweeps": {
+   "n_machines": 48,
+   "violations": 4,
+   "grid": [
+    0.15,
+    0.271,
+    0.393,
+    0.514,
+    0.636,
+    0.757,
+    0.879,
+    1.0
+   ]
+  }
+ },
+ "wall_s": 33.1
+}

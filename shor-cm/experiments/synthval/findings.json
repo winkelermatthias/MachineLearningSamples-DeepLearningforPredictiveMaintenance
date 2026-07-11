@@ -1,0 +1,10 @@
+{
+ "theory_hash": "ed4b2a45029a",
+ "cells": 52,
+ "divergent_frac": 0.0,
+ "validity_region": "two-sided N>=16, one-sided lower bound N=8",
+ "divergent_cells": [],
+ "control_locked_vs_locked_max_dev": 0.035,
+ "control_impostor_mean_dev": 0.018,
+ "verdict": "PASS"
+}
