@@ -320,6 +320,29 @@ def estimate_speed_sheet(x, fs, sheet, meta=None, top=3,
             out.append((sc, c, ev))
         if len(out) >= max(top, 3):
             break
+    # octave arbitration by sheet template: a half-order lattice
+    # (looseness) makes f0/2 a mathematically valid GCD, but the sheet's
+    # passage/ratio orders are EXACT — under the wrong octave they read
+    # at 2x/0.5x their expected order and the template mismatches.
+    if out:
+        _, c0, ev0 = out[0]
+        sm0 = sheet_match(pf, pa, c0, exp)
+        best_c, best_sm = c0, sm0
+        for mlt in (2.0, 0.5):
+            cn = c0 * mlt
+            if LO <= cn <= HI:
+                smn = sheet_match(pf, pa, cn, exp)
+                if smn > best_sm + 0.15:
+                    best_c, best_sm = cn, smn
+        if best_c != c0:
+            try:
+                _, mt = T.phase_from_comb(x, fs, f_nom=best_c,
+                                          prior_rel_sigma=0.008)
+                best_c = float(mt["rate_hz"])
+            except Exception:
+                pass
+            ev0 = dict(ev0); ev0["octave_arb"] = 1.0
+            out[0] = (out[0][0], best_c, ev0)
     s = np.array([v for v, _, _ in out])
     conf = np.exp(s - s.max()); conf = conf / conf.sum()
     return [{"hz": round(c, 3), "confidence": round(float(w), 3), "ev": ev}

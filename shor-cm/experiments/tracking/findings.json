@@ -6,8 +6,8 @@
   "growing_fault": 67,
   "stationary_fault": 51
  },
- "blind_speed_top1": 0.468,
- "locked_speed_top1": 0.483,
+ "blind_speed_top1": 0.525,
+ "locked_speed_top1": 0.553,
  "energy_fidelity": {
   "true": {
    "bearing": {
@@ -39,7 +39,7 @@
   "est": {
    "bearing": {
     "median_spearman": 0.397,
-    "median_abs_dB_err": 4.6,
+    "median_abs_dB_err": 3.9,
     "n": 28
    },
    "gear": {
@@ -48,25 +48,25 @@
     "n": 11
    },
    "imbalance": {
-    "median_spearman": 0.921,
+    "median_spearman": 0.968,
     "median_abs_dB_err": 0.1,
     "n": 22
    },
    "looseness": {
-    "median_spearman": 0.018,
-    "median_abs_dB_err": 6.5,
+    "median_spearman": 0.235,
+    "median_abs_dB_err": 1.6,
     "n": 25
    },
    "misalignment": {
-    "median_spearman": 0.5,
-    "median_abs_dB_err": 2.9,
+    "median_spearman": 0.722,
+    "median_abs_dB_err": 0.8,
     "n": 32
    }
   },
   "lock": {
    "bearing": {
-    "median_spearman": 0.293,
-    "median_abs_dB_err": 5.7,
+    "median_spearman": 0.334,
+    "median_abs_dB_err": 4.5,
     "n": 28
    },
    "gear": {
@@ -75,18 +75,18 @@
     "n": 11
    },
    "imbalance": {
-    "median_spearman": 0.943,
+    "median_spearman": 0.968,
     "median_abs_dB_err": 0.1,
     "n": 22
    },
    "looseness": {
-    "median_spearman": 0.079,
-    "median_abs_dB_err": 11.5,
+    "median_spearman": 0.191,
+    "median_abs_dB_err": 3.2,
     "n": 25
    },
    "misalignment": {
-    "median_spearman": 0.572,
-    "median_abs_dB_err": 2.4,
+    "median_spearman": 0.766,
+    "median_abs_dB_err": 0.8,
     "n": 32
    }
   }
@@ -102,20 +102,20 @@
    "n_growing": 67
   },
   "est": {
-   "recall_growing": 0.269,
-   "recall_growing_adaptive": 0.209,
-   "auc_grow_vs_stationary": 0.612,
-   "false_alarm_rate_machines": 0.017,
-   "false_alarm_rate_adaptive": 0.006,
+   "recall_growing": 0.328,
+   "recall_growing_adaptive": 0.224,
+   "auc_grow_vs_stationary": 0.642,
+   "false_alarm_rate_machines": 0.023,
+   "false_alarm_rate_adaptive": 0.012,
    "median_detection_delay_records": 9.0,
    "n_growing": 67
   },
   "lock": {
-   "recall_growing": 0.284,
-   "recall_growing_adaptive": 0.239,
-   "auc_grow_vs_stationary": 0.597,
+   "recall_growing": 0.313,
+   "recall_growing_adaptive": 0.254,
+   "auc_grow_vs_stationary": 0.613,
    "false_alarm_rate_machines": 0.046,
-   "false_alarm_rate_adaptive": 0.023,
+   "false_alarm_rate_adaptive": 0.017,
    "median_detection_delay_records": 9.0,
    "n_growing": 67
   }
@@ -124,5 +124,5 @@
   "spearman_raw_vs_speed": 0.375,
   "spearman_normalized_vs_speed": -0.102
  },
- "wall_s": 708.2
+ "wall_s": 415.7
 }

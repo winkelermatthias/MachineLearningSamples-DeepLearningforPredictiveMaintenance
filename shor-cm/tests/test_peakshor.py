@@ -105,3 +105,31 @@ def test_T38_sheet_conditioned_speed_recovers_input_shaft():
     assert m_true > m_driven + 0.2, (m_true, m_driven)
     # derived-candidate path: driven-lattice candidate / ratio -> input
     assert abs((f2 / r) / f0 - 1) < 1e-9
+
+
+def test_T40_sheet_octave_arbitration_fixes_looseness_frame():
+    """A looseness machine whose half-order lattice pulls the estimator
+    into the f0/2 frame: with the kinematic sheet (known passage), the
+    octave arbitration must return the TRUE frame on most records."""
+    import numpy as np
+    from shorcm import simforge_v2 as V2
+    rng0 = V2.rng_for_run(30_000_016)
+    m = V2.sample_machine(rng0)          # machine 16: gearbox, looseness
+    assert m["fault"] == "looseness"
+    ok = 0
+    for t in range(6):
+        rng = V2.rng_for_run((40_000_016, t))
+        sc = float(np.clip(1 + 0.18 * np.sin(1.7 * t + 16)
+                           + rng.normal(0, 0.03), 0.75, 1.25))
+        mm = dict(m); mm["severity"] = 0.7
+        mm["f_shaft"] = m["f_shaft"] * sc
+        mm["f_e"] = mm["f_shaft"] * mm["pole_pairs"] / (1 - mm["slip"])
+        for k in ("f2", "f3", "fc", "gmf", "gmf2"):
+            if k in mm:
+                mm[k] = mm[k] * sc
+        x = V2.synth_run(mm, rng, omega1x=sc ** 2)
+        est = PS.estimate_speed_sheet(x, V2.FS, V2.kinematic_sheet(m),
+                                      meta={"component": "motor"})
+        if abs(est[0]["hz"] / mm["f_shaft"] - 1) < 0.01:
+            ok += 1
+    assert ok >= 4, f"true frame on only {ok}/6 records"

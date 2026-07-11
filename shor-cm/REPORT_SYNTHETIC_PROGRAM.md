@@ -598,6 +598,32 @@ ambiguity is mathematically real for half-order lattices, so the fix is
 the sheet prior + frame-stability constraint, not more scoring), and
 bearing association noise (ρ 0.43 true-speed ceiling).
 
+## Iteration 9: sheet octave arbitration — PROMOTED; MAFAULDA blocked
+
+**Octave arbitration (T40)**: a looseness machine's half-order lattice
+makes f₀/2 a mathematically valid GCD, and the tracker was measuring
+frame-flip noise (traced live: 5/6 records in the half frame, HALF
+energy ≈ 0). The sheet resolves it — passage/ratio orders are EXACT, so
+under the wrong octave the template mismatches. The top-1 candidate is
+now arbitrated against its 2×/0.5× neighbors by sheet match. Fleet
+effects: speed est 0.468 → **0.525** (locked 0.553), looseness energy
+error 6.5 → **1.6 dB**, misalignment tracking ρ 0.50 → **0.72**,
+imbalance 0.97, growth recall 0.269 → **0.328** at unchanged false
+alarms.
+
+**Fleet arc over the session's tracking iterations**: blind per-record
+speed 0.349 → 0.553 (sheet + consistency lock), growth recall 0.209 →
+0.328, false alarms 2.3% → 1.2% (adaptive), every fidelity cell
+improved (worst cell now bearing ρ 0.40, was looseness 0.02).
+
+**MAFAULDA transfer gate: BLOCKED by environment**, not by science.
+The proxy returns 403 `host_not_allowed` for `www02.smt.ufrj.br`.
+Action for Matthias: add that host to the environment's network egress
+allowlist; the download (13 GB; check the ~45 GB extraction peak
+against free disk — currently 30 GB, so extract per-class and delete
+zips) and the reverse-validation gate are the next loop iteration the
+moment it's reachable. No substitute data was used, per CLAUDE.md.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND
