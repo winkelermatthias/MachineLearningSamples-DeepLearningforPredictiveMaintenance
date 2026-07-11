@@ -7,7 +7,7 @@
   "stationary_fault": 51
  },
  "blind_speed_top1": 0.349,
- "locked_speed_top1": 0.357,
+ "locked_speed_top1": 0.37,
  "energy_fidelity": {
   "true": {
    "bearing": {
@@ -65,28 +65,28 @@
   },
   "lock": {
    "bearing": {
-    "median_spearman": 0.389,
-    "median_abs_dB_err": 4.8,
+    "median_spearman": 0.376,
+    "median_abs_dB_err": 5.5,
     "n": 28
    },
    "gear": {
-    "median_spearman": 0.541,
-    "median_abs_dB_err": 7.0,
+    "median_spearman": 0.362,
+    "median_abs_dB_err": 8.1,
     "n": 11
    },
    "imbalance": {
-    "median_spearman": 0.866,
+    "median_spearman": 0.869,
     "median_abs_dB_err": 0.1,
     "n": 22
    },
    "looseness": {
-    "median_spearman": 0.032,
-    "median_abs_dB_err": 10.3,
+    "median_spearman": 0.018,
+    "median_abs_dB_err": 11.6,
     "n": 25
    },
    "misalignment": {
-    "median_spearman": 0.396,
-    "median_abs_dB_err": 6.8,
+    "median_spearman": 0.319,
+    "median_abs_dB_err": 3.7,
     "n": 32
    }
   }
@@ -111,12 +111,12 @@
    "n_growing": 67
   },
   "lock": {
-   "recall_growing": 0.299,
-   "recall_growing_adaptive": 0.194,
-   "auc_grow_vs_stationary": 0.618,
-   "false_alarm_rate_machines": 0.069,
-   "false_alarm_rate_adaptive": 0.04,
-   "median_detection_delay_records": 9.5,
+   "recall_growing": 0.239,
+   "recall_growing_adaptive": 0.179,
+   "auc_grow_vs_stationary": 0.585,
+   "false_alarm_rate_machines": 0.035,
+   "false_alarm_rate_adaptive": 0.012,
+   "median_detection_delay_records": 7.0,
    "n_growing": 67
   }
  },
@@ -124,5 +124,5 @@
   "spearman_raw_vs_speed": 0.375,
   "spearman_normalized_vs_speed": -0.102
  },
- "wall_s": 399.3
+ "wall_s": 470.3
 }

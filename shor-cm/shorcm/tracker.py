@@ -192,6 +192,107 @@ FAULT_KEY = {"imbalance": "SHAFT_1", "misalignment": "SHAFT_2",
              "looseness": "HALF", "bearing": "NEARRAT", "gear": "GMF"}
 
 
+def frame_fingerprint(pf, pa, c, kmax=16.0):
+    """Sparse invariant fingerprint of a speed frame: amplitude mass on
+    the integer+half order grid under hypothesis c. Two records of the
+    same machine agree in fingerprint exactly when their frames name the
+    same physical orders — regardless of the operating speed."""
+    d = {}
+    for f, a in zip(pf, pa):
+        o = f / c
+        if not (0.4 <= o <= kmax + 0.3):
+            continue
+        b = round(o * 2) / 2
+        if b >= 0.5 and abs(o - b) <= max(0.012 * o, 0.01):
+            d[b] = d.get(b, 0.0) + float(a)
+    return d
+
+
+def fp_cos(d1, d2):
+    keys = set(d1) | set(d2)
+    if not keys:
+        return 0.0
+    v1 = np.array([d1.get(k, 0.0) for k in keys])
+    v2 = np.array([d2.get(k, 0.0) for k in keys])
+    n = np.linalg.norm(v1) * np.linalg.norm(v2)
+    return float(v1 @ v2 / n) if n > 0 else 0.0
+
+
+class FrameSelector:
+    """Speed lock v2: choose each record's frame by INVARIANT-LEDGER
+    CONSISTENCY, not speed proximity (v1 died of early-error lock-in).
+    Warmup: buffer the first `warmup` records' candidates, then pick the
+    joint assignment by coordinate ascent on (confidence + pairwise
+    fingerprint agreement) — record 1 gets no special authority. After
+    warmup: score = alpha*conf + beta*cos(fingerprint, consensus);
+    consensus follows chosen fingerprints by EMA."""
+
+    def __init__(self, warmup=5, alpha=1.0, beta=1.4, gamma=1.0, ema=0.85):
+        self.warmup, self.alpha, self.beta, self.ema = warmup, alpha, beta, ema
+        self.gamma = gamma
+        self.buf = []                    # [(cands, fps)]
+        self.consensus = None
+        self.warmup_choices = None       # final frame per warmup record
+
+    @staticmethod
+    def quality(fp):
+        """Structural frame quality: a consistently ALIASED frame is as
+        self-consistent as the true one, but its mass sits on the half
+        grid; the true frame concentrates mass on integers with a live
+        1x. quality = integer-mass fraction + 0.5 * 1x share."""
+        tot = sum(fp.values()) + 1e-12
+        ints = sum(v for k, v in fp.items() if k == round(k))
+        return ints / tot + 0.5 * fp.get(1.0, 0.0) / tot
+
+    def _fps(self, cands, pf, pa):
+        return [frame_fingerprint(pf, pa, c["hz"])
+                if np.isfinite(c["hz"]) and c["hz"] > 0 else {}
+                for c in cands]
+
+    def observe(self, cands, pf, pa):
+        """Feed one record. Returns the chosen hz for this record; during
+        warmup this is provisional (top-1) — read `warmup_choices` after
+        the warmup completes to re-frame the buffered records."""
+        fps = self._fps(cands, pf, pa)
+        if self.consensus is not None:
+            scores = [self.alpha * c["confidence"]
+                      + self.beta * fp_cos(fp, self.consensus)
+                      + self.gamma * self.quality(fp)
+                      for c, fp in zip(cands, fps)]
+            i = int(np.argmax(scores))
+            ch = fps[i]
+            if ch:
+                for k in set(self.consensus) | set(ch):
+                    self.consensus[k] = (self.ema * self.consensus.get(k, 0.0)
+                                         + (1 - self.ema) * ch.get(k, 0.0))
+            return cands[i]["hz"]
+        self.buf.append((cands, fps))
+        if len(self.buf) < self.warmup:
+            return cands[0]["hz"]
+        # consensus init by coordinate ascent, 3 sweeps
+        pick = [0] * len(self.buf)
+        for _ in range(3):
+            for r, (cands_r, fps_r) in enumerate(self.buf):
+                best_i, best_s = pick[r], -1e9
+                for i, (c, fp) in enumerate(zip(cands_r, fps_r)):
+                    s = (self.alpha * c["confidence"]
+                         + self.gamma * self.quality(fp)
+                         + self.beta * np.mean(
+                             [fp_cos(fp, self.buf[q][1][pick[q]])
+                              for q in range(len(self.buf)) if q != r]))
+                    if s > best_s:
+                        best_i, best_s = i, s
+                pick[r] = best_i
+        self.warmup_choices = [self.buf[r][0][pick[r]]["hz"]
+                               for r in range(len(self.buf))]
+        cons = {}
+        for r in range(len(self.buf)):
+            for k, v in self.buf[r][1][pick[r]].items():
+                cons[k] = cons.get(k, 0.0) + v / len(self.buf)
+        self.consensus = cons
+        return self.warmup_choices[-1]
+
+
 def select_speed(cands, f_prev, band=0.35):
     """Temporal speed lock: a monitored machine is never blind-per-
     record. Among O1's top-k candidates, blend the estimator's own

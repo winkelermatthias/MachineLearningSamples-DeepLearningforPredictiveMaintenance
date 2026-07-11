@@ -82,3 +82,26 @@ def test_T25_misalignment_requires_1x():
     # true misalignment: 1x present, strong 2x WITH its 3x companion
     led = base | {"a1": 0.30, "a2": 0.70, "a3": 0.25}
     assert SC.rules_from_ledger(led) == "misalignment"
+
+
+def test_T38_sheet_conditioned_speed_recovers_input_shaft():
+    """Gearbox-like peak set: weak input 1x, strong driven lattice and
+    mesh. The plain estimator is drawn to the driven shaft; with the
+    kinematic sheet (known ratio, mesh, vanes) the input frame wins."""
+    import numpy as np
+    f0, r = 24.0, 19 / 43           # input Hz, ratio z1/z2
+    f2 = f0 * r
+    pf = np.array(sorted([f0 * 1.0, f0 * 2.0,                 # weak input
+                          f2, 2 * f2, 3 * f2, 6 * f2,         # driven+vane
+                          19 * f0, 19 * f0 + f0, 19 * f0 - f0]))  # mesh
+    amp = {f0: 0.10, 2 * f0: 0.05, f2: 0.5, 2 * f2: 0.25, 3 * f2: 0.15,
+           6 * f2: 0.4, 19 * f0: 0.5, 19 * f0 + f0: 0.2,
+           19 * f0 - f0: 0.2}
+    pa = np.array([amp[f] for f in pf])
+    sheet = {"ratio": r, "mesh": 19, "passage": 6}
+    exp = PS.sheet_expected_orders(sheet)
+    m_true = PS.sheet_match(pf, pa, f0, exp)
+    m_driven = PS.sheet_match(pf, pa, f2, exp)
+    assert m_true > m_driven + 0.2, (m_true, m_driven)
+    # derived-candidate path: driven-lattice candidate / ratio -> input
+    assert abs((f2 / r) / f0 - 1) < 1e-9

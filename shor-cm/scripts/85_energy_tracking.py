@@ -94,7 +94,8 @@ def one_machine(i):
     fkey = TK.FAULT_KEY.get(m["fault"])
     tfam = TRUE_KEY.get(m["fault"])
     rows = []
-    f_prev = None
+    deferred = []          # lock arm runs as a second pass: FrameSelector
+    sel = TK.FrameSelector(warmup=5)
     for t in range(RECORDS):
         rng = V2.rng_for_run((40_000_000 + i, t))
         if m["population"] == "vfd":
@@ -118,36 +119,44 @@ def one_machine(i):
                                      meta={"component": "motor"})
         f_hat = est[0]["hz"] if np.isfinite(est[0]["hz"]) else f_base
         en_e = TK.pattern_energies(x, V2.FS, f_hat)
-        f_lock = TK.select_speed(est, f_prev)
-        if not np.isfinite(f_lock) or f_lock <= 0:
-            f_lock = f_hat
-        f_prev = f_lock
-        en_l = en_e if abs(f_lock / f_hat - 1) < 1e-3 \
-            else TK.pattern_energies(x, V2.FS, f_lock)
+        pfk, pak, _ = PS.spectral_peaks(x, V2.FS)
+        deferred.append((t, x, est, pfk, pak, f_hat, en_e,
+                         mm["f_shaft"]))
         tr_t.update(t, en_t, mm["f_shaft"])
         tr_e.update(t, en_e, f_hat)
-        tr_l.update(t, en_l, f_lock)
         row = {"machine": i, "t": t, "scenario": scn, "fault": m["fault"],
                "archetype": m["archetype"], "population": m["population"],
                "sev": mm["severity"], "f_op": mm["f_shaft"],
                "speed_scale": sc,
-               "spd_ok": abs(f_hat / mm["f_shaft"] - 1) <= 0.01,
-               "spd_lock_ok": abs(f_lock / mm["f_shaft"] - 1) <= 0.01}
+               "spd_ok": abs(f_hat / mm["f_shaft"] - 1) <= 0.01}
         if fkey and en_t is not None:
             v = en_t[fkey]
             row["e_tracked_true"] = v[0] if isinstance(v, tuple) else v
         if fkey and en_e is not None:
             v = en_e[fkey]
             row["e_tracked_est"] = v[0] if isinstance(v, tuple) else v
-        if fkey and en_l is not None:
-            v = en_l[fkey]
-            row["e_tracked_lock"] = v[0] if isinstance(v, tuple) else v
         if tfam:
             row["e_true"] = true_energy(truth, *tfam)
         if en_t is not None:                       # speed-invariance probe
             row["shaft1_norm"] = en_t["SHAFT_1"] / sc ** 4
             row["shaft1_raw"] = en_t["SHAFT_1"]
         rows.append(row)
+    # ---- lock arm, second pass: FrameSelector over the whole sequence,
+    # warmup records re-framed retroactively (no record-1 authority) ----
+    frames = []
+    for (t, x, est, pfk, pak, f_hat, en_e, f_true_t) in deferred:
+        frames.append(sel.observe(est, pfk, pak))
+    if sel.warmup_choices is not None:
+        frames[:len(sel.warmup_choices)] = sel.warmup_choices
+    for (t, x, est, pfk, pak, f_hat, en_e, f_true_t), f_lock in \
+            zip(deferred, frames):
+        en_l = en_e if abs(f_lock / f_hat - 1) < 1e-3 \
+            else TK.pattern_energies(x, V2.FS, f_lock)
+        tr_l.update(t, en_l, f_lock)
+        rows[t]["spd_lock_ok"] = abs(f_lock / f_true_t - 1) <= 0.01
+        if fkey and en_l is not None:
+            v = en_l[fkey]
+            rows[t]["e_tracked_lock"] = v[0] if isinstance(v, tuple) else v
     res = {"machine": i, "scenario": scn, "fault": m["fault"],
            "archetype": m["archetype"], "population": m["population"],
            "onset": prof[1] if prof else np.nan}
