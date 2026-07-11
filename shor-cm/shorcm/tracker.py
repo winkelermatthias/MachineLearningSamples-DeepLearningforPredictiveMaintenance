@@ -85,27 +85,49 @@ def pattern_energies(x, fs, f_hat, spr=256):
             if e_c > best[0]:
                 best = (e_c, o_c)
     out["NEARRAT"] = best
-    # GMF: best-modulated high-order line + its sideband fan
+    # GMF: best-modulated high-order line + its sideband fan. Energies
+    # are BAND-integrated: at order ~50 even a small residual phase-
+    # reference error smears the mesh line Gaussian-in-order (C2), so
+    # peak tips under-read by 3-12 dB (measured).
     max_o = min(spr / 2 - 2.0, 130.0)
+    do = o[1] - o[0]
+    floor_a2 = float(np.median(A))
+    ENBW = 1.5
+
+    def band_e(o_c, half_rel=0.006, max_half=None):
+        i_c = int(round(o_c / do))
+        half = half_rel * o_c
+        if max_half is not None:         # keep adjacent bands disjoint
+            half = min(half, max_half)
+        h = max(int(half / do), 2)
+        i0, i1 = max(i_c - h, 0), min(i_c + h + 1, len(A))
+        band = A[i0:i1]
+        return float(max(np.sum(band ** 2) / 2
+                         - len(band) * floor_a2 ** 2 / 2, 0.0)) / ENBW
+
     gbest = (0.0, 0.0)
     if max_o > 12:
-        floor = float(np.median(A)) + 1e-15
+        floor = floor_a2 + 1e-15
         pk_hi = sorted([(oo, aa) for oo, aa, _ in
                         S.peak_orders(A, o, max_o, 40, guard=5.0)
                         if oo > 11.0], key=lambda t: -t[1])[:5]
         for o_g, a_g in pk_hi:
-            cnt_b, e_b = 0, 0.0
-            for dlt in np.arange(0.15, 1.26, 0.02):
+            cnt_b, e_b, dlt_b = 0, 0.0, None
+            # spacing scan to 3.5 orders: speed-INCREASING gearboxes put
+            # fault sidebands at z1/z2 > 1 orders
+            for dlt in np.arange(0.15, 3.55, 0.02):
                 cnt, e = 0, 0.0
                 for k in (1, 2, 3):
                     for sgn in (-1, 1):
                         a_sb = aabs(o_g + sgn * k * dlt)
                         if a_sb > max(0.15 * a_g, 4 * floor):
                             cnt += 1
-                            e += a_sb ** 2 / 2
-                if cnt > cnt_b:
-                    cnt_b, e_b = cnt, e
-            e_tot = a_g ** 2 / 2 + e_b
+                            e += band_e(o_g + sgn * k * dlt,
+                                        max_half=0.35 * dlt)
+                if cnt > cnt_b or (cnt == cnt_b and e > e_b):
+                    cnt_b, e_b, dlt_b = cnt, e, dlt
+            e_tot = band_e(o_g, max_half=max(0.35 * (dlt_b or 1.0),
+                                             3 * do)) + e_b
             if (cnt_b >= 1 or a_g > 8 * floor) and e_tot > gbest[0]:
                 gbest = (e_tot, o_g)
     out["GMF"] = gbest

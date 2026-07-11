@@ -115,8 +115,8 @@ def one_machine(i):
         truth = []
         x = V2.synth_run(mm, rng, truth=truth, omega1x=sc ** 2)
         en_t = TK.pattern_energies(x, V2.FS, mm["f_shaft"])
-        est = PS.estimate_speed_shor(x, V2.FS,
-                                     meta={"component": "motor"})
+        est = PS.estimate_speed_sheet(x, V2.FS, V2.kinematic_sheet(m),
+                                      meta={"component": "motor"})
         f_hat = est[0]["hz"] if np.isfinite(est[0]["hz"]) else f_base
         en_e = TK.pattern_energies(x, V2.FS, f_hat)
         pfk, pak, _ = PS.spectral_peaks(x, V2.FS)

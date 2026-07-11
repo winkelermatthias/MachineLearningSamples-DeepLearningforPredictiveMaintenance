@@ -364,23 +364,28 @@ def pattern_ledger_peaks(pf, pa, pc, f0, qmax=8, rtol=0.012):
     # GEAR: strongest high-order peak (order > 11) with a sideband fan
     # at some spacing delta in (0.15, 1.25) orders; mesh + matched
     # sidebands are labeled GEAR before the leftover pass runs.
-    hi_idx = [i for i in range(n) if order[i] > 11 and label[i] == "OTHER"]
-    if hi_idx:
+    for _mesh_pass in range(2):          # up to TWO meshes (2-stage box)
+        hi_idx = [i for i in range(n)
+                  if order[i] > 11 and label[i] == "OTHER"]
+        if not hi_idx:
+            break
         i_m = max(hi_idx, key=lambda i: pa[i])
-        if pa[i_m] > 3 * np.median(pa):
-            best, best_cnt = None, 0
-            for dlt in np.arange(0.15, 1.26, 0.02):
-                got = [i for i in range(n) if i != i_m and any(
-                    abs(abs(order[i] - order[i_m]) - k * dlt)
-                    < max(0.012 * order[i_m], 0.01)
-                    for k in (1, 2, 3))]
-                if len(got) > best_cnt:
-                    best, best_cnt = got, len(got)
-            if best_cnt >= 2:
-                label[i_m] = "GEAR"
-                for i in best:
-                    if label[i] == "OTHER":
-                        label[i] = "GEAR"
+        if pa[i_m] <= 3 * np.median(pa):
+            break
+        best, best_cnt = None, 0
+        for dlt in np.arange(0.15, 1.26, 0.02):
+            got = [i for i in range(n) if i != i_m and any(
+                abs(abs(order[i] - order[i_m]) - k * dlt)
+                < max(0.012 * order[i_m], 0.01)
+                for k in (1, 2, 3))]
+            if len(got) > best_cnt:
+                best, best_cnt = got, len(got)
+        if best_cnt < 2:
+            break
+        label[i_m] = "GEAR"
+        for i in best:
+            if label[i] == "OTHER":
+                label[i] = "GEAR"
     # second periodicity on leftovers -> NEIGHBOR. Candidates come from
     # OTHER + NEARRAT peaks, but only STABLE peaks (high concentration)
     # may be relabeled: a bearing tone's phase walk smears it, a neighbor

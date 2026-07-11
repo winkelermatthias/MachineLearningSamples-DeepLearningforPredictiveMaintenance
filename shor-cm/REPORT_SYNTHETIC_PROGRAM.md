@@ -584,6 +584,20 @@ end-to-end blind-cascade joint success 0.207 (iteration 1 equivalent)
 → 0.318 (v2 baseline) → **0.415**, on a population that got strictly
 harder along the way.
 
+## Iteration 8: sheet-tracked fleet + gear band energy
+
+| Fix | Verdict | Effect |
+|---|---|---|
+| GMF band energy (spacing scan to 3.5 orders for speed-increasing boxes, overlap-capped bands, T39: median 0.1 dB, ±2.5 dB level-constant scatter) | **PROMOTED** | gear energy error 8.9 → **1.8 dB** (true speed); end-to-end gear fidelity ρ 0.274 → **0.474** |
+| Sheet-conditioned speed as the fleet's deployment arm | **PROMOTED** | fleet blind speed 0.349 → **0.468**; growth recall 0.209 → **0.269** with false alarms DOWN (0.017 fixed gate, **0.006 adaptive**); misalignment tracking ρ 0.325 → 0.500 |
+| Multi-mesh Hz GEAR labeling | PARTIAL | rec_gmf +0.01–0.02 only; sideband members sit below the Hz peak guard — needs guided (mesh-anchored) peak extraction, queued |
+
+Remaining fleet weak spots, ranked: looseness tracking under estimated
+speed (ρ 0.02 — octave-frame poisoning of the HALF key; the frame
+ambiguity is mathematically real for half-order lattices, so the fix is
+the sheet prior + frame-stability constraint, not more scoring), and
+bearing association noise (ρ 0.43 true-speed ceiling).
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND
