@@ -206,14 +206,21 @@ def ledger(x, fs, f_hat):
 
 
 def rules_from_ledger(led):
-    """Transparent O3 rules arm, same thresholds as 94_eval rules_fault."""
+    """Transparent O3 rules arm. Misalignment rule per Matthias
+    (2026-07-11): the 1x must be there when the 2x is — a bare 2x-ish
+    line (which in the field is the electrical 2LF at order 2/(1-s), a
+    small slip off exact 2) is NEVER misalignment. Guards: (a) a1 must
+    be genuinely present, (b) the electrical shape (2x dominant with no
+    3x companion) is excluded even when 1x exists."""
     if led is None:
         return "unknown"
     if led["n_half"] >= 2:
         return "looseness"
     if led["uns_frac"] > 0.15:
         return "bearing"
-    if led["a2"] > 0.35 and led["a2"] > 0.6 * led["a1"]:
+    elec_like = led["a2"] > 2.5 * led["a1"] and led["a3"] < 0.2 * led["a2"]
+    if (led["a2"] > 0.35 and led["a2"] > 0.6 * led["a1"]
+            and led["a1"] > 0.12 and not elec_like):
         return "misalignment"
     if led["a1"] > 0.5:
         return "imbalance"

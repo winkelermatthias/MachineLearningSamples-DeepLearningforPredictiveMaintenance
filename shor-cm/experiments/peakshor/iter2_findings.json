@@ -167,5 +167,27 @@
   },
   "speed_top1_and_ml_fault": 0.5005
  },
- "wall_s": 50.8
+ "wall_s": 50.8,
+ "misalignment_rule_v2": {
+  "lt": {
+   "old_acc": 0.617,
+   "new_acc": 0.617,
+   "false_mis_old": 11,
+   "false_mis_new": 10,
+   "true_mis_old": 174,
+   "true_mis_new": 174
+  },
+  "le": {
+   "old_acc": 0.4155,
+   "new_acc": 0.4155,
+   "false_mis_old": 3,
+   "false_mis_new": 3,
+   "true_mis_old": 60,
+   "true_mis_new": 60
+  },
+  "joint_rules": {
+   "old": 0.3265,
+   "new": 0.3265
+  }
+ }
 }

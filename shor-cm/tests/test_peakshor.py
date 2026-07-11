@@ -67,3 +67,18 @@ def test_T23_waveform_end_to_end():
         # gate on top-3 for robustness across the three machines
         assert min(errs) <= 0.015, (i, m["fault"], m["f_shaft"],
                                     [c["hz"] for c in est])
+
+
+def test_T25_misalignment_requires_1x():
+    """Matthias's rule: 2x without 1x is never misalignment; 2x with a
+    slip offset is electrical, not mechanical."""
+    base = {"n_half": 0, "uns_frac": 0.0, "a3": 0.0}
+    # electrical masquerade: strong exact-2 line, weak 1x (f_e capture)
+    led = base | {"a1": 0.10, "a2": 0.55}
+    assert SC.rules_from_ledger(led) != "misalignment"
+    # electrical shape even with 1x present: 2x dominant, no 3x family
+    led = base | {"a1": 0.15, "a2": 0.60}
+    assert SC.rules_from_ledger(led) != "misalignment"
+    # true misalignment: 1x present, strong 2x WITH its 3x companion
+    led = base | {"a1": 0.30, "a2": 0.70, "a3": 0.25}
+    assert SC.rules_from_ledger(led) == "misalignment"
