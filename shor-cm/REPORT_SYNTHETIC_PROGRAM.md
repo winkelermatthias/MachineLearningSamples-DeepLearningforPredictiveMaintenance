@@ -458,6 +458,82 @@ costs ~0.18 end-to-end, which is the honest price of gearboxes).
 5. Belt archetype: belt defect frequency family (sub-1x rational of
    BOTH shafts) as its own pattern + fault class in v2.1.
 
+---
+
+# Iteration 4: pattern-energy tracking over time
+
+Directive (Matthias): patterns must be tracked in ENERGY over time,
+per sample, under variable speed (same order, different frequencies);
+presence is an indicator — GROWTH is when it becomes an issue. This is
+the fundamental practical layer of vibration analysis.
+
+## Design (`shorcm/tracker.py`, tests T32–T34 green before the fleet ran)
+
+**The pattern's name is its rational number.** Identity across records
+is the order-domain invariant, which is exactly what the Shor machinery
+provides: angular resampling projects out the speed, CF rationalization
+names the shaft-locked families (SHAFT_k per harmonic, HALF ladder),
+the slip band names the bearing tone (NEARRAT@o, associated across
+records within ±4% — slip moves it, identity survives), the mesh
+integer names the gear (GMF@z + sideband fan). Fixed-Hz confusers are
+the dual case: constant in Hz, never in order.
+
+**Per-sample energy** = Σ a²/2 over pattern members in the fine order
+spectrum, with speed-law normalization where physics demands it: the
+mass-force 1x is divided by (f/f_ref)² so an operating-point ramp
+cannot masquerade as fault growth (T33: a 25→40 Hz VFD ramp does NOT
+alarm after normalization).
+
+**Growth, not presence, is the alarm**: per invariant, Theil–Sen slope
+on log-energy + Mann–Kendall significance (p < 0.01) + ≥ 6 dB rise over
+the commissioning baseline (median of first 3 records). A stationary
+fault — present, fluctuating, not growing — is an indicator and must
+never alarm (T32 pins both directions).
+
+## Fleet experiment: 240 machines × 16 records, full v2 ensemble
+
+Scenarios: 40% stable-healthy, 25% stationary-fault (must NOT alarm),
+35% growing-fault (linear / exponential / late-step severity ramps,
+onset records 2–6). Speed varies record-to-record (VFD ±20% operating
+points with the ω² force scaling physically applied to the 1x; mains
+slip-wiggle only). Ground truth energy per pattern per record from the
+generator's composition truth. 3,840 records, 373 s wall.
+
+**Per-sample energy fidelity** (median Spearman ρ tracked-vs-true /
+median |dB| error, true speed): imbalance **0.99 / 0.1 dB**,
+misalignment **0.92 / 0.5 dB**, looseness **0.81 / 1.1 dB**, gear 0.72 /
+8.9 dB (rank right, systematic fan-energy bias), bearing **0.34 /
+4.1 dB — the weak link** (drifting-cluster energy is noisy record to
+record and association resets on slip jumps). Under blind per-record
+speed (top-1 0.349 on this fleet) everything except imbalance (0.91)
+degrades badly — energy tracking inherits O1's errors one-for-one.
+
+**Growth detection** (true speed): AUC growing-vs-stationary **0.843**;
+at the strict gate: recall 56.7%, **false-alarm rate 2.3%** of
+non-growing machines, median detection delay **8 records** from onset.
+The gate is deliberately precision-heavy (a 6 dB rise = 4× energy);
+recall is bounded by bearing-energy noise, not by the trend layer.
+
+**Speed invariance, the core requirement**: on healthy VFD machines,
+raw 1x energy correlates with operating speed ρ = 0.375 (physics);
+normalized, ρ = **−0.10 ≈ 0**. Order-invariant tracking under variable
+speed works as designed.
+
+## What fixes the weak links (next backlog)
+
+1. Bearing per-record energy: integrate the full drifting-cluster BAND
+   energy and/or use the Grover slip-scan (`amplify.slip_scan` zoom-DFT
+   at the kinematic order, already in the library) instead of peak
+   sums — the smeared tone's energy is in the band, not the peak.
+2. Track through the O1 posterior: carry top-3 speed hypotheses per
+   record and let temporal consistency of the invariant ledger SELECT
+   the hypothesis — tracking as a speed disambiguator (the fleet knows
+   yesterday's speed; blind-per-record is unnecessarily hard).
+3. Gear energy bias: normalize fan energy by the sideband-window count.
+4. Adaptive gate: per-key noise bands estimated from the commissioning
+   records (replace the global 6 dB with k·sigma of the key's own
+   baseline scatter) — recovers recall without paying false alarms.
+
 ## Artifacts
 
 | Path | Content |

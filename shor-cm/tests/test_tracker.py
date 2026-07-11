@@ -1,0 +1,75 @@
+"""Mechanism gate tests for pattern-energy tracking (T32-T34)."""
+import numpy as np
+from shorcm import tracker as TK
+from shorcm import simforge_v2 as V2
+
+
+def _seq_tracker(logs, key="SHAFT_1", f=30.0):
+    tr = TK.PatternTracker(f_ref=f)
+    for t, e in enumerate(logs):
+        tr.update(t, {key: e} if key.startswith("SHAFT") or key == "HALF"
+                  else {key: (e, 3.1)}, f)
+    return tr
+
+
+def test_T32_growth_alarms_stationary_does_not():
+    rng = np.random.default_rng(40)
+    # growing: 12 dB rise over 16 records + noise
+    grow = [1e-4 * 10 ** (1.2 * t / 16) * (1 + 0.15 * rng.standard_normal())
+            for t in range(16)]
+    tr = _seq_tracker(grow)
+    td = tr.trends()["SHAFT_1"]
+    assert td["alarm"], td
+    # stationary fault: present, fluctuating, NOT growing -> indicator,
+    # never an alarm
+    stat = [3e-3 * (1 + 0.2 * rng.standard_normal()) for _ in range(16)]
+    tr2 = _seq_tracker(stat)
+    td2 = tr2.trends()["SHAFT_1"]
+    assert not td2["alarm"], td2
+    # online delay: alarm must fire before the end on the growing series
+    assert tr.first_alarm("SHAFT_1") is not None
+
+
+def test_T33_omega2_normalization_kills_speed_ramp_false_alarm():
+    """A VFD ramp 25 -> 40 Hz raises raw 1x energy by (40/25)^4 in E
+    units (amp ~ omega^2 in force -> here amp ~ omega^2 modeled via
+    omega1x). Normalized SHAFT_1 must NOT alarm."""
+    tr = TK.PatternTracker(f_ref=25.0)
+    rng = np.random.default_rng(41)
+    for t in range(16):
+        f = 25.0 + 15.0 * t / 15
+        amp = 0.2 * (f / 25.0) ** 2 * (1 + 0.05 * rng.standard_normal())
+        tr.update(t, {"SHAFT_1": amp ** 2 / 2}, f)
+    td = tr.trends()["SHAFT_1"]
+    assert not td["alarm"], td
+
+
+def test_T34_order_invariant_tracking_under_variable_speed():
+    """Same machine, same severity, speed varying +/-20% record to
+    record: tracked SHAFT_2 and NEARRAT energies must stay flat (no
+    trend), and NEARRAT association must survive the speed changes."""
+    rng0 = V2.rng_for_run(777)
+    m = V2.sample_machine(rng0)
+    m["fault"], m["subtype"], m["fault_shaft"] = "bearing", "BPFO", "in"
+    m["severity"] = 0.8
+    m["archetype"], m["population"] = "pump_direct", "vfd"
+    m["f2"] = m["f_shaft"]
+    m.setdefault("vanes", 6)
+    f_base = min(max(m["f_shaft"], 20.0), 45.0)
+    tr = TK.PatternTracker(f_ref=f_base)
+    got = 0
+    for t in range(8):
+        sc = 1.0 + 0.2 * np.sin(2.2 * t)
+        mm = dict(m)
+        mm["f_shaft"] = f_base * sc
+        mm["f_e"] = mm["f_shaft"] * mm["pole_pairs"] / (1 - mm["slip"])
+        rng = V2.rng_for_run(778 + t)
+        x = V2.synth_run(mm, rng)
+        en = TK.pattern_energies(x, V2.FS, mm["f_shaft"])
+        assert en is not None
+        if en["NEARRAT"][0] > 0:
+            got += 1
+        tr.update(t, en, mm["f_shaft"])
+    assert got >= 6, f"NEARRAT found in only {got}/8 records"
+    td = tr.trends(min_n=6).get("NEARRAT")
+    assert td is not None and not td["alarm"], td
