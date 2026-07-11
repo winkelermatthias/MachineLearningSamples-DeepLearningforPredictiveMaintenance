@@ -645,6 +645,26 @@ anchoring below the peak guard for weak meshes, not the sidebands.
 success **0.21 → 0.49** (0.52 with the kinematic sheet), on a
 population that grew from one archetype to seven along the way.
 
+## Iteration 11: the confidence contract — PROMOTED
+
+Softmax-over-scores was uninformative (ECE 0.16–0.22, measured three
+times). Rebuilt as isotonic calibration on the SCORE MARGIN (top1−top2)
+of the sheet estimator, fitted on even speed bands, evaluated on odd
+(and reversed):
+
+| calibrator | holdout ECE |
+|---|---|
+| raw softmax | 0.164 |
+| isotonic on margin | **0.085** (0.063 with the larger fit set) |
+| LightGBM(9 features)+isotonic | 0.149 — WORSE, overfits, killed |
+
+The abstain contract of PHASE2 §2.4 now functions: emit at P ≥ 0.5 →
+59% coverage at 82% accuracy (base rate 58%). The 0.05 target follows
+from calibration-set size (isotonic ~1/√n; deployment fits on the full
+corpus plus real dev data). The instructive negative: the multi-feature
+learned calibrator LOST to a single physically-meaningful margin — on
+420 calibration rows, capacity is a liability.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND

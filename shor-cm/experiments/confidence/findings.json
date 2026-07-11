@@ -1,0 +1,28 @@
+{
+ "n": 1199,
+ "n_fit": 420,
+ "n_holdout": 779,
+ "top1_rate": 0.575,
+ "ece_softmax": 0.1642,
+ "ece_iso_margin": 0.0849,
+ "ece_lgbm_iso": 0.1487,
+ "brier_lgbm_iso": 0.1526,
+ "emit_p50": {
+  "coverage": 0.593,
+  "accuracy": 0.818
+ },
+ "emit_p70": {
+  "coverage": 0.578,
+  "accuracy": 0.827
+ },
+ "reversed_split": {
+  "fit_even_eval_odd": {
+   "n_fit": 420,
+   "ece": 0.0849
+  },
+  "fit_odd_eval_even": {
+   "n_fit": 779,
+   "ece": 0.0634
+  }
+ }
+}

@@ -355,7 +355,8 @@ def estimate_speed_sheet(x, fs, sheet, meta=None, top=3,
             out[0] = (out[0][0], best_c, ev0)
     s = np.array([v for v, _, _ in out])
     conf = np.exp(s - s.max()); conf = conf / conf.sum()
-    return [{"hz": round(c, 3), "confidence": round(float(w), 3), "ev": ev}
+    return [{"hz": round(c, 3), "confidence": round(float(w), 3),
+             "score": round(float(v), 3), "ev": ev}
             for (v, c, ev), w in zip(out[:top], conf[:top])]
 
 
