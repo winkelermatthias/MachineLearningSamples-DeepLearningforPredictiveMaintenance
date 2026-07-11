@@ -7,11 +7,12 @@
   "stationary_fault": 51
  },
  "blind_speed_top1": 0.349,
+ "locked_speed_top1": 0.357,
  "energy_fidelity": {
   "true": {
    "bearing": {
-    "median_spearman": 0.341,
-    "median_abs_dB_err": 4.1,
+    "median_spearman": 0.43,
+    "median_abs_dB_err": 2.5,
     "n": 28
    },
    "gear": {
@@ -37,8 +38,8 @@
   },
   "est": {
    "bearing": {
-    "median_spearman": 0.241,
-    "median_abs_dB_err": 7.7,
+    "median_spearman": 0.374,
+    "median_abs_dB_err": 4.6,
     "n": 28
    },
    "gear": {
@@ -61,21 +62,61 @@
     "median_abs_dB_err": 7.9,
     "n": 32
    }
+  },
+  "lock": {
+   "bearing": {
+    "median_spearman": 0.389,
+    "median_abs_dB_err": 4.8,
+    "n": 28
+   },
+   "gear": {
+    "median_spearman": 0.541,
+    "median_abs_dB_err": 7.0,
+    "n": 11
+   },
+   "imbalance": {
+    "median_spearman": 0.866,
+    "median_abs_dB_err": 0.1,
+    "n": 22
+   },
+   "looseness": {
+    "median_spearman": 0.032,
+    "median_abs_dB_err": 10.3,
+    "n": 25
+   },
+   "misalignment": {
+    "median_spearman": 0.396,
+    "median_abs_dB_err": 6.8,
+    "n": 32
+   }
   }
  },
  "growth_detection": {
   "true": {
    "recall_growing": 0.567,
-   "auc_grow_vs_stationary": 0.843,
+   "recall_growing_adaptive": 0.567,
+   "auc_grow_vs_stationary": 0.823,
    "false_alarm_rate_machines": 0.023,
+   "false_alarm_rate_adaptive": 0.012,
    "median_detection_delay_records": 8.0,
    "n_growing": 67
   },
   "est": {
    "recall_growing": 0.209,
-   "auc_grow_vs_stationary": 0.627,
+   "recall_growing_adaptive": 0.149,
+   "auc_grow_vs_stationary": 0.605,
    "false_alarm_rate_machines": 0.023,
+   "false_alarm_rate_adaptive": 0.023,
    "median_detection_delay_records": 9.0,
+   "n_growing": 67
+  },
+  "lock": {
+   "recall_growing": 0.299,
+   "recall_growing_adaptive": 0.194,
+   "auc_grow_vs_stationary": 0.618,
+   "false_alarm_rate_machines": 0.069,
+   "false_alarm_rate_adaptive": 0.04,
+   "median_detection_delay_records": 9.5,
    "n_growing": 67
   }
  },
@@ -83,5 +124,5 @@
   "spearman_raw_vs_speed": 0.375,
   "spearman_normalized_vs_speed": -0.102
  },
- "wall_s": 373.4
+ "wall_s": 399.3
 }

@@ -519,6 +519,18 @@ raw 1x energy correlates with operating speed ρ = 0.375 (physics);
 normalized, ρ = **−0.10 ≈ 0**. Order-invariant tracking under variable
 speed works as designed.
 
+## Iteration 4b: the three fixes, measured (same fleet seeds)
+
+| Fix | Verdict | Measured effect |
+|---|---|---|
+| NEARRAT band energy (cluster band ±1.5%, ENBW-corrected, floor-subtracted; calibrated to a²/2 by T35) | **PROMOTED** | bearing fidelity ρ 0.341 → **0.430**, median error 4.1 → **2.5 dB** (true speed). Remaining noise is cluster ASSOCIATION, not energy measurement |
+| Adaptive per-key gates (max(3 dB, 3σ of commissioning scatter)) | **PROMOTED** | false alarms **2.3% → 1.2%** at unchanged recall 0.567 (true-speed arm). On noisy blind arms the gate correctly rises and recall drops — by design |
+| Temporal speed lock v1 (confidence + history-proximity bonus, T36) | **KILLED** | locked top-1 0.349 → 0.357 (~nothing); false alarms 2.3% → 6.9%. Mechanism: an early wrong speed LOCKS IN and poisons the whole track, and when the top-3 does not contain truth (37% of fleet records) no history rule can recover it. v2 of this idea must initialize from a multi-record consensus and score hypotheses by INVARIANT-LEDGER consistency (does the pattern set stay coherent under this frame), not speed proximity alone |
+
+The killed attempt is ledger-logged with its mechanism; the recall
+bottleneck for growth detection remains the blind-speed stage, exactly
+as the cascade analysis predicted.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND
