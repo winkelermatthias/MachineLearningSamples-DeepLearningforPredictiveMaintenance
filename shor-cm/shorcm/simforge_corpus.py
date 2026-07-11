@@ -92,7 +92,7 @@ def _fixed_bases(x, fs, f_hat):
         if all(abs(c / (f_hat * r) - 1) > 0.03 for r in (0.5, 1, 2, 3)) \
                 and conc_at(c) > 0.5:
             bases.append(c)
-    lbm = (ff > 30) & (ff < 380)
+    lbm = (ff > 30) & (ff < 900)      # up to VFD 2 f_e territory
     med = np.median(Af[lbm]) + 1e-15
     idx = np.flatnonzero(lbm)
     for i in idx[1:-1]:
@@ -103,15 +103,17 @@ def _fixed_bases(x, fs, f_hat):
     return bases
 
 
-def ledger(x, fs, f_hat):
+def ledger(x, fs, f_hat, spr=128, uns_hi=9.0):
     """Physics-level evidence ledger under speed hypothesis f_hat.
     Returns dict of scalar features (None on phase-extraction failure).
-    Never raw bins: orders, families, snap fractions, coherence ratios."""
+    Never raw bins: orders, families, snap fractions, coherence ratios.
+    v2 usage: spr=256 (order range to 128 for gear mesh), uns_hi=16
+    (big low-speed bearings reach BPFI ~ 15)."""
     try:
         ph, meta = T.phase_from_comb(x, fs, f_nom=f_hat, prior_rel_sigma=0.008)
-        xa = S.angular_resample(x, ph, 128)
-        A, o = S.fine_order_spectrum(xa, 128)
-        Z, ob = S.block_spectra(xa, 128, revs=5)
+        xa = S.angular_resample(x, ph, spr)
+        A, o = S.fine_order_spectrum(xa, spr)
+        Z, ob = S.block_spectra(xa, spr, revs=5)
         _, _, ratio_b = S.coherent_split(Z)
     except Exception:
         return None
@@ -133,8 +135,8 @@ def ledger(x, fs, f_hat):
     halves = [aabs(k) for k in (0.5, 1.5, 2.5, 3.5)]
     n_half = int(sum(h > 0.10 for h in halves))
     e_half = float(sum(halves))
-    pk = S.peak_orders(A, o, 9.0, 25, guard=5.0)
-    tol = max(S.snap_tol(max(int(len(xa) / 128), 10)), 0.004)
+    pk = S.peak_orders(A, o, uns_hi, 25, guard=5.0)
+    tol = max(S.snap_tol(max(int(len(xa) / spr), 10)), 0.004)
     do = o[1] - o[0]
 
     def narrow(oo, a):
@@ -163,7 +165,10 @@ def ledger(x, fs, f_hat):
         e_tot += a_c
         drifting = width > 0.004 or len(cl) >= 3
         if drifting:
-            if 1.8 < o_c < 9.0:
+            # masked() applies here too: a FIXED-Hz line (electrical,
+            # hum) smears into a wide cluster in the ORDER domain when
+            # the shaft wanders around it — wide does not imply bearing
+            if 1.8 < o_c < uns_hi and not masked(o_c):
                 uns += a_c
                 if a_c > uns_best[0]:
                     uns_best = (a_c, o_c)
@@ -176,17 +181,60 @@ def ledger(x, fs, f_hat):
             e_snap += a_c
             if fr.numerator % 2 == 1:
                 e_odd += a_c
-        elif 1.8 < o_c < 9.0 and not masked(o_c) and narrow(o_c, a_c):
+        elif (1.8 < o_c < uns_hi and not masked(o_c) and narrow(o_c, a_c)
+              and rat(o_c) < 0.45):
+            # coherence gate: a kinematic passage tone on a second shaft
+            # (vane pass through a gearbox ratio, order 6 x 2.48 = 14.9)
+            # is narrow, unsnapped AND phase-locked to the input comb —
+            # high ratio. A bearing tone phase-walks — low ratio. Only
+            # low-coherence narrow tones count as bearing evidence.
             uns += a_c
             if a_c > uns_best[0]:
                 uns_best = (a_c, o_c)
     tot = e_tot + 1e-12
+    # gear mesh evidence: strongest high-order line (order > 11) plus a
+    # sideband fan at the best spacing in 0.15..1.25 orders (parallel
+    # boxes: shaft-spaced; planetary: carrier- or defect-spaced)
+    max_o = min(spr / 2 - 2.0, 130.0)
+    gmf_order = gmf_rel = gmf_sb_count = gmf_sb_energy = 0.0
+    floor_g = float(np.median(A)) + 1e-15
+    if max_o > 12.0:
+        pk_hi = sorted([(oo, aa) for oo, aa, _ in
+                        S.peak_orders(A, o, max_o, 40, guard=5.0)
+                        if oo > 11.0], key=lambda t: -t[1])[:5]
+
+        def sb_fan(o_g, a_g):
+            best_cnt, best_e = 0, 0.0
+            for dlt in np.arange(0.15, 1.26, 0.02):
+                cnt, e = 0, 0.0
+                for k in (1, 2, 3):
+                    for sgn in (-1, 1):
+                        a_sb = aabs(o_g + sgn * k * dlt)
+                        if a_sb > max(0.15 * a_g, 4 * floor_g):
+                            cnt += 1
+                            e += a_sb
+                if cnt > best_cnt or (cnt == best_cnt and e > best_e):
+                    best_cnt, best_e = cnt, e
+            return best_cnt, best_e
+
+        best = None                      # a bare passage line must lose
+        for o_g, a_g in pk_hi:           # to a modulated mesh, so rank
+            cnt, e = sb_fan(o_g, a_g)    # by (sideband count, amp)
+            key = (cnt, a_g)
+            if best is None or key > best[0]:
+                best = (key, o_g, a_g, cnt, e)
+        if best is not None:
+            _, o_g, a_g, cnt, e = best
+            gmf_order, gmf_rel = float(o_g), float(a_g / floor_g)
+            gmf_sb_count, gmf_sb_energy = float(cnt), float(e)
     led = {"a1": a1, "a2": a2, "a3": a3, "a2_over_a1": a2 / (a1 + 1e-9),
            "n_half": n_half, "e_half": e_half,
            "snap_frac": e_snap / tot, "odd_frac": e_odd / (e_snap + 1e-12),
            "uns_frac": uns / tot, "uns_abs": uns, "e_tot": float(tot),
            "uns_top_amp": uns_best[0],
            "uns_top_order": uns_best[1],
+           "gmf_order": gmf_order, "gmf_rel": gmf_rel,
+           "gmf_sb_count": gmf_sb_count, "gmf_sb_energy": gmf_sb_energy,
            "ratio_1": rat(1.0), "ratio_2": rat(2.0), "ratio_3": rat(3.0),
            "ratio_half": rat(0.5),
            "n_peaks": len(pk), "floor": float(np.median(A))}
@@ -216,6 +264,9 @@ def rules_from_ledger(led):
         return "unknown"
     if led["n_half"] >= 2:
         return "looseness"
+    if (led.get("gmf_rel", 0) > 6 and led.get("gmf_sb_count", 0) >= 3
+            and led.get("gmf_sb_energy", 0) > 0.4):
+        return "gear"
     if led["uns_frac"] > 0.15:
         return "bearing"
     elec_like = led["a2"] > 2.5 * led["a1"] and led["a3"] < 0.2 * led["a2"]
@@ -231,3 +282,5 @@ LEDGER_FEATURES = ["a1", "a2", "a3", "a2_over_a1", "n_half", "e_half",
                    "snap_frac", "odd_frac", "uns_frac", "uns_abs", "e_tot",
                    "uns_top_amp", "uns_top_order", "ratio_1", "ratio_2",
                    "ratio_3", "ratio_half", "n_peaks", "floor", "ppa_z_uns"]
+LEDGER_FEATURES_V2 = LEDGER_FEATURES + ["gmf_order", "gmf_rel",
+                                        "gmf_sb_count", "gmf_sb_energy"]
