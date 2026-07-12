@@ -116,6 +116,76 @@ def test_T48_half_record_stability():
         assert d < 0.05, (fam, s1.get(fam), s2.get(fam), d)
 
 
+def test_T50_crystal_hum_on_half_integer_recovered_shaft_not_stolen():
+    """A mains line landing EXACTLY on a shaft half-integer order must
+    still be recovered as FIXEDHZ (it is crystal-narrow in Hz; a
+    coincident shaft harmonic would be smeared by wander). Converse: a
+    genuine wandering shaft harmonic at the same position must NOT be
+    stolen from the HARM family."""
+    # hum at 87.5 Hz = order 3.5 at f0=25 — inside the old blanket
+    # exemption window; wander 1.2% so a shaft-locked line there WOULD
+    # smear over >3 Hz bins (the resolvability gate's territory)
+    rng = np.random.default_rng(7)
+    n = int(DUR * FS)
+    t = np.arange(n) / FS
+    f_inst = 25.0 * (1 + 0.012 * np.sin(2 * np.pi * 0.7 * t + 1.0))
+    ph = 2 * np.pi * np.cumsum(f_inst) / FS
+    x = 0.35 * rng.standard_normal(n) \
+        + 0.5 * np.cos(ph) + 0.25 * np.cos(2 * ph) \
+        + 0.14 * np.cos(2 * np.pi * 87.5 * t + 0.3)
+    pats, _ = PT.decompose(x, FS, 25.0)
+    fx = [p for p in pats if p["type"] == "FIXEDHZ"
+          and abs(p["params"]["hz"] - 87.5) < 1.5]
+    assert fx, [(p["type"], p["params"]) for p in pats]
+    err = 10 * np.log10(fx[0]["energy"] / (0.14 ** 2 / 2))
+    assert abs(err) < 2.5, err
+    # converse: genuine wandering shaft harmonics at the same wander,
+    # no hum anywhere — the HARM family must keep its energy
+    rng2 = np.random.default_rng(8)
+    x2 = 0.35 * rng2.standard_normal(n) \
+        + 0.5 * np.cos(ph + 0.5) + 0.25 * np.cos(2 * ph + 1.1) \
+        + 0.3 * np.cos(3 * ph + 2.0)
+    e_true = (0.5 ** 2 + 0.25 ** 2 + 0.3 ** 2) / 2
+    pats2, _ = PT.decompose(x2, FS, 25.0)
+    got2 = _shares(pats2)
+    err2 = 10 * np.log10((got2.get("HARM", 0) + 1e-12) / e_true)
+    assert abs(err2) < 1.5, (err2, [(p["type"], p["params"])
+                                    for p in pats2])
+
+
+def test_T51_group_alarm_bearing_growing_in_its_fan():
+    """A bearing whose energy grows in its modulation FAN while its
+    tone sits still: instance-level NEARRAT stays quiet, but the
+    kinematic group (NEARRAT + co-carrier SIDEBAND) must alarm."""
+    rng = np.random.default_rng(9)
+    tr = PT.GeneralTracker()
+    for t in range(14):
+        e_tone = 3e-3 * (1 + 0.1 * rng.standard_normal())
+        e_fan = 2e-4 * 10 ** (1.3 * t / 13) \
+            * (1 + 0.1 * rng.standard_normal())
+        pats = [
+            {"type": "NEARRAT", "params": {"order": 6.2}, "energy": e_tone,
+             "members": [(6.2, e_tone)], "share": 0.1},
+            {"type": "SIDEBAND",
+             "params": {"carrier": 6.2, "spacing": 1.0,
+                        "carrier_visible": True},
+             "energy": e_fan, "members": [(6.2, e_fan)], "share": 0.1},
+            {"type": "HARM", "params": {"base": 1.0}, "energy": 0.12,
+             "members": [(1.0, 0.12)], "share": 0.5},
+        ]
+        tr.update(t, pats)
+    tds = tr.trends()
+    nr = {k: d for k, d in tds.items() if k.startswith("('NEARRAT'")}
+    assert nr and not any(d["alarm"] for d in nr.values()), nr
+    gps = tr.trends_grouped()
+    bearing_gp = [g for g in gps if "NEARRAT" in g["types"]]
+    assert bearing_gp, gps
+    assert any(g["alarm"] for g in bearing_gp), bearing_gp
+    assert "SIDEBAND" in bearing_gp[0]["types"], bearing_gp
+    harm_gp = [g for g in gps if g["types"] == ["HARM"]]
+    assert harm_gp and not any(g["alarm"] for g in harm_gp), gps
+
+
 def test_T49_general_tracking_under_varying_speed():
     """A growing SIDEBAND fan and a constant HARM family, speed moving
     +/-15% record to record: identities persist, the sideband instance

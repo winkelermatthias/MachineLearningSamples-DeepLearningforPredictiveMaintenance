@@ -32,7 +32,10 @@ OUT = Path("experiments/patterns")
 # correct isolation of a modulated bearing tone — credit it; (b) the
 # new TONE type is the correct home for lone vane-pass/second-shaft/
 # drive lines. v1 findings preserved in findings_pre_fix.json.
-JUDGMENT_VERSION = 2
+# v3 amendment: truth families that COLLIDE in frequency (ELEC 2*f_e on
+# the 120 Hz hum of a mains machine) are judged as ONE composite — a
+# single physical line cannot be attributed to two families.
+JUDGMENT_VERSION = 3
 
 
 def _off_int_carrier(p):
@@ -52,7 +55,11 @@ COMPAT = {"SHAFT": lambda p: p["type"] == "HARM"
           "NEIGHBOR": lambda p: p["type"] in ("FIXEDHZ", "HARM", "TONE"),
           "SHAFT2": lambda p: p["type"] in ("HARM", "NEARRAT", "FIXEDHZ",
                                             "TONE"),
-          "PASSAGE": lambda p: p["type"] in ("HARM", "SIDEBAND", "TONE")}
+          # a belt/gearbox blade-pass rides the DRIVEN shaft: non-
+          # integer order, creep-drifting — blind-indistinguishable
+          # from a bearing tone, so NEARRAT capture is correct
+          "PASSAGE": lambda p: p["type"] in ("HARM", "SIDEBAND", "TONE",
+                                             "NEARRAT")}
 
 
 def attr_one(i):
@@ -66,23 +73,46 @@ def attr_one(i):
     rows = []
     share_sum = sum(p["share"] for p in pats)
     floor_share = next(p["share"] for p in pats if p["type"] == "FLOOR")
-    for tf in truth:
-        fam = tf["family"]
-        if fam not in COMPAT or fam == "ELEC_HF":
+    # merge truth families that COLLIDE in frequency (e.g. ELEC 2*f_e
+    # sits exactly on the 120 Hz hum on mains machines): one physical
+    # line cannot be attributed to two families — judge the composite
+    fams = [tf for tf in truth
+            if tf["family"] in COMPAT and tf["family"] != "ELEC_HF"]
+    groups = []
+    for tf in fams:
+        hit = None
+        for g in groups:
+            if any(abs(f - f2) < 1.2
+                   for f in tf["freqs_hz"] if f > 2.0
+                   for g_tf in g for f2 in g_tf["freqs_hz"] if f2 > 2.0):
+                hit = g
+                break
+        (hit.append(tf) if hit is not None else groups.append([tf]))
+    for g in groups:
+        fam = "+".join(sorted({tf["family"] for tf in g}))
+        orders, e_true = [], 0.0
+        for tf in g:
+            orders += [f / f0 for f in tf["freqs_hz"]
+                       if 2.0 < f and f / f0 < 128]
+            e_true += sum(a ** 2 / 2 for f, a in zip(tf["freqs_hz"],
+                                                     tf["amps"])
+                          if 2.0 < f and f / f0 < 128)
+        if not orders or e_true < 1e-4:
             continue
-        freqs = [f for f in tf["freqs_hz"] if 2.0 < f]
-        orders = [f / f0 for f in freqs if f / f0 < 128]
-        if not orders:
-            continue
-        e_true = sum(a ** 2 / 2 for f, a in zip(tf["freqs_hz"],
-                                                tf["amps"])
-                     if 2.0 < f and f / f0 < 128)
-        if e_true < 1e-4:
-            continue
-        ok = COMPAT[fam]
+        oks = [COMPAT[tf["family"]] for tf in g]
         e_got = 0.0
         for p in pats:
-            if not ok(p):
+            if not any(ok(p) for ok in oks):
+                continue
+            if p["type"] == "BAND":
+                # a broad hump is credited by CONTAINMENT: at high
+                # order, wander smears mesh + fan into one band whose
+                # midpoint can sit far from any single truth order
+                lo, hi = p["params"]["lo"], p["params"]["hi"]
+                if hi - lo <= 8.0 and any(
+                        lo - 0.02 * o <= o <= hi + 0.02 * o
+                        for o in orders):
+                    e_got += p["energy"]
                 continue
             for mo, me in p["members"]:
                 if any(abs(mo / o - 1) < 0.06 for o in orders):
@@ -140,15 +170,21 @@ def trk_one(i):
     tds = tr.trends()
     persist = 0.0
     alarm_right = False
+    alarm_right_gp = False
     if want:
         insts = [r for r in tr.reg if r["type"] == want]
         if insts:
             persist = max(len(r["pts"]) for r in insts) / 14
         alarm_right = any(tds.get(str(r["id"]), {}).get("alarm", False)
                           for r in insts)
+        # group level: a modulated bearing may grow in its FAN while
+        # its tone sits still — kinematically one source
+        alarm_right_gp = any(g["alarm"] for g in tr.trends_grouped()
+                             if want in g["types"])
     any_alarm = any(d["alarm"] for d in tds.values())
     return {"machine": i, "scenario": scn, "fault": m["fault"],
             "persistence": persist, "alarm_right_type": alarm_right,
+            "alarm_right_group": alarm_right_gp,
             "any_alarm": any_alarm,
             "n_instances": len(tr.reg)}
 
@@ -184,6 +220,8 @@ def main():
             dt[dt.fault != "healthy"].persistence.median()), 3),
         "growth_alarm_right_type": round(float(
             grow.alarm_right_type.mean()), 3),
+        "growth_alarm_right_group": round(float(
+            grow.alarm_right_group.mean()), 3),
         "false_alarm_machines": round(float(other.any_alarm.mean()), 3),
         "n_growing": len(grow)}
     find["wall_s"] = round(time.time() - t0, 1)

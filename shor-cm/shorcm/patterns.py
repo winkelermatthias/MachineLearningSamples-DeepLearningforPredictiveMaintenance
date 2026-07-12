@@ -65,6 +65,10 @@ class _Spec:
 
     def __init__(self, x, fs, f_hat, spr=256):
         ph, _ = T.phase_from_comb(x, fs, f_nom=f_hat, prior_rel_sigma=0.008)
+        f_inst = np.gradient(ph) * fs / (2 * np.pi)
+        med = np.median(f_inst) + 1e-15
+        q16, q84 = np.percentile(f_inst, [16, 84])
+        self.wander_frac = float(max((q84 - q16) / 2 / med, 0.0))
         xa = S.angular_resample(x, ph, spr)
         self.A, self.o = S.fine_order_spectrum(xa, spr)
         Z, _ = S.block_spectra(xa, spr, revs=5)
@@ -97,6 +101,30 @@ class _Spec:
                       - len(seg) * self.floor ** 2 / 2, 0.0)) / ENBW
         if claim:
             self.claimed[i0:i1] |= True
+        return e
+
+    def band_local(self, o_lo, o_hi):
+        """Like band(), but subtracts the LOCAL background density
+        (median of the unclaimed ring around the band) instead of the
+        global floor — a narrow line sitting on a hump must be credited
+        its line energy only; the hump's slice under it goes to FLOOR,
+        not to the line. Bins are claimed either way."""
+        i0 = max(int(o_lo / self.do), 1)
+        i1 = min(int(o_hi / self.do) + 1, len(self.A))
+        if i1 <= i0:
+            return 0.0
+        ring = np.concatenate([self.A[max(i0 - 60, 0):i0][
+            ~self.claimed[max(i0 - 60, 0):i0]],
+            self.A[i1:i1 + 60][~self.claimed[i1:i1 + 60]]])
+        bg = float(np.median(ring)) if len(ring) >= 10 else self.floor
+        bg = max(bg, self.floor)
+        m = ~self.claimed[i0:i1]
+        if not m.any():
+            return 0.0
+        seg = self.A[i0:i1][m]
+        e = float(max(np.sum(seg ** 2) / 2
+                      - len(seg) * bg ** 2 / 2, 0.0)) / ENBW
+        self.claimed[i0:i1] |= True
         return e
 
     def amp_at(self, o_c, halfw=None):
@@ -133,14 +161,34 @@ def decompose(x, fs, f_hat, spr=256, sheet=None):
     medz = np.median(Az) + 1e-15
     fixed_hz = []
 
+    def _crystal(hz):
+        # a mains/drive line lives in 1-2 Hz bins; a shaft harmonic at
+        # the same position smears over its wander width — narrowness
+        # discriminates ONLY where that width is resolvable (>= 3 Hz
+        # bins), which protects low-order shaft lines whose smear is
+        # sub-bin
+        dfb = fs / len(x)
+        if sp.wander_frac * hz < 3.0 * dfb:
+            return False
+        j = int(round(hz * len(x) / fs))
+        if not (3 < j < len(Az) - 26):
+            return False
+        j = j - 2 + int(np.argmax(Az[j - 2:j + 3]))
+        seg = Az[j - 25:j + 26]
+        loc = float(np.median(seg))       # floor-subtract: a modest
+        num = float(Az[j - 1:j + 2].sum() - 3 * loc)   # line's wide-
+        den = float(seg.sum() - 51 * loc)              # window sum is
+        return num > 0 and num / (den + 1e-15) > 0.72  # noise-dominated
+
     def shaft_coincident(hz):
         # cap the proportional tolerance: beyond order ~8 an uncapped
         # 3%-of-order window exceeds the half-integer grid spacing and
-        # would exempt EVERY high-order fixed line; up there the
-        # concentration gate discriminates (a wandering shaft harmonic
-        # is smeared, a mains line is crystal-narrow)
+        # would exempt EVERY high-order fixed line; and a line that is
+        # crystal-narrow in Hz is a fixed source even ON a half-integer
+        # (a coincident shaft harmonic would be smeared by wander)
         o = hz / f_hat
-        return abs(o - round(o * 2) / 2) < min(0.03 * max(o, 1.0), 0.12)
+        near = abs(o - round(o * 2) / 2) < min(0.03 * max(o, 1.0), 0.12)
+        return near and not _crystal(hz)
 
     for base in (50.0, 60.0, 100.0, 120.0):
         j = int(round(base * len(x) / fs))
@@ -158,8 +206,12 @@ def decompose(x, fs, f_hat, spr=256, sheet=None):
         o_c = hz / f_hat
         if not (0.3 < o_c < sp.max_o):
             continue
-        w = max(0.02 * o_c, 0.05)          # shaft wander smears in order
-        e = sp.band(o_c - w, o_c + w)
+        # a fixed line smears over ~wander*o in the order domain; claim
+        # THAT width and credit only the local-background-subtracted
+        # line energy — a wide claim credited against the global floor
+        # swallows any hump it sits on (15 dB overcredit observed)
+        w = max(1.5 * sp.wander_frac * o_c, 0.03)
+        e = sp.band_local(o_c - w, o_c + w)
         if e > 0:
             pats.append({"type": "FIXEDHZ", "params": {"hz": float(hz)},
                          "energy": e, "members": [(round(o_c, 3), e)]})
@@ -230,6 +282,11 @@ def decompose(x, fs, f_hat, spr=256, sheet=None):
         for r in cands:
             if abs(r - 1.0) < 0.03 or abs(r - 0.5) < 0.02:
                 continue
+            # a second shaft is PHASE-LOCKED to the input (gear ratio);
+            # a bearing pair at (o, 2o) mimics the lattice geometry but
+            # drifts — coherence is the discriminator
+            if sp.coh(r) < 0.45:
+                continue
             e2, m2, b2 = harm_family(r, kmax=int(min(sp.max_o / r, 12)))
             if len(m2) >= 2 and e2 > 0:
                 for lo_, hi_ in b2:
@@ -268,7 +325,14 @@ def decompose(x, fs, f_hat, spr=256, sheet=None):
                             continue
                         a = sp.amp_at(o_m)
                         i = int(round(o_m / sp.do))
-                        if sp.claimed[i]:
+                        # a member is unavailable only when its window
+                        # is MOSTLY claimed — a narrow FIXEDHZ line
+                        # riding on it must not break the fan geometry
+                        # (band() integrates only the unclaimed
+                        # remainder, so nothing double-counts)
+                        hw = max(int(_tone_halfw(o_m) / sp.do), 2)
+                        cl = sp.claimed[max(i - hw, 0):i + hw + 1]
+                        if len(cl) and cl.mean() > 0.7:
                             continue
                         loc = np.median(
                             sp.A[max(i - 40, 0):i + 40]) + 1e-15
@@ -309,7 +373,8 @@ def decompose(x, fs, f_hat, spr=256, sheet=None):
     tolh = max(S.snap_tol(sp.revs), 0.004)
     res_h = np.where(sp.claimed, 0.0, sp.A)
     smh = _mf(res_h, size=max(int(0.05 / sp.do) | 1, 3))
-    mban = (sp.o > 1.8) & (sp.o < 16.0)
+    mban = (sp.o > 1.2) & (sp.o < 20.0)   # geared-down bearings land
+    # below 1.8 (order = ratio * BPFx), big-bearing 2x reaches past 16
     hoth = (smh > 1.8 * sp.floor) & mban
     if hoth.any():
         idxh = np.flatnonzero(hoth)
@@ -318,52 +383,83 @@ def decompose(x, fs, f_hat, spr=256, sheet=None):
                     for g in np.split(idxh, splitsh + 1) if len(g) >= 2]
         # a diffused tone's shoulders carry much of its energy but dip
         # under any fixed threshold (and claimed-bin zeros break
-        # hysteresis): integrate with PROPORTIONAL margins instead,
-        # then merge overlapping segments
-        ext = []
+        # hysteresis): integrate with PROPORTIONAL margins. Merge only
+        # segments whose RAW edges nearly touch — extended-margin
+        # overlap fuses distinct tones across genuinely cold valleys
+        # into one centerless pseudo-hump
+        merged = []                # [[lo_ext, hi_ext, [consts], raw_hi]]
         for o_lo, o_hi in raw_segs:
             o_c0 = (o_lo + o_hi) / 2
-            ext.append([o_lo - 0.08 * o_c0, o_hi + 0.08 * o_c0])
-        ext.sort()
-        merged = []                    # [[lo, hi, [constituents]]]
-        for k, (lo, hi) in enumerate(ext):
-            if merged and lo <= merged[-1][1] + 0.03 * lo:
-                merged[-1][1] = max(merged[-1][1], hi)
-                merged[-1][2].append(raw_segs[k])
+            lo_e, hi_e = o_lo - 0.08 * o_c0, o_hi + 0.08 * o_c0
+            if merged and o_lo - merged[-1][3] < 0.04 * o_lo:
+                merged[-1][1] = max(merged[-1][1], hi_e)
+                merged[-1][2].append((o_lo, o_hi))
+                merged[-1][3] = max(merged[-1][3], o_hi)
             else:
-                merged.append([lo, hi, [raw_segs[k]]])
+                merged.append([lo_e, hi_e, [(o_lo, o_hi)], o_hi])
+        merged = [(lo, hi, consts) for lo, hi, consts, _ in merged]
 
         def seed_e(seg):
             i0, i1 = int(seg[0] / sp.do), int(seg[1] / sp.do) + 1
             return float(np.sum(sp.A[i0:i1] ** 2))
 
+        cands_h = []
         for o_lo, o_hi, consts in merged:
-            if o_hi - o_lo > 1.5:      # chained too far: keep only the
-                best = max(consts, key=seed_e)   # dominant constituent
-                o_c0 = (best[0] + best[1]) / 2
-                o_lo = best[0] - 0.08 * o_c0
-                o_hi = best[1] + 0.08 * o_c0
+            if o_hi - o_lo > 1.5:
+                # chained too far: split back into constituents — each
+                # real tone in the chain deserves its own shot (keeping
+                # only the dominant one silently dropped its neighbors)
+                for c in sorted(consts, key=seed_e, reverse=True)[:4]:
+                    o_c0 = (c[0] + c[1]) / 2
+                    cands_h.append((c[0] - 0.08 * o_c0,
+                                    c[1] + 0.08 * o_c0))
+            else:
+                cands_h.append((o_lo, o_hi))
+        for o_lo, o_hi in cands_h:
             o_c = (o_lo + o_hi) / 2
             wid = o_hi - o_lo
             if not (0.02 <= wid <= 1.5):
                 continue
-            if abs(o_c - round(o_c)) <= max(tolh, 0.01) \
-                    or sp.coh(o_c) >= 0.45:
+            near_rat = not (abs(o_c - round(o_c)) <= max(tolh, 0.01)
+                            or sp.coh(o_c) >= 0.45)
+            if not near_rat and wid > 0.6:
+                continue                   # wide coherent stuff -> BAND
+            e = sp.band(o_lo - 0.02 * o_c, o_hi + 0.02 * o_c,
+                        claim=False)
+            # anti-clutter gate relative to the FLOOR energy in the
+            # band, not to e_tot — a small real tone on a big machine
+            # (belt lattice at e ~ 0.2% of total) is still a pattern;
+            # a noise blob barely over the hump threshold is not
+            nb = (o_hi - o_lo + 0.04 * o_c) / sp.do
+            floor_e = nb * sp.floor ** 2 / 2 / ENBW
+            if e <= max(4.0 * floor_e, 0.001 * sp.e_tot):
                 continue
-            e = sp.band(o_lo - 0.02 * o_c, o_hi + 0.02 * o_c)
+            sp.band(o_lo - 0.02 * o_c, o_hi + 0.02 * o_c)
             members = [(round(float(o_c), 3), e)]
-            e2x = sp.band(2 * o_c - wid, 2 * o_c + wid)
-            if e2x > 0.05 * e:
-                e += e2x
-                members.append((round(float(2 * o_c), 3), e2x))
-            if e > 0.005 * sp.e_tot:
-                pats.append({"type": "NEARRAT",
+            if not near_rat:
+                # an on-integer / shaft-coherent hump is a wander-
+                # smeared LOCKED tone (vane pass on a hot record, a
+                # second-shaft line) — TONE, not bearing, not floor
+                pats.append({"type": "TONE",
                              "params": {"order": round(float(o_c), 3)},
                              "energy": e, "members": members})
+                continue
+            # 2x member: NARROW dry-run probe, claim only on acceptance
+            # — an unconditional wide claim mis-centered at 2*o_c can
+            # swallow a NEIGHBORING hump (a second bearing tone) whole
+            w2 = min(wid, 0.06 * o_c)
+            e2x = sp.band(2 * o_c - w2, 2 * o_c + w2, claim=False)
+            if e2x > 0.05 * e:
+                sp.band(2 * o_c - w2, 2 * o_c + w2)
+                e += e2x
+                members.append((round(float(2 * o_c), 3), e2x))
+            pats.append({"type": "NEARRAT",
+                         "params": {"order": round(float(o_c), 3)},
+                         "energy": e, "members": members})
 
     # ---- 6 NEARRAT drifting tones (+ their 2x) ----
     tol = max(S.snap_tol(sp.revs), 0.004)
-    pk = S.peak_orders(sp.A, sp.o, 16.0, 30, guard=4.0)
+    pk = S.peak_orders(sp.A, sp.o, 20.0, 30, guard=4.0)
     clusters = []
     for oo, aa, _ in sorted(pk):
         if clusters and oo - clusters[-1][-1][0] < 0.008 * oo:
@@ -385,7 +481,7 @@ def decompose(x, fs, f_hat, spr=256, sheet=None):
         a_c = sum(a for _, a in cl)
         o_c = sum(o_ * a for o_, a in cl) / (a_c + 1e-15)
         i = int(round(o_c / sp.do))
-        if sp.claimed[i] or not (1.8 < o_c < 16.0):
+        if sp.claimed[i] or not (1.2 < o_c < 20.0):
             continue
         width = (cl[-1][0] - cl[0][0]) / o_c if len(cl) > 1 else 0.0
         fr = Fraction(o_c).limit_denominator(8)
@@ -397,8 +493,10 @@ def decompose(x, fs, f_hat, spr=256, sheet=None):
             continue
         e = sp.band(cl[0][0] - 0.03 * o_c, cl[-1][0] + 0.03 * o_c)
         members = [(round(float(o_c), 3), e)]
-        e2x = sp.band(2 * o_c * (1 - 0.01), 2 * o_c * (1 + 0.01))
+        e2x = sp.band(2 * o_c * (1 - 0.01), 2 * o_c * (1 + 0.01),
+                      claim=False)
         if e2x > 0.05 * e:
+            sp.band(2 * o_c * (1 - 0.01), 2 * o_c * (1 + 0.01))
             e += e2x; members.append((round(float(2 * o_c), 3), e2x))
         if e > 0:
             pats.append({"type": "NEARRAT",
@@ -413,13 +511,16 @@ def decompose(x, fs, f_hat, spr=256, sheet=None):
     for oo, aa in rem[:6]:
         i = int(round(oo / sp.do))
         loc = np.median(sp.A[max(i - 40, 0):i + 40]) + 1e-15
-        if aa < 6.0 * loc:
+        # window adapts to wander smear: at high order a shaft-locked
+        # tone (vane pass) is a narrow HUMP, not a 3-bin peak
+        w = max(_tone_halfw(oo), 2.0 * sp.wander_frac * oo)
+        hw = max(int(w / sp.do), 2)
+        if aa < 4.0 * loc:
             continue
-        conc = float(sp.A[max(i - 2, 0):i + 3].sum()
-                     / (sp.A[max(i - 25, 0):i + 26].sum() + 1e-15))
-        if conc < 0.5:
+        seg = sp.A[max(i - hw, 0):i + hw + 1]
+        dens = float(np.mean(seg ** 2))
+        if dens < 6.0 * loc ** 2:
             continue
-        w = _tone_halfw(oo)
         e = sp.band(oo - w, oo + w)
         if e > 0.003 * sp.e_tot:
             pats.append({"type": "TONE",
@@ -537,4 +638,62 @@ class GeneralTracker:
             td = _trend(r["pts"], adaptive=adaptive)
             if td is not None:
                 out[str(r["id"])] = td
+        return out
+
+    def groups(self):
+        """Cluster instances that are kinematically ONE source: a
+        bearing tone (NEARRAT), its modulation fan (SIDEBAND at the
+        same carrier order or its 2x), a lone TONE at that order, and
+        co-carrier fans. Returns a list of index lists into self.reg."""
+        def _anchor(r):
+            t, q = r["id"][0], r["id"]
+            if t in ("NEARRAT", "TONE"):
+                return q[1]
+            if t == "SIDEBAND":
+                return q[1]
+            return None
+
+        def _linked(ra, rb):
+            a, b = _anchor(ra), _anchor(rb)
+            if a is None or b is None:
+                return False
+            for m in (1.0, 2.0, 0.5):
+                if abs(a / (m * b) - 1) < 0.08:
+                    return True
+            return False
+
+        n = len(self.reg)
+        parent = list(range(n))
+
+        def find(i):
+            while parent[i] != i:
+                parent[i] = parent[parent[i]]
+                i = parent[i]
+            return i
+
+        for i in range(n):
+            for j in range(i + 1, n):
+                if _linked(self.reg[i], self.reg[j]):
+                    parent[find(i)] = find(j)
+        out = {}
+        for i in range(n):
+            out.setdefault(find(i), []).append(i)
+        return list(out.values())
+
+    def trends_grouped(self, adaptive=True):
+        """Group-level view: a group alarms when ANY member alarms —
+        a modulated bearing may grow in its fan while its tone sits
+        still; they are the same physical source."""
+        tds = [(_trend(r["pts"], adaptive=adaptive), r)
+               for r in self.reg]
+        out = []
+        for idxs in self.groups():
+            mem = [(tds[i][0], tds[i][1]) for i in idxs]
+            out.append({
+                "types": sorted({r["type"] for _, r in mem}),
+                "ids": [str(r["id"]) for _, r in mem],
+                "alarm": any(td["alarm"] for td, _ in mem
+                             if td is not None),
+                "n": max((td["n"] for td, _ in mem if td is not None),
+                         default=0)})
         return out
