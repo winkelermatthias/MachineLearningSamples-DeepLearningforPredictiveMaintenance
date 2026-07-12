@@ -186,6 +186,41 @@ def test_T51_group_alarm_bearing_growing_in_its_fan():
     assert harm_gp and not any(g["alarm"] for g in harm_gp), gps
 
 
+def test_T52_sheet_seeded_mesh_fan_under_heavy_wander():
+    """A gearbox mesh fan at order 37 under 1.2% wander: the smear
+    (0.44 orders) fuses carrier and sidebands. The kinematic sheet
+    knows z = 37 — seeded extraction must recover the mesh energy
+    within 2.5 dB and label it SIDEBAND at the right carrier."""
+    rng = np.random.default_rng(11)
+    n = int(DUR * FS)
+    t = np.arange(n) / FS
+    f_inst = 25.0 * (1 + 0.012 * np.sin(2 * np.pi * 0.7 * t + 1.0))
+    ph = 2 * np.pi * np.cumsum(f_inst) / FS
+    x = 0.35 * rng.standard_normal(n) \
+        + 0.5 * np.cos(ph) + 0.25 * np.cos(2 * ph)
+    e_true = 0.0
+    for o_m, a in ((37.0, 0.5), (36.0, 0.25), (38.0, 0.25),
+                   (35.0, 0.12), (39.0, 0.12)):
+        x += a * np.cos(o_m * ph + rng.uniform(0, 6.28))
+        e_true += a ** 2 / 2
+    pats, _ = PT.decompose(x, FS, 25.0, sheet={"mesh": 37})
+    sb = [p for p in pats if p["type"] == "SIDEBAND"
+          and p["params"].get("seeded")
+          and abs(p["params"]["carrier"] - 37.0) < 0.5]
+    assert sb, [(p["type"], p["params"]) for p in pats]
+    e_got = sum(p["energy"] for p in sb)
+    err = 10 * np.log10(e_got / e_true)
+    assert abs(err) < 2.5, err
+    # control: healthy-ish record, no mesh energy — the seed must NOT
+    # invent a pattern out of floor
+    x2 = 0.35 * np.random.default_rng(12).standard_normal(n) \
+        + 0.5 * np.cos(ph)
+    pats2, _ = PT.decompose(x2, FS, 25.0, sheet={"mesh": 37})
+    sb2 = [p for p in pats2 if p["type"] == "SIDEBAND"
+           and p["params"].get("seeded")]
+    assert not sb2 or sum(p["energy"] for p in sb2) < 0.1 * e_true, sb2
+
+
 def test_T49_general_tracking_under_varying_speed():
     """A growing SIDEBAND fan and a constant HARM family, speed moving
     +/-15% record to record: identities persist, the sideband instance
