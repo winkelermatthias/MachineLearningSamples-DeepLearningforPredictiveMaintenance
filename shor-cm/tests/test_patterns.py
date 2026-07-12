@@ -304,6 +304,66 @@ def test_T54_impulsive_bearing_lives_in_the_envelope():
         break
 
 
+def test_T56_speed_belief_no1x_then_recovery():
+    """CWRU lesson as a mechanism test. Records 0-5: no shaft evidence
+    at all — the estimator returns a confident 3x lock (that is what
+    it does on a healthy machine). The belief, seeded by the nameplate,
+    must stay in the right octave band (probabilistic answer for the
+    time being). Records 6+: a fault makes the true lattice undeniable
+    — if the belief had committed wrong, a DECISIVE correction must
+    fire exactly once, and GeneralTracker.reframe must re-key
+    identities."""
+    from shorcm.speedbelief import SpeedBelief
+    truth = 29.9
+    sb = SpeedBelief(f_nom=29.0)      # nameplate 3% off, realistic
+    # phase 1: estimator confidently wrong (3x lock), truth absent
+    for t in range(6):
+        out = sb.update({"DE": [{"hz": 3 * truth, "confidence": 0.6},
+                                {"hz": 1.5 * truth, "confidence": 0.3}]})
+    # nameplate prior must keep MAP off the 3x lock OR flag undecided
+    assert out["undecided"] or abs(out["map_hz"] / truth - 1) < 0.10, out
+    committed_wrong = abs(out["map_hz"] / truth - 1) > 0.10
+    # phase 2: fault develops - true lattice now dominates every record
+    corrections = []
+    for t in range(10):
+        out = sb.update({"DE": [{"hz": truth, "confidence": 0.75},
+                                {"hz": 3 * truth, "confidence": 0.15}]})
+        if out["correction"]:
+            corrections.append(out["correction"])
+    assert abs(out["map_hz"] / truth - 1) < 0.04, out
+    assert not out["undecided"]
+    assert len(corrections) <= 1
+    if committed_wrong:
+        assert corrections, "wrong early commitment must be corrected"
+    # reframe re-keys tracked identities by the correction ratio
+    tr = PT.GeneralTracker()
+    for t in range(8):
+        tr.update(t, [{"type": "HARM", "params": {"base": 1.0},
+                       "energy": 0.1, "members": [(1.0, 0.1)],
+                       "share": 0.4}])
+    tr.reframe(1.0 / 3.0)             # frame corrected from 3x to 1x
+    assert tr.reg[0]["id"] == ("HARM", 3.0), tr.reg[0]["id"]
+    assert tr.reg[0].get("reframed")
+
+
+def test_T57_cross_sensor_reliability_downweights_misleading_mount():
+    """Three sensors on one shaft: two see the truth weakly, one is
+    confidently wrong every record. The fused belief must land on the
+    truth and the bad sensor's reliability must fall below the good
+    ones'."""
+    from shorcm.speedbelief import SpeedBelief
+    truth = 25.0
+    sb = SpeedBelief(f_nom=25.5)
+    for t in range(10):
+        out = sb.update({
+            "DE": [{"hz": truth * 1.002, "confidence": 0.35}],
+            "NDE": [{"hz": truth * 0.998, "confidence": 0.3}],
+            "AX": [{"hz": 41.7, "confidence": 0.7}]})
+    assert abs(out["map_hz"] / truth - 1) < 0.04, out
+    rel = out["reliability"]
+    assert rel["AX"] < min(rel["DE"], rel["NDE"]), rel
+
+
 def test_T49_general_tracking_under_varying_speed():
     """A growing SIDEBAND fan and a constant HARM family, speed moving
     +/-15% record to record: identities persist, the sideband instance
