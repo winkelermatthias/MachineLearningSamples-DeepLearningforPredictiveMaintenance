@@ -1115,6 +1115,42 @@ in the script header before the first run**:
 3. **What transfers today:** bearing detection with zero false
    alarms, and blind speed on a real gearbox rig at 20/30 Hz.
 
+## Iteration 24: the envelope channel — real bearing capture 0.0 → 0.90
+
+The fix designed from iteration 23's headline finding, delivered and
+re-gated on the same real data:
+
+- **`shorcm/envelope.py`** — HF-resonance envelope: pick the band
+  (from a small candidate set) whose envelope has maximum kurtosis,
+  Hilbert magnitude, decimate.
+- **`decompose(mode="envelope")`** — three raw-domain gates *invert*
+  in the envelope of a steady rig, each found by autopsy on MFPT:
+  the FIXEDHZ narrowness stage steals a steady defect rate (BPFI at
+  55× floor was claimed as "FIXEDHZ 118 Hz"); the block-coherence
+  veto rejects steady defect rates (they ARE coherent against a
+  constant reference); the sideband carrier floor of 5.0 blocks
+  BPFI = 4.755 with its textbook ±1× fan. Envelope mode disables the
+  first two and lowers the third.
+- **Phase discipline** — the envelope's own comb lock is biased by
+  the defect rate, and on impulse-dominated records the RAW comb
+  drifts ~10% too (no shaft lattice to hold it). Hybrid: use the raw
+  comb only when it lands within 1.5% of the caller's f_hat,
+  otherwise constant phase (T54 pins the synthetic mechanism).
+- **SimForge impulsive bearings** — impulse train at the defect rate
+  convolved with a decaying HF ring; mode and resonance derive
+  deterministically from already-sampled fields so no seeded rng
+  stream shifts. The simulator now covers the physics the transfer
+  gate caught it missing.
+
+**Re-run of the real transfer gate** (amendment J3env registered
+before the run): envelope capture at the true defect orders on MFPT —
+**BPFO 0.90, BPFI 0.71** (raw-domain J3 was 0.0), one baseline false
+positive. `analyze_record` now emits `patterns_envelope` +
+`envelope_band_hz` as the bearing evidence surface for real data.
+Honest fail kept: SEU's bearingset envelope delta is flat (0.05) —
+that rig's bearing faults on the planetary channel are not impulsive
+in the same sense; documented, not chased.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND

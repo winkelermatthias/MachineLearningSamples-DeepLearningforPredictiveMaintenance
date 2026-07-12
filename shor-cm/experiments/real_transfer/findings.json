@@ -13,6 +13,10 @@
  "J6_gear_delta": 0.0,
  "J6_bearing_delta": -0.175,
  "J7_sideband_delta": 0.038,
+ "J3env_bpfo_on_outer": 0.9,
+ "J3env_bpfi_on_inner": 0.714,
+ "J3env_fp_baseline": 1,
+ "J6env_bearing_delta": 0.05,
  "n_mfpt": 20,
  "n_seu": 200,
  "verdicts": {
@@ -22,7 +26,9 @@
   "J4": false,
   "J5": true,
   "J6": false,
-  "J7": false
+  "J7": false,
+  "J3env": true,
+  "J6env": false
  },
- "wall_s": 230.7
+ "wall_s": 264.4
 }

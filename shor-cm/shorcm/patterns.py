@@ -63,8 +63,13 @@ def _trend(pts, alarm_p=0.01, base_db=6.0, adaptive=True):
 class _Spec:
     """Order spectrum + bookkeeping for one record."""
 
-    def __init__(self, x, fs, f_hat, spr=256):
-        ph, _ = T.phase_from_comb(x, fs, f_nom=f_hat, prior_rel_sigma=0.008)
+    def __init__(self, x, fs, f_hat, spr=256, ph=None):
+        if ph is None:
+            ph, _ = T.phase_from_comb(x, fs, f_nom=f_hat,
+                                      prior_rel_sigma=0.008)
+        ph = np.asarray(ph, float)[:len(x)]
+        if len(ph) < len(x):
+            x = x[:len(ph)]
         f_inst = np.gradient(ph) * fs / (2 * np.pi)
         med = np.median(f_inst) + 1e-15
         q16, q84 = np.percentile(f_inst, [16, 84])
@@ -149,11 +154,23 @@ def _tone_halfw(o_c):
     return max(0.006 * o_c, 0.03)
 
 
-def decompose(x, fs, f_hat, spr=256, sheet=None):
+def decompose(x, fs, f_hat, spr=256, sheet=None, ph=None,
+              mode="raw"):
     """Isolating pattern decomposition. Returns (patterns, e_total):
     patterns is a list of dicts with type, params, energy, share,
-    members; shares + FLOOR sum to 1."""
-    sp = _Spec(x, fs, f_hat, spr)
+    members; shares + FLOOR sum to 1. ph: optional precomputed shaft
+    phase (e.g. from the RAW carrier when x is an envelope — the
+    envelope's own comb lock is biased by the defect rate).
+    mode="envelope" adapts three raw-domain gates that INVERT in the
+    envelope of a steady rig (all three measured on MFPT):
+      - no FIXEDHZ stage (mains lines do not survive the HF bandpass;
+        a crystal-narrow defect rate was stolen as FIXEDHZ 118 Hz)
+      - no block-coherence veto on NEARRAT (a steady defect rate IS
+        block-coherent against the constant reference)
+      - sideband carrier floor 2.0 instead of 5.0 (BPFI 4.755 with its
+        textbook +/-1x fan sits below the raw-domain floor)."""
+    env_mode = mode == "envelope"
+    sp = _Spec(x, fs, f_hat, spr, ph=ph)
     pats = []
 
     # ---- 1 FIXEDHZ: known grid + detected narrow Hz lines ----
@@ -190,18 +207,23 @@ def decompose(x, fs, f_hat, spr=256, sheet=None):
         near = abs(o - round(o * 2) / 2) < min(0.03 * max(o, 1.0), 0.12)
         return near and not _crystal(hz)
 
-    for base in (50.0, 60.0, 100.0, 120.0):
-        j = int(round(base * len(x) / fs))
-        if 0 < j < len(Az) - 1 and Az[max(j - 2, 0):j + 3].max() > 5 * medz \
-                and not shaft_coincident(base):
-            fixed_hz.append(base)
-    for j in range(12, len(Az) - 12):
-        if Az[j] > 8 * medz and Az[j] >= Az[j - 1] and Az[j] > Az[j + 1]:
-            conc = Az[j - 1:j + 2].sum() / (Az[j - 12:j + 13].sum() + 1e-12)
-            hz = j * fs / len(x)
-            if conc > 0.6 and all(abs(hz - b) > 2.0 for b in fixed_hz) \
-                    and not shaft_coincident(hz):
-                fixed_hz.append(round(hz, 1))
+    if not env_mode:
+        for base in (50.0, 60.0, 100.0, 120.0):
+            j = int(round(base * len(x) / fs))
+            if 0 < j < len(Az) - 1 \
+                    and Az[max(j - 2, 0):j + 3].max() > 5 * medz \
+                    and not shaft_coincident(base):
+                fixed_hz.append(base)
+        for j in range(12, len(Az) - 12):
+            if Az[j] > 8 * medz and Az[j] >= Az[j - 1] \
+                    and Az[j] > Az[j + 1]:
+                conc = Az[j - 1:j + 2].sum() \
+                    / (Az[j - 12:j + 13].sum() + 1e-12)
+                hz = j * fs / len(x)
+                if conc > 0.6 and all(abs(hz - b) > 2.0
+                                      for b in fixed_hz) \
+                        and not shaft_coincident(hz):
+                    fixed_hz.append(round(hz, 1))
     for hz in fixed_hz:
         o_c = hz / f_hat
         if not (0.3 < o_c < sp.max_o):
@@ -396,7 +418,7 @@ def decompose(x, fs, f_hat, spr=256, sheet=None):
         for c_o in carr_cands:
             # modulation fans live around mesh/passage carriers; a "fan"
             # below order 5 is almost surely a diffused tone's fragments
-            if c_o < 5.0 or c_o > sp.max_o - 1:
+            if c_o < (2.0 if env_mode else 5.0) or c_o > sp.max_o - 1:
                 continue
             for dlt in np.arange(0.15, 3.55, 0.02):
                 mem = []
@@ -503,7 +525,8 @@ def decompose(x, fs, f_hat, spr=256, sheet=None):
             if not (0.02 <= wid <= 1.5):
                 continue
             near_rat = not (abs(o_c - round(o_c)) <= max(tolh, 0.01)
-                            or sp.coh(o_c) >= 0.45)
+                            or (not env_mode
+                                and sp.coh(o_c) >= 0.45))
             if not near_rat and wid > 0.6:
                 continue                   # wide coherent stuff -> BAND
             e = sp.band(o_lo - 0.02 * o_c, o_hi + 0.02 * o_c,
@@ -571,7 +594,7 @@ def decompose(x, fs, f_hat, spr=256, sheet=None):
                    and (fr.denominator == 1 or fr.numerator <= 10))
         drifting = width > 0.004 or len(cl) >= 3 or not snapped
         if not (drifting and abs(o_c - round(o_c)) > tol
-                and sp.coh(o_c) < 0.45):
+                and (env_mode or sp.coh(o_c) < 0.45)):
             continue
         e = sp.band(cl[0][0] - 0.03 * o_c, cl[-1][0] + 0.03 * o_c)
         members = [(round(float(o_c), 3), e)]
@@ -645,6 +668,32 @@ def decompose(x, fs, f_hat, spr=256, sheet=None):
                  "members": []})
     pats.sort(key=lambda p: -p["share"])
     return pats, sp.e_tot
+
+
+def decompose_envelope(x, fs, f_hat, spr=256):
+    """Pattern decomposition of the HF-resonance ENVELOPE, with the
+    shaft phase taken from the RAW carrier (the envelope's own comb
+    lock is biased toward the defect rate). This is where impulsive
+    bearing faults live — the raw order spectrum carries almost
+    nothing at the defect order (measured on MFPT: raw attribution
+    0.0, envelope immediate)."""
+    from . import envelope as EV
+    ph, mt = T.phase_from_comb(x, fs, f_nom=f_hat,
+                               prior_rel_sigma=0.008)
+    # an impulse-dominated raw spectrum has no shaft lattice to lock
+    # on: the comb drifts ~10% and warps every envelope order. Trust
+    # the comb only when it lands where the caller said the shaft is;
+    # otherwise use constant phase — unbiased geometry, and NEARRAT
+    # absorbs the (small) wander smear.
+    if abs(float(mt.get("rate_hz", f_hat)) / f_hat - 1) > 0.015:
+        ph = 2 * np.pi * f_hat * np.arange(len(x)) / fs
+    env, fs_d, q, band = EV.envelope_signal(x, fs)
+    pats, e_tot = decompose(env, fs_d, f_hat, spr=spr,
+                            ph=np.asarray(ph)[::q][:len(env)],
+                            mode="envelope")
+    for p in pats:
+        p["domain"] = "envelope"
+    return pats, e_tot, band
 
 
 # ---------------- fixed-size feature block for the fault ML ----------
