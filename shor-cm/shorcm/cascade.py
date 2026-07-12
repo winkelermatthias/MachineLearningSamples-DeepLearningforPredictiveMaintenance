@@ -36,6 +36,31 @@ FAULTS6 = ["healthy", "imbalance", "misalignment", "looseness",
            "bearing", "gear"]
 
 
+def _sheet_contradictions(sheet, pats):
+    """Audit S7: the kinematic sheet is registry data and can be
+    WRONG (bad tooth count fabricates seeded mesh energy; a wrong
+    ratio never finds its lattice). Flags, never behavior changes —
+    the deployment surface decides what to trust."""
+    flags = {}
+    if sheet and sheet.get("mesh"):
+        seeded = [p for p in pats if p["type"] == "SIDEBAND"
+                  and p["params"].get("seeded")
+                  and p["params"].get("resolved")]
+        if not seeded:
+            flags["mesh_unsupported"] = True
+    r = (sheet or {}).get("ratio")
+    if r and abs(r - 1) > 0.05:
+        near = [p for p in pats
+                if (p["type"] == "HARM"
+                    and abs(p["params"]["base"] / r - 1) < 0.06)
+                or (p["type"] in ("NEARRAT", "TONE")
+                    and abs((p["params"].get("order") or 0) / r - 1)
+                    < 0.06)]
+        if not near:
+            flags["ratio_unsupported"] = True
+    return flags
+
+
 class Cascade:
     def __init__(self, fault_model=None, calibrator=None, meta=None,
                  severity_model=None):
@@ -87,7 +112,15 @@ class Cascade:
         x0, in_flags = HY.validate_signal(x0, fs)
         rms = float(np.sqrt(np.mean(x0 ** 2)))
         x0 = x0 / rms
-        est = PS.estimate_speed_sheet(x0, fs, sheet, meta=meta)
+        f_force = (meta or {}).get("f_force")
+        if f_force and np.isfinite(f_force) and f_force > 0:
+            # monitor frame unification (audit S5): the caller's
+            # temporally-locked frame overrides per-record estimation
+            # so diagnosis and tracking share ONE frame
+            est = [{"hz": float(f_force), "confidence": 1.0,
+                    "score": 0.0, "ev": {"forced": 1}}]
+        else:
+            est = PS.estimate_speed_sheet(x0, fs, sheet, meta=meta)
         est = [c for c in est if np.isfinite(c["hz"])] or \
             [{"hz": float("nan"), "confidence": 0.0, "score": -9,
               "ev": {}}]
@@ -100,8 +133,8 @@ class Cascade:
         # the isotonic calibrator clamps to its MAXIMUM -> confidence
         # ~1.0 on garbage. Fewer than 2 real candidates or a non-finite
         # top speed means the calibrated margin is meaningless.
-        if len(est) < 2 or not np.isfinite(est[0]["hz"]) \
-                or est[0]["hz"] <= 0:
+        if (len(est) < 2 and not est[0].get("ev", {}).get("forced")) \
+                or not np.isfinite(est[0]["hz"]) or est[0]["hz"] <= 0:
             p_ok = 0.0
         out = {"speed_candidates": est,
                "speed_hz": est[0]["hz"],
@@ -142,6 +175,8 @@ class Cascade:
                     pats, _ = PT.decompose(x0, fs, f_hat,
                                            sheet=sheet or None)
                     pfd = PT.pattern_features(pats)
+                    out["sheet_flags"] = _sheet_contradictions(
+                        sheet, pats)
                 except Exception:
                     pfd = dict.fromkeys(PT.PF_COLS, 0.0)
                 feats = feats + [pfd[c] for c in PT.PF_COLS]
@@ -205,6 +240,28 @@ class MachineMonitor:
         f_lock = self.sel.observe(rec["speed_candidates"], pf, pa)
         if not np.isfinite(f_lock) or f_lock <= 0:
             f_lock = rec["speed_hz"]
+        # frame unification (audit S5): if the temporal lock disagrees
+        # with the per-record top-1 by > 2%, re-analyze at the locked
+        # frame so diagnosis and tracking share ONE frame
+        if np.isfinite(f_lock) and f_lock > 0 \
+                and np.isfinite(rec.get("speed_hz", np.nan)) \
+                and abs(f_lock / rec["speed_hz"] - 1) > 0.02:
+            cands = rec["speed_candidates"]
+            rec = self.cascade.analyze_record(
+                X, fs, self.sheet, meta={"f_force": float(f_lock)})
+            rec["speed_candidates"] = cands
+            rec["frame_forced"] = True
+        # decisive lock flip (audit S10): re-key tracked histories
+        # instead of restarting them
+        if getattr(self, "_last_lock", None) \
+                and np.isfinite(f_lock) and f_lock > 0:
+            ratio = f_lock / self._last_lock
+            if any(abs(ratio / k - 1) < 0.06
+                   for k in (2.0, 3.0, 0.5, 1.0 / 3.0)):
+                self.gen.reframe(ratio)
+                rec["frame_correction"] = {"ratio": round(ratio, 4)}
+        if np.isfinite(f_lock) and f_lock > 0:
+            self._last_lock = f_lock
         en = TK.pattern_energies(x0, fs, f_lock) \
             if np.isfinite(f_lock) and f_lock > 0 else None
         self.tracker.update(t, en, f_lock)
