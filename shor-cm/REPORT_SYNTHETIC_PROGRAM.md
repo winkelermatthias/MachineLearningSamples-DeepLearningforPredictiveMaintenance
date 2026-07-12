@@ -708,6 +708,44 @@ can serve the real-data transfer role while the MAFAULDA egress
 (`www02.smt.ufrj.br`, still 403) stays closed. Both blockers are
 Matthias-side switches; everything downstream is committed and ready.
 
+## Iteration 14: the frozen cascade, certified end-to-end — READY FOR REAL DATA
+
+Per Matthias's directive (massively synthetic first, ready for real
+afterwards), the whole program is now assembled behind one deployment
+surface and certified on data nothing was ever tuned on:
+
+- **`shorcm/cascade.py`** — `Cascade.analyze_record(X, fs, sheet)` →
+  speed top-3 + calibrated confidence + abstain, Hz/order pattern
+  ledgers, rules + frozen-ML fault with abstention, axial subtype,
+  severity drivers; `MachineMonitor.feed(t, X, fs)` → streaming
+  diagnosis + growth alarms. T45 pins the contract.
+- **`models/`** — frozen artifacts: 6-way LightGBM (2,000 est-speed
+  ledgers), isotonic calibrator (1,199 records), thresholds, full
+  lineage in meta.json.
+- **`shorcm/adapters.py`** — the entire real-data surface:
+  `from_mafaulda_csv(path)` (channel map ready, tacho reserved for
+  judgment) and `from_relos_timeseries(...)`. Applying the cascade to
+  real data is one line; no algorithm changes.
+
+**Held-out certification** (fresh seed blocks 88M/99M, consumed ONLY
+through the API — exactly as real data will be): 1,500 multi-channel
+records + 60 monitored fleets:
+
+| contract | target | certified |
+|---|---|---|
+| speed top-1 / top-3 | — | 0.586 / 0.786 |
+| confidence ECE | **≤ 0.05** | **0.026 — MET** |
+| abstain (emit P ≥ 0.5) | functional | 50% coverage @ 70% top-1 |
+| fault ML, blind 6-way | — | **0.775** (rules floor 0.445), 98% coverage |
+| misalignment subtype | — | **0.921** (n=216) |
+| growth detection delay | — | 7 records |
+| monitor any-key false alarms | ≤ few % | **8.9% — known gap**: per-key gates are tuned, the any-of-20-keys union is not; alarm-persistence policy queued |
+
+Every pre-registered contract that can be evaluated synthetically is
+now met except the monitor-level alarm union. The program is ready to
+point at MAFAULDA (egress allowlist pending) and Relos timeseries
+(auth pending) — both are adapter calls, not development.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND

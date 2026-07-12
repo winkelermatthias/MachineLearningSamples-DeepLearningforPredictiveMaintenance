@@ -1,0 +1,53 @@
+{
+ "frozen_at": "iteration-14",
+ "fault_model": {
+  "algo": "lightgbm-6way",
+  "train": "experiments/v2 est-speed ledgers",
+  "n": 2000,
+  "features": [
+   "a1",
+   "a2",
+   "a3",
+   "a2_over_a1",
+   "n_half",
+   "e_half",
+   "snap_frac",
+   "odd_frac",
+   "uns_frac",
+   "uns_abs",
+   "e_tot",
+   "uns_top_amp",
+   "uns_top_order",
+   "ratio_1",
+   "ratio_2",
+   "ratio_3",
+   "ratio_half",
+   "n_peaks",
+   "floor",
+   "ppa_z_uns",
+   "gmf_order",
+   "gmf_rel",
+   "gmf_sb_count",
+   "gmf_sb_energy"
+  ],
+  "classes": [
+   "healthy",
+   "imbalance",
+   "misalignment",
+   "looseness",
+   "bearing",
+   "gear"
+  ]
+ },
+ "calibrator": {
+  "algo": "isotonic(margin12)",
+  "train": "experiments/confidence",
+  "n": 1199
+ },
+ "seeds": {
+  "corpus_v2": 20260710,
+  "confidence": 20260710,
+  "model": 20260709
+ },
+ "subtype_threshold_ax_ratio_2": 0.61
+}
