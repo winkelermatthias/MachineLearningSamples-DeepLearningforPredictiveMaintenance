@@ -2,28 +2,28 @@
  "n_single": 1500,
  "n_fleet": 60,
  "speed": {
-  "top1": 0.586,
-  "top3": 0.786,
-  "ece": 0.0262,
+  "top1": 0.588,
+  "top3": 0.7867,
+  "ece": 0.0282,
   "emit_coverage": 0.501,
   "emit_top1": 0.7031
  },
  "fault": {
-  "ml_acc": 0.8153,
-  "rules_acc": 0.4447,
-  "ml_acc_emitted": 0.8218,
-  "fault_coverage": 0.984
+  "ml_acc": 0.798,
+  "rules_acc": 0.4473,
+  "ml_acc_emitted": 0.8043,
+  "fault_coverage": 0.985
  },
  "misalignment_subtype": {
-  "n": 229,
-  "accuracy": 0.913
+  "n": 231,
+  "accuracy": 0.926
  },
  "tracking": {
   "growth_recall_fault_key": 0.467,
   "growth_any_alarm": 0.6,
-  "false_alarm_machines": 0.089,
+  "false_alarm_machines": 0.067,
   "median_delay": 7.0,
   "n_growing": 15
  },
- "wall_s": 1544.6
+ "wall_s": 1610.7
 }

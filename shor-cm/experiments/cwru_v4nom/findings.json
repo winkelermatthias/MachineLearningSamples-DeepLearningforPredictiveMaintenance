@@ -1,0 +1,23 @@
+{
+ "n": 64,
+ "C1_speed_hit": 0.016,
+ "C2_bearing_recall": 0.867,
+ "C2_bearing_calls_normal": 4,
+ "C3_env_by_subtype": {
+  "IR": 0.75,
+  "OR": 0.929,
+  "B": 0.688
+ },
+ "C3_normal_fp": 0,
+ "C4_severity_spearman": {
+  "IR": -0.015,
+  "OR": -0.365
+ },
+ "verdicts": {
+  "C1": false,
+  "C2": false,
+  "C3": true,
+  "C4": false
+ },
+ "wall_s": 88.3
+}
