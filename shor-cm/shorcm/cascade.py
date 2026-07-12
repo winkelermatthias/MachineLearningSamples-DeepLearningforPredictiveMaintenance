@@ -76,6 +76,17 @@ class Cascade:
         sheet = sheet or {}
         X = np.asarray(X, float)
         x0 = X if X.ndim == 1 else X[:, 0]
+        # field-data contract (audit F1/F2): hygiene first — dropouts
+        # and NaNs must never reach the envelope band selector — then
+        # unit-RMS normalization so every downstream feature is
+        # SCALE-INVARIANT (unknown gains and unit systems cannot move
+        # a model input); absolute level preserved in signal_rms.
+        from . import hygiene as HY
+        raw_rms = float(np.sqrt(np.mean(
+            np.square(x0[np.isfinite(x0)])))) if len(x0) else 0.0
+        x0, in_flags = HY.validate_signal(x0, fs)
+        rms = float(np.sqrt(np.mean(x0 ** 2)))
+        x0 = x0 / rms
         est = PS.estimate_speed_sheet(x0, fs, sheet, meta=meta)
         est = [c for c in est if np.isfinite(c["hz"])] or \
             [{"hz": float("nan"), "confidence": 0.0, "score": -9,
@@ -95,7 +106,9 @@ class Cascade:
         out = {"speed_candidates": est,
                "speed_hz": est[0]["hz"],
                "speed_confidence": round(p_ok, 3),
-               "abstain_speed": bool(p_ok < 0.5)}
+               "abstain_speed": bool(p_ok < 0.5),
+               "signal_rms": round(rms, 6),
+               "input_flags": in_flags}
         f_hat = est[0]["hz"]
         if not np.isfinite(f_hat) or f_hat <= 0:
             out["fault"] = "unknown"

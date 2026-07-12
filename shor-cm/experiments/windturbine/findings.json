@@ -2,7 +2,7 @@
  "n": 50,
  "first_alarm_day": 31,
  "W2_env_emergence_spearman": 0.858,
- "W3_severity_spearman": 0.694,
+ "W3_severity_spearman": 0.667,
  "W4_speed_octave_hit": 0.12,
  "supp_speed_locked_hit": 0.18,
  "verdicts": {
@@ -11,5 +11,5 @@
   "W3": true,
   "W4": false
  },
- "wall_s": 80.4
+ "wall_s": 86.5
 }
