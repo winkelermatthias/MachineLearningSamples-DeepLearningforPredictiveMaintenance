@@ -37,9 +37,11 @@ FAULTS6 = ["healthy", "imbalance", "misalignment", "looseness",
 
 
 class Cascade:
-    def __init__(self, fault_model=None, calibrator=None, meta=None):
+    def __init__(self, fault_model=None, calibrator=None, meta=None,
+                 severity_model=None):
         self.fault_model = fault_model
         self.calibrator = calibrator
+        self.severity_model = severity_model
         self.meta = meta or {}
 
     # ---------- persistence ----------
@@ -51,9 +53,11 @@ class Cascade:
             if (d / "fault_lgbm.joblib").exists() else None
         cal = joblib.load(d / "conf_isotonic.joblib") \
             if (d / "conf_isotonic.joblib").exists() else None
+        sev = joblib.load(d / "severity_lgbm.joblib") \
+            if (d / "severity_lgbm.joblib").exists() else None
         meta = json.loads((d / "meta.json").read_text()) \
             if (d / "meta.json").exists() else {}
-        return cls(fm, cal, meta)
+        return cls(fm, cal, meta, severity_model=sev)
 
     def save(self, model_dir):
         import joblib
@@ -63,6 +67,8 @@ class Cascade:
             joblib.dump(self.fault_model, d / "fault_lgbm.joblib")
         if self.calibrator is not None:
             joblib.dump(self.calibrator, d / "conf_isotonic.joblib")
+        if self.severity_model is not None:
+            joblib.dump(self.severity_model, d / "severity_lgbm.joblib")
         (d / "meta.json").write_text(json.dumps(self.meta, indent=1))
 
     # ---------- single record ----------
@@ -110,6 +116,10 @@ class Cascade:
             out["fault_ml"] = FAULTS6[i]
             out["fault_ml_margin"] = round(float(ps[-1] - ps[-2]), 3)
             out["abstain_fault"] = bool(ps[-1] - ps[-2] < 0.1)
+            if self.severity_model is not None:
+                out["severity_score"] = round(float(np.clip(
+                    self.severity_model.predict([feats])[0], 0.0, 1.0)),
+                    3)
         # multi-channel evidence
         if X.ndim == 2 and X.shape[1] >= 2:
             from . import simforge_mc as MC

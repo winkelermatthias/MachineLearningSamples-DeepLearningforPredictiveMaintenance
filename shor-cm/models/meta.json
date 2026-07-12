@@ -64,6 +64,12 @@
   "train": "experiments/confidence",
   "n": 1199
  },
+ "severity_model": {
+  "algo": "lightgbm-reg",
+  "train": "faulted rows, same features",
+  "n": 1681,
+  "gate": "OOF spearman 0.732, all-class >= 0.462 (experiments/severity)"
+ },
  "seeds": {
   "corpus_v2": 20260710,
   "confidence": 20260710,
