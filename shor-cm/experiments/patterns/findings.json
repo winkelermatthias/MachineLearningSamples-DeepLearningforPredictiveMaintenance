@@ -1,0 +1,36 @@
+{
+ "judgment_version": 2,
+ "n_attr_rows": 3877,
+ "n_track": 60,
+ "attribution_median_absdB_by_family": {
+  "BEARING": 5.51,
+  "ELEC": 7.24,
+  "GMF": 1.6,
+  "HALF": 0.21,
+  "HUM": 12.57,
+  "NEIGHBOR": 1.77,
+  "PASSAGE": 3.69,
+  "SHAFT": 0.31,
+  "SHAFT2": 1.56
+ },
+ "attribution_recall_within_3dB": {
+  "BEARING": 0.448,
+  "ELEC": 0.378,
+  "GMF": 0.606,
+  "HALF": 0.927,
+  "HUM": 0.342,
+  "NEIGHBOR": 0.593,
+  "PASSAGE": 0.485,
+  "SHAFT": 0.835,
+  "SHAFT2": 0.559
+ },
+ "share_sum_max_dev": 0.0,
+ "floor_share_median_faulted": 0.324,
+ "tracking": {
+  "persistence_median": 0.964,
+  "growth_alarm_right_type": 0.588,
+  "false_alarm_machines": 0.047,
+  "n_growing": 17
+ },
+ "wall_s": 475.6
+}

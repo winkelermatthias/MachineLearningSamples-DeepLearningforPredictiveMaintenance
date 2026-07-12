@@ -746,6 +746,93 @@ now met except the monitor-level alarm union. The program is ready to
 point at MAFAULDA (egress allowlist pending) and Relos timeseries
 (auth pending) — both are adapter calls, not development.
 
+## Iteration 15: general pattern isolation + tracking — every bin has a name
+
+Per Matthias's directive (heavy focus on tracking a wide variety of
+patterns — with sidebands or not, harmonic or not — under varying
+speed, with proper pattern isolation), the pattern layer was rebuilt
+from "energies at known keys" into a true **isolating decomposition**
+(`shorcm/patterns.py`): the order spectrum of one record is greedily
+carved into named patterns under a claimed-bin mask, so **every
+spectral bin belongs to at most one pattern** and shares + FLOOR sum
+to 1 by construction (max deviation observed corpus-wide: 0.0).
+
+The vocabulary is the analyst's, not the simulator's:
+
+- `FIXEDHZ(f)` — crystal-narrow non-synchronous line (hum, drive,
+  neighbor); identity lives in Hz
+- `HARM(r)` — harmonic family of base order r (input shaft r=1, second
+  shaft / belt lattice r≠1); a family is a *contiguous decaying run* —
+  it ends after 3 consecutive misses, so a mesh fan at order ~z can
+  never be swallowed as "harmonics 40–46"
+- `HALFHARM` — the q=2 looseness ladder
+- `SIDEBAND(c, d)` — symmetric fan around carrier c spaced d, **with or
+  without a visible carrier** (suppressed-carrier modulation is a
+  classic fault signature, T47 pins it)
+- `NEARRAT(o)` — drifting near-rational (bearing) tone: caught either
+  as a peak cluster with slip-band grouping or, when heavily diffused,
+  as a residual *hump* with proportional shoulders
+- `TONE(o)` — a strong isolated line with no family (lone vane-pass,
+  second-shaft or drive line)
+- `BAND(lo, hi)` — broadband hump; `FLOOR` — everything unclaimed
+
+Mechanism gates T46–T49: mixed 4-family composition recovered with
+< 1.5 dB attribution error each and exact share identity; suppressed-
+carrier fan identified with correct carrier and spacing; half-record
+shares stable < 5 pp; a growing sideband fan alarms under ±15% speed
+wander while the constant harmonic family stays quiet.
+
+**Corpus judgment** (600 v2 machines, 3,877 truth-family rows; then 60
+fleets × 14 records at ±20% VFD speed): per generator-truth family,
+energy captured by *type-compatible* patterns near the truth orders —
+
+| truth family | median attribution error | recall within 3 dB |
+|---|---|---|
+| SHAFT harmonics | 0.31 dB | 0.835 |
+| HALF ladder | 0.21 dB | 0.927 |
+| GMF + sidebands | 1.60 dB | 0.606 |
+| second shaft | 1.56 dB | 0.559 |
+| neighbor line | 1.77 dB | 0.593 |
+| vane/blade passage | 3.69 dB | 0.485 |
+| bearing | 5.51 dB | 0.448 |
+| electrical lines | 7.24 dB | 0.378 |
+| mains hum | 12.57 dB | 0.342 |
+
+Generalized tracking (`GeneralTracker`, per-type invariant identities:
+HARM by base ratio, SIDEBAND by carrier order + spacing, NEARRAT by
+slip band, FIXEDHZ by Hz): under ±20% record-to-record speed swings,
+median identity persistence of the fault-relevant instance is
+**0.964** (13.5 of 14 records), growth alarms land on the right
+pattern type in 58.8% of growing machines, and only **4.7%** of
+healthy/stationary machines raise any alarm — versus the 8.9% any-key
+false-alarm gap of the key-based monitor.
+
+Two findings from the first judgment pass are worth recording:
+
+1. **An uncapped proportional tolerance silently deleted mains hum.**
+   The `shaft_coincident` exemption (skip FIXEDHZ extraction when the
+   line sits on a shaft half-integer) used a 3%-of-order window, which
+   exceeds the half-integer grid spacing above order ~8 — every
+   high-order fixed line was exempted, and HUM attribution read
+   **97.96 dB** of error. Capping the tolerance at 0.12 orders (the
+   concentration gate discriminates up there: a wandering shaft
+   harmonic smears, a mains line stays crystal-narrow) brought it to
+   12.57 dB, and pulled ELEC/SHAFT2/PASSAGE up with it
+   (`findings_pre_fix.json` preserves the before).
+2. **The judgment itself was amended once (recorded as v2):** bearing
+   truth *includes* its modulation sidebands, so an off-integer-carrier
+   SIDEBAND fan is a correct isolation of a modulated bearing tone and
+   is now credited; the new TONE type is credited for lone passage/
+   second-shaft/drive lines.
+
+Remaining weak links, in causal order: fixed-Hz lines at high order
+under shaft wander (HUM/ELEC — the order-domain resampling smears
+them; extraction in the Hz domain before resampling would be exact),
+heavily diffused bearing humps (5.5 dB median — shoulders below the
+seed threshold), and right-type growth attribution at 0.588 (energy
+often grows in a *sibling* pattern, e.g. the bearing's fan instead of
+its tone; instance-merge policy queued).
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND
@@ -765,6 +852,7 @@ point at MAFAULDA (egress allowlist pending) and Relos timeseries
 
 | Path | Content |
 |---|---|
+| `experiments/patterns/` | iteration-15 isolation/tracking judgment (findings.json + pre-fix, attribution + tracking parquet) |
 | `experiments/synthval_massive/` | C1–C6 findings.json, maps (parquet + PNG) |
 | `experiments/massive/manifest.parquet` | corpus ground truth (regenerate any run from seed) |
 | `experiments/massive/o1_results.parquet` | 6,000 (run × ablation) O1 outcomes |
