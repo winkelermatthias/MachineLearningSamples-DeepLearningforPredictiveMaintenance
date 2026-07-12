@@ -136,8 +136,11 @@ class MachineMonitor:
         self.sheet = sheet
         self.sel = TK.FrameSelector(warmup=5)
         self.tracker = TK.PatternTracker(f_ref=f_ref)
+        from . import patterns as PT
+        self.gen = PT.GeneralTracker()
 
     def feed(self, t, X, fs):
+        from . import patterns as PT
         X = np.asarray(X, float)
         x0 = X if X.ndim == 1 else X[:, 0]
         rec = self.cascade.analyze_record(X, fs, self.sheet)
@@ -152,4 +155,20 @@ class MachineMonitor:
         rec["alarms"] = {k: d for k, d in
                          self.tracker.trends(adaptive=True).items()
                          if d["alarm"]}
+        # general-pattern layer: isolating decomposition tracked by
+        # per-type invariant identities; GROUP alarms treat a bearing
+        # tone and its modulation fan as one physical source
+        rec["patterns"] = []
+        if np.isfinite(f_lock) and f_lock > 0:
+            try:
+                pats, _ = PT.decompose(x0, fs, f_lock)
+                self.gen.update(t, pats)
+                rec["patterns"] = [
+                    {"type": p["type"], "params": p["params"],
+                     "share": round(p["share"], 4)}
+                    for p in pats if p["share"] > 0.005]
+            except Exception:
+                pass
+        rec["pattern_alarms"] = [g for g in self.gen.trends_grouped()
+                                 if g["alarm"]]
         return rec

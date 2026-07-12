@@ -655,7 +655,7 @@ class GeneralTracker:
 
         def _linked(ra, rb):
             a, b = _anchor(ra), _anchor(rb)
-            if a is None or b is None:
+            if a is None or b is None or a < 0.05 or b < 0.05:
                 return False
             for m in (1.0, 2.0, 0.5):
                 if abs(a / (m * b) - 1) < 0.08:

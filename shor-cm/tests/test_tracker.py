@@ -216,3 +216,8 @@ def test_T45_cascade_api_end_to_end():
     for t in range(3):
         rec = mon.feed(t, X, MC.FS)
         assert "alarms" in rec and "speed_locked_hz" in rec
+        assert "patterns" in rec and "pattern_alarms" in rec
+        assert isinstance(rec["patterns"], list)
+        if rec["patterns"]:
+            p = rec["patterns"][0]
+            assert {"type", "params", "share"} <= set(p)
