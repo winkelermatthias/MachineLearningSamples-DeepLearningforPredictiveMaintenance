@@ -296,6 +296,9 @@ def estimate_speed_sheet(x, fs, sheet, meta=None, top=3,
     cands = list(pair_candidates(pf, pa))
     cands += [v for v in spacing_candidates(pf, pa) if LO <= v <= HI]
     cands += [v for v in extra_candidates if LO <= v <= HI]
+    f_nom = (meta or {}).get("f_nom")
+    if f_nom and LO <= f_nom <= HI:
+        cands.append(float(f_nom))     # nameplate prior: candidate only
     ratios = []
     if sheet.get("ratio") and abs(sheet["ratio"] - 1) > 0.02:
         ratios.append(sheet["ratio"])
@@ -317,7 +320,16 @@ def estimate_speed_sheet(x, fs, sheet, meta=None, top=3,
         sc, ev = hz_structure_score(pf, pa, c)
         sm = sheet_match(pf, pa, c, exp)
         ev["sheet"] = round(sm, 2)
-        scored.append((sc + 2.5 * sm, c, ev))
+        tot = sc + 2.5 * sm
+        if f_nom:
+            # asset-registry nameplate: soft octave-scale prior — a
+            # healthy machine can show NOTHING at 1x (CWRU normals:
+            # only the 3rd-harmonic lattice is visible), and then the
+            # nameplate is the only anchor
+            b = float(np.exp(-(np.log(c / f_nom) / np.log(1.6)) ** 2))
+            ev["nom"] = round(b, 2)
+            tot += 2.0 * b
+        scored.append((tot, c, ev))
     scored.sort(key=lambda t: -t[0])
     out = []
     for sc, c, ev in scored:
@@ -338,7 +350,12 @@ def estimate_speed_sheet(x, fs, sheet, meta=None, top=3,
         _, c0, ev0 = out[0]
         sm0 = sheet_match(pf, pa, c0, exp)
         best_c, best_sm = c0, sm0
-        for mlt in (2.0, 0.5):
+        # 2x/0.5x are octave flips; 3x/(1/3) locks happen on motor rigs
+        # whose 3rd-harmonic lattice (90/180/270 Hz on a 30 Hz shaft)
+        # outweighs the fundamental — measured on CWRU normals (f_hat
+        # exactly 3.00x, which then fires the bearing rule because every
+        # true harmonic reads off-integer)
+        for mlt in (2.0, 0.5, 3.0, 1.0 / 3.0):
             cn = c0 * mlt
             if LO <= cn <= HI:
                 smn = sheet_match(pf, pa, cn, exp)

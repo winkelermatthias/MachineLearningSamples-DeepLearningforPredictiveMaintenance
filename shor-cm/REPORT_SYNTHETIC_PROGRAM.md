@@ -1188,6 +1188,44 @@ blind per-record speed against a dominant gearbox mesh is the known
 hard case (this rig's per-record candidates are wrong outright, so
 temporal locking cannot rescue them).
 
+## Iteration 26 (part 1): CWRU — subtype-resolved bearing diagnosis, and two speed physics lessons
+
+The full canonical CWRU benchmark (64 runs: IR/OR/ball at fault sizes
+0.007–0.028", 4 speeds, plus normals) through the frozen cascade,
+judgments pre-registered:
+
+| judgment | result |
+|---|---|
+| C3 envelope subtype capture at true defect orders | **PASS — IR 0.75, OR 0.93, ball 0.69, zero normal FPs** |
+| C2 bearing detection | recall 0.533 ✓ but all 4 normals flagged → FAIL |
+| C1 blind speed | FAIL 0.0 |
+| C4 severity vs fault size | IR **0.53 PASS**, OR −0.24 FAIL (3/6/12-o'clock position confound) |
+
+C3 is the headline: the envelope channel doesn't just detect bearing
+faults on the most-studied benchmark in the field — it resolves
+**which** race is damaged, from the defect order alone, with no
+training on this data.
+
+The two fails share one proven root cause chain:
+
+1. **A healthy machine can show nothing at 1×.** The CWRU normal
+   spectrum contains *no peak at shaft speed at all* — only the
+   3rd-harmonic lattice (89.9 = 3.0035×, shaft-locked) and a
+   ¼-order comb are visible. Blind per-record speed here is
+   physically unidentifiable; 89.9 Hz is the best blind statement
+   the data supports.
+2. **The 3× lock manufactures the bearing false alarm.** At a 3×
+   frame every true harmonic reads off-integer → "unsnapped energy"
+   → the bearing rule fires. At the true frame the same record reads
+   healthy with zero unsnapped energy (verified directly).
+
+Two mechanisms implemented in response, **weights deliberately left
+to be gated on synthetic dev — not tuned on CWRU**: frame arbitration
+extended to 3×/⅓× flips, and a nameplate prior (`meta["f_nom"]`,
+soft octave-scale bonus) — in deployment the asset registry always
+knows approximate RPM, and on a healthy machine it is the only anchor
+there is.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND

@@ -922,3 +922,32 @@ class GeneralTracker:
                 "n": max((td["n"] for td, _ in mem if td is not None),
                          default=0)})
         return out
+
+
+PF_ENV_COLS = ["pfe_top", "pfe_tot", "pfe_n", "pfe_frac", "pfe_harm"]
+
+
+def pattern_features_env(pats_env):
+    """Fixed-size envelope-domain feature block: shares of defect-type
+    patterns in the HF-resonance envelope — where impulsive bearing
+    faults live. Complements pattern_features (raw domain)."""
+    d = dict.fromkeys(PF_ENV_COLS, 0.0)
+    defect = []
+    for p in pats_env:
+        t = p["type"]
+        s = p.get("share", 0.0)
+        if t in ("NEARRAT", "SIDEBAND") \
+                or (t == "HARM" and p["params"].get("base", 0) > 1.5):
+            o = (p["params"].get("order")
+                 or p["params"].get("carrier")
+                 or p["params"].get("base"))
+            defect.append((s, float(o)))
+            if t == "HARM":
+                d["pfe_harm"] += s
+    if defect:
+        defect.sort(reverse=True)
+        d["pfe_top"] = defect[0][0]
+        d["pfe_tot"] = sum(s for s, _ in defect)
+        d["pfe_n"] = float(len(defect))
+        d["pfe_frac"] = abs(defect[0][1] - round(defect[0][1]))
+    return d
