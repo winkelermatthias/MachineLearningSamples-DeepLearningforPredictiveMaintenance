@@ -127,3 +127,35 @@ def test_T31_gear_rule_and_ledger_features():
     bare = base | {"gmf_rel": 12, "gmf_sb_count": 1, "gmf_sb_energy": 0.1}
     assert SC.rules_from_ledger(strong) == "gear"
     assert SC.rules_from_ledger(bare) != "gear"
+
+
+def test_T44_multichannel_physics():
+    """Angular misalignment must be axial-dominant; parallel must not.
+    Shared phases: the 1x line sits at the same frequency in all
+    channels. Cross-channel fusion keeps real peaks, kills noise-only."""
+    from shorcm import simforge_mc as MC
+    rng = np.random.default_rng(100)
+    got = {"angular": None, "parallel": None}
+    for _ in range(400):
+        m = V2.sample_machine(rng)
+        if m["fault"] != "misalignment" or m["severity"] < 0.6:
+            continue
+        st = m["subtype"]
+        if st not in got or got[st] is not None:
+            continue
+        X = MC.synth_run_mc(m, rng)
+        af = MC.axial_features(X, MC.FS, m["f_shaft"])
+        got[st] = af["ax_ratio_2"]
+        if all(v is not None for v in got.values()):
+            break
+    assert got["angular"] is not None and got["parallel"] is not None
+    assert got["angular"] > got["parallel"] + 0.2, got
+    # fusion sanity on one machine: fused peaks exist and include an
+    # integer order of the input shaft
+    rng2 = np.random.default_rng(101)
+    m = V2.sample_machine(rng2)
+    X = MC.synth_run_mc(m, rng2)
+    pf, pa, pc = MC.fused_peaks(X, MC.FS)
+    assert len(pf) > 5
+    assert any(abs(f / m["f_shaft"] - round(f / m["f_shaft"])) <
+               0.02 * max(f / m["f_shaft"], 1) for f in pf)

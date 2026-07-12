@@ -1,0 +1,18 @@
+{
+ "n": 600,
+ "de": {
+  "top1": 0.5533,
+  "top3": 0.7767
+ },
+ "fused": {
+  "top1": 0.5017,
+  "top3": 0.7433
+ },
+ "subtype": {
+  "n_misalign": 114,
+  "auc_angular_vs_rest": 0.972,
+  "holdout_accuracy": 0.931,
+  "threshold": 0.606
+ },
+ "wall_s": 57.2
+}
