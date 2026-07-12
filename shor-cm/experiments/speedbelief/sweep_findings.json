@@ -1,0 +1,22 @@
+{
+ "n_configs": 162,
+ "n_admissible": 0,
+ "baseline": {
+  "hit": 0.422,
+  "hit_pre": 0.069
+ },
+ "best": {
+  "hit": 0.395,
+  "hit_pre": 0.278,
+  "base": 0.422,
+  "base_pre": 0.069,
+  "corr_good": true,
+  "corr_bad": true,
+  "prior_sigma_oct": 0.25,
+  "kin_scale": 1.0,
+  "temper": 1.2,
+  "use_reliability": false,
+  "flip_ratio": 4.0
+ },
+ "wall_s": 116.5
+}

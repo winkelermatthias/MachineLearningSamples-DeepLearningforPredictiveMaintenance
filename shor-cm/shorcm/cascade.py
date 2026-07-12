@@ -84,6 +84,14 @@ class Cascade:
         margin = s[0] - s[1]
         p_ok = float(self.calibrator.predict([margin])[0]) \
             if self.calibrator is not None else est[0]["confidence"]
+        # degenerate-record guard (audit S-bug): a drowned or single-
+        # candidate record produces margin vs the -99 sentinel, which
+        # the isotonic calibrator clamps to its MAXIMUM -> confidence
+        # ~1.0 on garbage. Fewer than 2 real candidates or a non-finite
+        # top speed means the calibrated margin is meaningless.
+        if len(est) < 2 or not np.isfinite(est[0]["hz"]) \
+                or est[0]["hz"] <= 0:
+            p_ok = 0.0
         out = {"speed_candidates": est,
                "speed_hz": est[0]["hz"],
                "speed_confidence": round(p_ok, 3),

@@ -63,21 +63,33 @@ def spectrum(x, fs, fmax=2000.0):
     return f[:imax], A[:imax]
 
 
-def _is_hum(f, tol=1.5):
-    return any(abs(f - h) < tol for h in GRID_HUM)
+def _is_hum(f, tol=1.5, conc=None):
+    """Grid-line test. With a concentration value (from
+    spectral_peaks) the mask applies only to CRYSTAL-narrow lines —
+    a blanket +/-1.5 Hz deletion removed the 1x/2x of every 2-pole
+    mains machine (measured: speed_ok 0.348 on that class vs 0.663
+    elsewhere). A wandering shaft line near 50/60 Hz is broad; true
+    hum is 1-2 bins."""
+    near = any(abs(f - h) < tol for h in GRID_HUM)
+    if conc is None:
+        return near
+    return near and conc > 0.62
 
 
-def pair_candidates(pf, pa, mmax=10, rtol=0.01, lo=LO, hi=HI, topn=10):
+def pair_candidates(pf, pa, mmax=10, rtol=0.01, lo=LO, hi=HI, topn=10,
+                    pc=None):
     """f0 candidates from CF-snapped peak-pair ratios, weighted vote.
     Each pair (i, j), f_i < f_j: snap f_j/f_i -> n/m (n, m <= mmax);
     implied fundamental f_i/m votes with weight sqrt(a_i a_j)."""
     votes = []                            # (f0, weight)
     n = len(pf)
+    cc = (lambda i: pc[i]) if pc is not None and len(pc) == n \
+        else (lambda i: None)
     for i in range(n):
-        if _is_hum(pf[i]):
+        if _is_hum(pf[i], conc=cc(i)):
             continue
         for j in range(i + 1, n):
-            if _is_hum(pf[j]):
+            if _is_hum(pf[j], conc=cc(j)):
                 continue
             r = pf[j] / pf[i]
             fr = Fraction(r).limit_denominator(mmax)
@@ -138,13 +150,17 @@ def _amp_at_order(pf, pa, f0, order, rtol=0.012):
     return float(pa[m].max()) if m.any() else 0.0
 
 
-def hz_structure_score(pf, pa, f0, qmax=8, max_order=12.0, rtol=0.01):
+def hz_structure_score(pf, pa, f0, qmax=8, max_order=12.0, rtol=0.01,
+                       pc=None):
     """Rational-structure score of hypothesis f0 on the raw peak list.
     Same evidence vocabulary as blindspeed.structure_score plus the
     double-speed (q=2 forest) negative signature."""
     if len(pf) == 0:
         return -9.0, {}
-    keep = ~np.array([_is_hum(f) for f in pf])
+    if pc is not None and len(pc) == len(pf):
+        keep = ~np.array([_is_hum(f, conc=c) for f, c in zip(pf, pc)])
+    else:
+        keep = ~np.array([_is_hum(f) for f in pf])
     pf_, pa_ = pf[keep], pa[keep]
     med = np.median(pa_) + 1e-15
     e_snap = e_tot = e_odd = 0.0
@@ -293,7 +309,7 @@ def estimate_speed_sheet(x, fs, sheet, meta=None, top=3,
     the input), and scoring blends rational structure with the sheet
     template match."""
     pf, pa, pc = peaks if peaks is not None else spectral_peaks(x, fs)
-    cands = list(pair_candidates(pf, pa))
+    cands = list(pair_candidates(pf, pa, pc=pc))
     cands += [v for v in spacing_candidates(pf, pa) if LO <= v <= HI]
     cands += [v for v in extra_candidates if LO <= v <= HI]
     f_nom = (meta or {}).get("f_nom")
@@ -317,7 +333,7 @@ def estimate_speed_sheet(x, fs, sheet, meta=None, top=3,
     exp = sheet_expected_orders(sheet)
     scored = []
     for c in full[:40]:
-        sc, ev = hz_structure_score(pf, pa, c)
+        sc, ev = hz_structure_score(pf, pa, c, pc=pc)
         sm = sheet_match(pf, pa, c, exp)
         ev["sheet"] = round(sm, 2)
         tot = sc + 2.5 * sm

@@ -31,7 +31,8 @@ LOG_FLOOR = np.log(0.02)          # likelihood floor for unmatched hyp
 class SpeedBelief:
     def __init__(self, f_nom, rel_lo=0.25, rel_hi=4.0, n_grid=161,
                  prior_sigma_oct=0.35, extra_prior=(),
-                 flip_ratio=6.0, flip_hold=3):
+                 flip_ratio=6.0, flip_hold=3, kin_scale=1.0,
+                 temper=0.6, use_reliability=True):
         """f_nom: nameplate Hz (the anchor). Grid is log-spaced over
         [rel_lo, rel_hi] * f_nom. prior_sigma_oct: nameplate prior
         width in OCTAVES. extra_prior: iterable of (hz, weight) from
@@ -53,6 +54,9 @@ class SpeedBelief:
         self._flip_count = 0
         self.flip_ratio = float(flip_ratio)
         self.flip_hold = int(flip_hold)
+        self.kin_scale = float(kin_scale)
+        self.temper = float(temper)
+        self.use_reliability = bool(use_reliability)
         self.n_updates = 0
 
     KIN = ((1.0, 1.0), (1 / 3, 0.35), (0.5, 0.35), (2 / 3, 0.2),
@@ -72,6 +76,8 @@ class SpeedBelief:
             if hz is None or not np.isfinite(hz) or hz <= 0:
                 continue
             for k, kw in self.KIN:
+                if k != 1.0:
+                    kw = kw * self.kin_scale
                 li += w * kw * np.exp(
                     -((self.grid / (hz * k) - 1) / 0.02) ** 2 / 2)
         return np.log(li / li.max())
@@ -97,7 +103,7 @@ class SpeedBelief:
             if best is not None:
                 key = int(round(np.log2(best["hz"] / self.f_nom) * 12))
                 seen = self._votes.setdefault(s, {})
-                w_nov = 1.0 / (1.0 + 0.6 * seen.get(key, 0))
+                w_nov = 1.0 / (1.0 + self.temper * seen.get(key, 0))
                 seen[key] = seen.get(key, 0) + 1
             self.logp += r * w_nov * ll
             # online reliability: does this sensor's best candidate
@@ -112,8 +118,9 @@ class SpeedBelief:
                 agree = float(any(
                     abs(best["hz"] * k / self.grid[j] - 1) < 0.04
                     for k in (1.0,)))
-            self.rel[s] = float(np.clip(
-                0.8 * r + 0.2 * (0.2 + 0.8 * agree), 0.2, 1.0))
+            if self.use_reliability:
+                self.rel[s] = float(np.clip(
+                    0.8 * r + 0.2 * (0.2 + 0.8 * agree), 0.2, 1.0))
         self.logp -= self.logp.max()
         self.logp = np.maximum(self.logp, -60.0)
         j = int(np.argmax(self.logp))
