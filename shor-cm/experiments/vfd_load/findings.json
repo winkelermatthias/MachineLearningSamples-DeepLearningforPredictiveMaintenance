@@ -1,0 +1,11 @@
+{
+ "healthy_instances": 51,
+ "V1_flagged_frac": 0.0,
+ "bearing_instances": 8,
+ "V2_true_bearings_wrongly_flagged": 0,
+ "verdicts": {
+  "V1": false,
+  "V2": true
+ },
+ "wall_s": 268.9
+}

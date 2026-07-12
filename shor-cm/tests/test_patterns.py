@@ -384,3 +384,39 @@ def test_T49_general_tracking_under_varying_speed():
         {k: tds[k] for k in sb_keys}
     assert not any(tds[k]["alarm"] for k in h_keys), \
         {k: tds[k] for k in h_keys}
+
+
+def test_T60_fixed_source_order_speed_slope():
+    """The F5 blind spot: on a load-varying VFD an electrical line
+    satisfies every single-record bearing signature. Across records the
+    discriminator is d ln(order)/d ln(speed): -1 for a fixed-Hz source,
+    0 for a true bearing order. Steady fleets must return None (cannot
+    tell)."""
+    rng = np.random.default_rng(31)
+    f_e_line = 100.0                       # fixed electrical line, Hz
+    tr = PT.GeneralTracker()
+    for t in range(10):
+        f = 25.0 * (1 + 0.12 * np.sin(1.3 * t))     # load swings
+        pats = [
+            {"type": "NEARRAT", "params": {"order": f_e_line / f},
+             "energy": 3e-3 * (1 + 0.1 * rng.standard_normal()),
+             "members": [], "share": 0.1},           # elec in disguise
+            {"type": "NEARRAT", "params": {
+                "order": 3.57 * (1 + rng.normal(0, 0.004))},
+             "energy": 2e-3 * (1 + 0.1 * rng.standard_normal()),
+             "members": [], "share": 0.1},           # true bearing
+        ]
+        tr.update(t, pats, f_speed=f)
+    flags = {round(np.median([o for o, _ in r["obs"]]), 1):
+             tr.fixed_source(r) for r in tr.reg}
+    elec_key = [k for k in flags if abs(k - 4.0) < 0.7]
+    bear_key = [k for k in flags if abs(k - 3.6) < 0.2]
+    assert elec_key and flags[elec_key[0]] is True, flags
+    assert bear_key and flags[bear_key[0]] is False, flags
+    # steady fleet: cannot tell -> None
+    tr2 = PT.GeneralTracker()
+    for t in range(10):
+        tr2.update(t, [{"type": "NEARRAT", "params": {"order": 4.0},
+                        "energy": 1e-3, "members": [], "share": 0.1}],
+                   f_speed=25.0 * (1 + rng.normal(0, 0.002)))
+    assert tr2.fixed_source(tr2.reg[0]) is None

@@ -804,7 +804,7 @@ class GeneralTracker:
         self.reg = []                      # {"id","type","pts","last"}
         self.max_per_type = max_per_type
 
-    def update(self, t, patterns):
+    def update(self, t, patterns, f_speed=None):
         for p in patterns:
             if p["type"] == "FLOOR" or p["energy"] <= 0:
                 continue
@@ -814,14 +814,41 @@ class GeneralTracker:
                 if r["id"][0] == pid[0] and _match(pid[0], pid, r["id"]):
                     inst = r
                     break
+            if inst is None and f_speed is not None \
+                    and pid[0] in ("NEARRAT", "TONE"):
+                # Hz-continuity second pass: a FIXED-Hz source under
+                # big speed swings fragments in order-keyed identity
+                # (its order moves as 1/speed), but order*speed stays
+                # constant. A bearing cannot false-match here: its
+                # order is constant, so order*speed moves WITH speed.
+                o_new = (p["params"].get("order") or 0) * f_speed
+                for r in self.reg:
+                    if r["id"][0] != pid[0] or not r.get("obs"):
+                        continue
+                    o_p, f_p = r["obs"][-1]
+                    if o_p * f_p > 0 \
+                            and abs(o_new / (o_p * f_p) - 1) < 0.025:
+                        inst = r
+                        break
             if inst is None:
                 same = [r for r in self.reg if r["id"][0] == pid[0]]
                 if len(same) >= self.max_per_type:
                     same.sort(key=lambda r: len(r["pts"]))
                     self.reg.remove(same[0])
-                inst = {"id": pid, "type": pid[0], "pts": []}
+                inst = {"id": pid, "type": pid[0], "pts": [],
+                        "obs": []}
                 self.reg.append(inst)
             inst["pts"].append((t, np.log10(p["energy"] + 1e-15)))
+            # order observation for the fixed-source discriminator: a
+            # fixed-Hz source (electrical line, neighbor) read in the
+            # ORDER domain moves as 1/speed (log-log slope -1) while a
+            # true bearing order stays constant (slope 0)
+            o_obs = (p["params"].get("order")
+                     or p["params"].get("carrier")
+                     or p["params"].get("base"))
+            if f_speed is not None and o_obs:
+                inst.setdefault("obs", []).append(
+                    (float(o_obs), float(f_speed)))
             inst["id"] = pid               # slow drift of the identity
 
     def trends(self, adaptive=True):
@@ -829,8 +856,35 @@ class GeneralTracker:
         for r in self.reg:
             td = _trend(r["pts"], adaptive=adaptive)
             if td is not None:
+                td = dict(td)
+                td["fixed_source"] = self.fixed_source(r)
                 out[str(r["id"])] = td
         return out
+
+    def fixed_source(self, r):
+        """True when this instance's observed order moves as 1/speed
+        (a fixed-Hz source — electrical line, neighbor machine — read
+        in the order domain), False for genuinely speed-locked orders
+        (shaft ratios, bearing rates), None when speed variation is
+        too small to tell (< 3%). The audit's F5 blind spot: on a
+        load-varying VFD an electrical line satisfies every single-
+        record bearing signature; only the ACROSS-record order-vs-
+        speed slope separates them."""
+        obs = r.get("obs") or []
+        if len(obs) < 8:
+            return None
+        o = np.array([a for a, _ in obs], float)
+        f = np.array([b for _, b in obs], float)
+        m = (o > 0) & (f > 0)
+        if m.sum() < 5:
+            return None
+        lo, lf = np.log(o[m]), np.log(f[m])
+        if lf.std() < 0.008:  # slope SE ~ order-jitter/(span*sqrt(n))
+            return None       # ~0.1 at 1.5% slip-span with 8+ obs: 0
+                              # vs -1 stays separable; below that, no
+        # (slip-only load swings are ~1.5% - the common field case)
+        slope = float(np.polyfit(lf, lo, 1)[0])
+        return bool(slope < -0.5)
 
     def reframe(self, ratio):
         """A decisive speed-frame correction arrived (belief flip):
