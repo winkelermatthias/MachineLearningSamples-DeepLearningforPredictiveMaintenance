@@ -19,3 +19,19 @@
 - CWRU mirrors probed (s-whynot, yyxyz, XiongMeijing, Xiaohan-Chen,
   zhangxiaoli73): no raw-accessible .mat paths found; not pursued today.
 - Relos MCP: DROPPED per Matthias 2026-07-12.
+
+## 2026-07-12 (later) — data acquisition breakthrough
+- Matthias's Google Drive MAFAULDA folder: drive.google.com +
+  drive.usercontent.google.com blocked at proxy CONNECT; googleapis.com
+  reachable but needs API key. Offered 3 routes (GitHub release /
+  Drive API key / env allowlist). PENDING Matthias.
+- **git clone of arbitrary PUBLIC GitHub repos WORKS through the proxy**
+  (curl to github.com HTML is 403, but git transport passes). This opens
+  every GitHub-hosted dataset directly:
+  - mathworks/WindTurbineHighSpeedBearingPrognosis-Data -> data/windturbine
+    (50-day REAL run-to-failure, vibration+tacho, CC BY-NC-SA, Bechhoefer)
+  - s-whynot/CWRU-dataset -> data/cwru (890 MB, full canonical CWRU:
+    Normal + 12k/48k DE + 12k FE .mat files)
+- MAFAULDA on GitHub/HF/Kaggle/archive.org/zenodo/figshare/mendeley: hosts
+  blocked or no mirror found; ufrj origin still 403. MAFAULDA path remains
+  Matthias-side (GitHub release recommended).

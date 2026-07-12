@@ -1,0 +1,15 @@
+{
+ "n": 50,
+ "first_alarm_day": 31,
+ "W2_env_emergence_spearman": 0.858,
+ "W3_severity_spearman": 0.447,
+ "W4_speed_octave_hit": 0.1,
+ "supp_speed_locked_hit": 0.16,
+ "verdicts": {
+  "W1": true,
+  "W2": true,
+  "W3": false,
+  "W4": false
+ },
+ "wall_s": 104.7
+}

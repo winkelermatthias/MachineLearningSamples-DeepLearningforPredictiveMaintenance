@@ -109,3 +109,24 @@ def from_seu_csv(path, channel=1, t0=0.0, dur=8.0):
     x = x[np.isfinite(x)]
     f_nom = 30.0 if "_30_2" in str(path) else 20.0
     return x, SEU_FS, {}, {"rate_hz": f_nom, "title": title}
+
+
+# ---------------- Wind-turbine high-speed bearing (run-to-failure) ----
+# Mirror: mathworks/WindTurbineHighSpeedBearingPrognosis-Data (CC
+# BY-NC-SA 4.0, owner Eric Bechhoefer). 50 consecutive daily records,
+# 6 s vibration @ 97656 Hz + tacho pulse TIMES (~40.7 s window,
+# ~60.07 pulses/s; pulses-per-rev not published, so speed truth is an
+# OCTAVE CLASS {60.07/k}). A real inner-race fault develops over the
+# 50 days.
+WT_FS = 97656.0
+
+
+def from_windturbine_mat(path):
+    """(x, fs, sheet, meta) — meta carries the tacho pulse rate."""
+    import scipy.io as sio
+    m = sio.loadmat(path, squeeze_me=True)
+    x = np.asarray(m["vibration"], float).ravel()
+    tach = np.asarray(m["tach"], float).ravel()
+    dt = np.median(np.diff(tach)) if len(tach) > 10 else np.nan
+    return x, WT_FS, {}, {"tach_pulse_hz": float(1.0 / dt)
+                          if np.isfinite(dt) else np.nan}
