@@ -1,0 +1,117 @@
+{
+ "n_runs": 2000,
+ "speed": {
+  "pure": {
+   "top1": 0.367,
+   "top3": 0.629,
+   "octave": 0.1975,
+   "shaft2": 0.1165
+  },
+  "union": {
+   "top1": 0.37,
+   "top3": 0.6315,
+   "octave": 0.1975,
+   "shaft2": 0.1165
+  },
+  "union_with_kinematic_sheet": 0.4865
+ },
+ "speed_by_archetype": {
+  "union_top1": {
+   "blower_roots": 0.451,
+   "fan_belt": 0.339,
+   "fan_direct": 0.477,
+   "fan_gearbox2": 0.241,
+   "pump_direct": 0.551,
+   "pump_gearbox1": 0.247,
+   "pump_planetary": 0.258
+  },
+  "union_top3": {
+   "blower_roots": 0.71,
+   "fan_belt": 0.564,
+   "fan_direct": 0.766,
+   "fan_gearbox2": 0.56,
+   "pump_direct": 0.802,
+   "pump_gearbox1": 0.502,
+   "pump_planetary": 0.494
+  },
+  "union_shaft2": {
+   "blower_roots": 0.0,
+   "fan_belt": 0.152,
+   "fan_direct": 0.0,
+   "fan_gearbox2": 0.226,
+   "pump_direct": 0.0,
+   "pump_gearbox1": 0.265,
+   "pump_planetary": 0.197
+  }
+ },
+ "speed_by_speed_class": {
+  "union_top1": {
+   "False": 0.381,
+   "True": 0.347
+  },
+  "union_top3": {
+   "False": 0.627,
+   "True": 0.641
+  }
+ },
+ "fault_ml_by_archetype_true_speed": {
+  "blower_roots": 0.927,
+  "fan_belt": 0.864,
+  "fan_direct": 0.895,
+  "fan_gearbox2": 0.809,
+  "pump_direct": 0.875,
+  "pump_gearbox1": 0.813,
+  "pump_planetary": 0.732
+ },
+ "fault": {
+  "true_speed": {
+   "n": 2000,
+   "rules_acc": 0.5515,
+   "rules_macro_f1": 0.5519,
+   "ml_acc": 0.8445,
+   "ml_macro_f1": 0.8141,
+   "gate_promote": true,
+   "gate_delta_lo": 0.2319
+  },
+  "est_speed": {
+   "n": 2000,
+   "rules_acc": 0.363,
+   "rules_macro_f1": 0.3411,
+   "ml_acc": 0.684,
+   "ml_macro_f1": 0.6586,
+   "gate_promote": true,
+   "gate_delta_lo": 0.2836
+  }
+ },
+ "joint": {
+  "top1_and_rules": 0.2185,
+  "top1_and_ml": 0.318,
+  "kinsheet_and_ml": 0.368
+ },
+ "patterns": {
+  "pe_rec_bearing": 0.143,
+  "pe_rec_elec_excluded": 0.828,
+  "pe_rec_gmf": 0.125,
+  "pe_rec_gmf2": 0.097,
+  "pe_rec_gmf_center": 0.231,
+  "pe_rec_half": 0.205,
+  "pe_rec_hum": 0.494,
+  "pe_rec_neighbor": 0.221,
+  "pe_rec_passage": 0.661,
+  "pe_rec_shaft": 0.464,
+  "pe_rec_shaft2": 0.411,
+  "pt_rec_bearing": 0.267,
+  "pt_rec_elec_excluded": 0.858,
+  "pt_rec_gmf": 0.135,
+  "pt_rec_gmf2": 0.081,
+  "pt_rec_gmf_center": 0.204,
+  "pt_rec_half": 0.93,
+  "pt_rec_hum": 0.494,
+  "pt_rec_neighbor": 0.259,
+  "pt_rec_passage": 0.625,
+  "pt_rec_shaft": 0.769,
+  "pt_rec_shaft2": 0.47
+ },
+ "bearing_orderdomain_recall_true_speed": 0.429,
+ "wall_s": 74.3
+}

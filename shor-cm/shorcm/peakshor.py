@@ -93,6 +93,36 @@ def pair_candidates(pf, pa, mmax=10, rtol=0.01, lo=LO, hi=HI, topn=10):
     return [f for f, _ in out[:topn]]
 
 
+def spacing_candidates(pf, pa, lo=LO, hi=120.0, min_support=3, topn=5):
+    """f0 candidates from peak-pair DIFFERENCES: a sideband comb spaced
+    delta (gear mesh +/- k*f_shaft, electrical carrier +/- k*2LF) puts
+    its generator in the spacings even when the absolute orders are far
+    too high for small-rational pair ratios. Clusters of >= min_support
+    pairwise differences vote, weighted sqrt(a_i a_j)."""
+    n = len(pf)
+    diffs = []
+    for i in range(n):
+        for j in range(i + 1, n):
+            d = abs(pf[j] - pf[i])
+            if lo <= d <= hi:
+                diffs.append((d, float(np.sqrt(pa[i] * pa[j]))))
+    if not diffs:
+        return []
+    diffs.sort()
+    clusters = []                        # [w*d sum, w sum, count]
+    for d, w in diffs:
+        if clusters and abs(d - clusters[-1][0] / clusters[-1][1]) \
+                < 0.012 * d:
+            clusters[-1][0] += d * w
+            clusters[-1][1] += w
+            clusters[-1][2] += 1
+        else:
+            clusters.append([d * w, w, 1])
+    out = [(c[0] / c[1], c[1]) for c in clusters if c[2] >= min_support]
+    out.sort(key=lambda t: -t[1])
+    return [f for f, _ in out[:topn]]
+
+
 def _amp_at_order(pf, pa, f0, order, rtol=0.012):
     m = np.abs(pf / f0 - order) < rtol * max(order, 1.0)
     return float(pa[m].max()) if m.any() else 0.0
@@ -161,6 +191,7 @@ def estimate_speed_shor(x, fs, meta=None, top=3, refine=True,
     blindspeed.estimate_speed: list of {hz, confidence, ev}."""
     pf, pa, pc = spectral_peaks(x, fs)
     cands = list(pair_candidates(pf, pa))
+    cands += [c for c in spacing_candidates(pf, pa) if LO <= c <= HI]
     cands += [c for c in extra_candidates if LO <= c <= HI]
     if not cands:                          # drowned spectrum: fall back to
         from . import blindspeed as BS     # the comb grid, then give up
@@ -236,6 +267,26 @@ def pattern_ledger_peaks(pf, pa, pc, f0, qmax=8, rtol=0.012):
                 label[i] = "RATIONAL"
         elif 1.8 < o < 9.0:
             label[i] = "NEARRAT"
+    # GEAR: strongest high-order peak (order > 11) with a sideband fan
+    # at some spacing delta in (0.15, 1.25) orders; mesh + matched
+    # sidebands are labeled GEAR before the leftover pass runs.
+    hi_idx = [i for i in range(n) if order[i] > 11 and label[i] == "OTHER"]
+    if hi_idx:
+        i_m = max(hi_idx, key=lambda i: pa[i])
+        if pa[i_m] > 3 * np.median(pa):
+            best, best_cnt = None, 0
+            for dlt in np.arange(0.15, 1.26, 0.02):
+                got = [i for i in range(n) if i != i_m and any(
+                    abs(abs(order[i] - order[i_m]) - k * dlt)
+                    < max(0.012 * order[i_m], 0.01)
+                    for k in (1, 2, 3))]
+                if len(got) > best_cnt:
+                    best, best_cnt = got, len(got)
+            if best_cnt >= 2:
+                label[i_m] = "GEAR"
+                for i in best:
+                    if label[i] == "OTHER":
+                        label[i] = "GEAR"
     # second periodicity on leftovers -> NEIGHBOR. Candidates come from
     # OTHER + NEARRAT peaks, but only STABLE peaks (high concentration)
     # may be relabeled: a bearing tone's phase walk smears it, a neighbor

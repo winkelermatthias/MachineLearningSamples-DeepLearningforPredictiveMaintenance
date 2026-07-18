@@ -357,6 +357,107 @@ one dominant, well-understood failure class (octave degeneracy).
 6. Then the reverse-validation transfer gate on MAFAULDA dev — decides
    ITERATE vs SHIP for the whole program.
 
+---
+
+# Iteration 3: SimForge v2 — the full machine population
+
+Directive (Matthias): cover planetary gearboxes, parallel gearboxes,
+bearings big (low-speed) and small (high-speed), typed pumps with common
+vane counts, fans, blowers, coupling issues — expand big time, judge
+again on patterns / speed / fault, separately and together.
+
+## The population (`shorcm/simforge_v2.py`, tests T26–T31)
+
+7 archetypes: direct pumps (end-suction 5-7 vanes, double-suction 6-8,
+gear pumps 9/11/13 teeth), direct fans (3-12 blades), roots blowers
+(2-3 lobes, strong lobe pass), belt-driven fans (ratio 0.4-2.2 with
+0.5-2% creep slip — the second shaft is a genuinely DRIFTING lattice),
+single- and two-stage parallel gearboxes (coprime tooth pairs 17-64,
+GMF + shaft-spaced sidebands), planetary boxes (5 (Zs,Zp,Zr) sets, 3-5
+planets, carrier kinematics exact: fc(Zs+Zr)=fs·Zs pinned by test).
+Bearings from geometry, not a lookup: element count Z and pitch ratio g
+give BPFO/BPFI/BSF/FTF with BPFO+BPFI=Z exact; big bearings (Z 12-24)
+ride low-speed shafts (3-12 Hz), small (Z 7-12) ride fast ones —
+the size-speed correlation is a tested population property.
+Faults 6-way with subtypes: misalignment = parallel/angular/COUPLING,
+bearing = outer/inner/ball on either shaft with race-correct modulation
+(BPFI carries 1x sidebands, ball carries FTF), gear = wear/local tooth/
+sun/planet/ring with kinematically correct sideband spacings. Residual
+1x is now drawn 0.05-0.35, so the misalignment-masquerade population
+exists (T29) — closing the gap the 1x rule exposed.
+
+## New algorithm pieces (mechanism-tested before evaluation)
+
+- **Spacing candidates** (third Shor reading): pairwise peak DIFFERENCES
+  vote for the comb generator — reaches gear sidebands and electrical
+  combs where pair ratios n/m ≤ 10 cannot (T30).
+- **High-order ledger**: spr=256 (orders to 128), bearing band widened
+  to order 16 (big-bearing BPFI ~15), GMF features = best-modulated
+  high-order line + sideband fan over spacings 0.15-1.25 orders (a bare
+  vane-pass line loses to a modulated mesh by construction).
+- **Two order-domain evidence gates found by chasing v2 false bearings**:
+  (1) narrow unsnapped tones must have LOW block coherence — a passage
+  tone through a gear ratio (vane 6 × ratio 2.48 = order 14.9) is
+  phase-locked to the input comb, a bearing tone is not; (2) wide
+  clusters must still pass the FIXEDHZ mask — a fixed-Hz electrical line
+  smears WIDE in the order domain when the shaft wanders around it,
+  so "wide" alone does not mean bearing. Rules accuracy on the smoke
+  set went 0.458 → 0.625 from these two gates.
+
+## Triple judgment, 2,000 v2 runs (seed 20260710)
+
+**SPEED (vs input shaft, tol 1%)**: top-1 **0.370**, top-3 **0.631**,
+octave 0.198, driven-shaft capture 0.117. With the kinematic sheet
+(ratio known, so a driven-shaft hit converts): **0.487**. By archetype:
+direct pumps 0.55/0.80, fans 0.48/0.77, roots 0.45/0.71, belt 0.34/0.56,
+two-stage 0.24/0.56, single-stage 0.25/0.50, planetary 0.26/0.49.
+Geared trains halve blind-speed performance — the driven lattice, mesh
+combs and weak input 1x are exactly the deployment-relevant hard case.
+Low-speed machines hold up (top-3 0.641 vs 0.627 fast). The union of
+generators adds ~nothing over pure peak-Shor now that spacing candidates
+are in (0.370 vs 0.367) — the candidate problem is solved; SCORING under
+multiple lattices is the open problem.
+
+**PATTERNS (true speed / est speed)**: shaft 0.77/0.46, half 0.93/0.21,
+passage 0.62/0.66, shaft2 lattice 0.47/0.41, GMF center 0.20/0.23,
+bearing (Hz label) 0.27/0.14 with order-domain drifting-cluster recall
+0.43, ELEC correctly excluded 0.86/0.83, hum 0.49, neighbor 0.26.
+Weakest: GEAR labeling in the Hz ledger (single-mesh-candidate
+limitation) and low-amplitude confusers at the peak-guard edge.
+
+**FAULT (6-way)**:
+
+| condition | rules acc / mF1 | ML acc / mF1 | gate |
+|---|---|---|---|
+| true speed (separate) | 0.551 / 0.552 | **0.844 / 0.814** | PROMOTE (+0.23) |
+| estimated speed (together) | 0.363 / 0.341 | 0.684 / 0.659 | PROMOTE (+0.28) |
+
+ML per archetype at true speed: roots 0.93, fan 0.90, belt 0.86, pump
+0.88, gearbox2 0.81, gearbox1 0.81, planetary 0.73. Rules residual
+failure is bearing-overfire from genuinely drifting non-bearing content
+(belt lattices) plus weak neighbor lines smearing in the order domain.
+
+**TOGETHER (blind end-to-end)**: speed top-1 AND ML fault = **0.318**;
+with kinematic sheet **0.368** (v1.1 population: 0.500 — the expansion
+costs ~0.18 end-to-end, which is the honest price of gearboxes).
+
+## What the expansion taught (next backlog, mechanisms in hand)
+
+1. Kinematic-sheet-conditioned speed scoring: the asset registry knows
+   the ratio; treat driven-lattice hits as evidence FOR the input
+   hypothesis instead of a rival (worth ~12 pp immediately, measured).
+2. Planetary needs its own scorer: sun-shaft evidence is physically
+   faint; carrier lattice + Np·fc planet-pass + mesh sidebands ARE the
+   signature. Score candidate sun speeds through the planetary forward
+   model (5 candidate (Zs,Zp,Zr) sheets max).
+3. GEAR pattern family: multi-mesh labeling (two-stage boxes), and
+   sideband members should inherit the mesh label in the Hz ledger.
+4. Neighbor/hum weak-line handling: peak guard adaptively lower in
+   dead bands, and the order-domain wide-cluster mask needs the
+   Hz-domain neighbor list (cross-domain fusion).
+5. Belt archetype: belt defect frequency family (sub-1x rational of
+   BOTH shafts) as its own pattern + fault class in v2.1.
+
 ## Artifacts
 
 | Path | Content |
