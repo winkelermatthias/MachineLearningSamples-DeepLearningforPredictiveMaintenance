@@ -170,9 +170,12 @@ def sample_machine(rng):
     return m
 
 
-def synth_run(m, rng, truth=None):
+def synth_run(m, rng, truth=None, omega1x=1.0):
     """Waveform + optional composition truth. Truth appends never touch
-    the rng stream (same contract as simforge_lite)."""
+    the rng stream (same contract as simforge_lite).
+    omega1x: multiplies the 1x (mass-force) amplitude — imbalance force
+    scales with omega^2, so monitoring sequences pass
+    (f_op / f_base)^2 here. Pure multiplication: rng order unchanged."""
     def note(family, freqs, amps, drifting=False):
         if truth is not None:
             truth.append({"family": family,
@@ -194,7 +197,8 @@ def synth_run(m, rng, truth=None):
     x = m["noise"] * rng.standard_normal(n)
 
     # input shaft family (residual imbalance now 0.05-0.35!)
-    a1 = m["resid_1x"] + (1.3 * s if m["fault"] == "imbalance" else 0)
+    a1 = (m["resid_1x"] + (1.3 * s if m["fault"] == "imbalance" else 0)) \
+        * omega1x
     a2 = rng.uniform(0.03, 0.10)
     a3 = 0.0
     if m["fault"] == "misalignment":
