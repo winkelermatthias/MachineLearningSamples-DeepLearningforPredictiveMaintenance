@@ -13,7 +13,13 @@
    "octave": 0.1975,
    "shaft2": 0.1165
   },
-  "union_with_kinematic_sheet": 0.4865
+  "sheet": {
+   "top1": 0.4825,
+   "top3": 0.741,
+   "octave": 0.169,
+   "shaft2": 0.092
+  },
+  "union_plus_shaft2_upper_bound": 0.4865
  },
  "speed_by_archetype": {
   "union_top1": {
@@ -25,33 +31,33 @@
    "pump_gearbox1": 0.247,
    "pump_planetary": 0.258
   },
-  "union_top3": {
-   "blower_roots": 0.71,
-   "fan_belt": 0.564,
-   "fan_direct": 0.766,
-   "fan_gearbox2": 0.56,
-   "pump_direct": 0.802,
-   "pump_gearbox1": 0.502,
-   "pump_planetary": 0.494
+  "sheet_top1": {
+   "blower_roots": 0.472,
+   "fan_belt": 0.463,
+   "fan_direct": 0.572,
+   "fan_gearbox2": 0.362,
+   "pump_direct": 0.624,
+   "pump_gearbox1": 0.442,
+   "pump_planetary": 0.419
   },
-  "union_shaft2": {
-   "blower_roots": 0.0,
-   "fan_belt": 0.152,
-   "fan_direct": 0.0,
-   "fan_gearbox2": 0.226,
-   "pump_direct": 0.0,
-   "pump_gearbox1": 0.265,
-   "pump_planetary": 0.197
+  "sheet_top3": {
+   "blower_roots": 0.78,
+   "fan_belt": 0.693,
+   "fan_direct": 0.829,
+   "fan_gearbox2": 0.689,
+   "pump_direct": 0.858,
+   "pump_gearbox1": 0.661,
+   "pump_planetary": 0.661
   }
  },
  "speed_by_speed_class": {
-  "union_top1": {
-   "False": 0.381,
-   "True": 0.347
+  "sheet_top1": {
+   "False": 0.486,
+   "True": 0.475
   },
-  "union_top3": {
-   "False": 0.627,
-   "True": 0.641
+  "sheet_top3": {
+   "False": 0.732,
+   "True": 0.761
   }
  },
  "fault_ml_by_archetype_true_speed": {
@@ -71,35 +77,35 @@
    "ml_acc": 0.8445,
    "ml_macro_f1": 0.8141,
    "gate_promote": true,
-   "gate_delta_lo": 0.2319
+   "gate_delta_lo": 0.2284
   },
   "est_speed": {
    "n": 2000,
-   "rules_acc": 0.363,
-   "rules_macro_f1": 0.3411,
-   "ml_acc": 0.684,
-   "ml_macro_f1": 0.6586,
+   "rules_acc": 0.4,
+   "rules_macro_f1": 0.3901,
+   "ml_acc": 0.722,
+   "ml_macro_f1": 0.7008,
    "gate_promote": true,
-   "gate_delta_lo": 0.2836
+   "gate_delta_lo": 0.2748
   }
  },
  "joint": {
-  "top1_and_rules": 0.2185,
-  "top1_and_ml": 0.318,
-  "kinsheet_and_ml": 0.368
+  "top1_and_rules": 0.277,
+  "top1_and_ml": 0.4145,
+  "kinsheet_and_ml": 0.45
  },
  "patterns": {
-  "pe_rec_bearing": 0.143,
-  "pe_rec_elec_excluded": 0.828,
-  "pe_rec_gmf": 0.125,
-  "pe_rec_gmf2": 0.097,
-  "pe_rec_gmf_center": 0.231,
-  "pe_rec_half": 0.205,
+  "pe_rec_bearing": 0.161,
+  "pe_rec_elec_excluded": 0.826,
+  "pe_rec_gmf": 0.127,
+  "pe_rec_gmf2": 0.09,
+  "pe_rec_gmf_center": 0.226,
+  "pe_rec_half": 0.296,
   "pe_rec_hum": 0.494,
-  "pe_rec_neighbor": 0.221,
-  "pe_rec_passage": 0.661,
-  "pe_rec_shaft": 0.464,
-  "pe_rec_shaft2": 0.411,
+  "pe_rec_neighbor": 0.229,
+  "pe_rec_passage": 0.639,
+  "pe_rec_shaft": 0.543,
+  "pe_rec_shaft2": 0.417,
   "pt_rec_bearing": 0.267,
   "pt_rec_elec_excluded": 0.858,
   "pt_rec_gmf": 0.135,
@@ -113,5 +119,5 @@
   "pt_rec_shaft2": 0.47
  },
  "bearing_orderdomain_recall_true_speed": 0.429,
- "wall_s": 74.3
+ "wall_s": 72.9
 }

@@ -30,17 +30,17 @@ def main():
 
     # ---- speed ----
     sp = {}
-    for arm in ("pure", "union"):
+    for arm in ("pure", "union", "sheet"):
         sp[arm] = {k: round(float(df[f"{arm}_{k}"].mean()), 4)
                    for k in ("top1", "top3", "octave", "shaft2")}
-    sp["union_with_kinematic_sheet"] = round(float(
+    sp["union_plus_shaft2_upper_bound"] = round(float(
         (df.union_top1 | df.union_shaft2).mean()), 4)
     find["speed"] = sp
     find["speed_by_archetype"] = json.loads(
-        df.groupby("archetype")[["union_top1", "union_top3",
-                                 "union_shaft2"]].mean().round(3).to_json())
+        df.groupby("archetype")[["union_top1", "sheet_top1",
+                                 "sheet_top3"]].mean().round(3).to_json())
     find["speed_by_speed_class"] = json.loads(
-        df.groupby("low_speed")[["union_top1", "union_top3"]]
+        df.groupby("low_speed")[["sheet_top1", "sheet_top3"]]
         .mean().round(3).to_json())
 
     # ---- fault: rules + ML, both conditions ----
@@ -110,11 +110,11 @@ def main():
     ml_ok = ml_est_pred.reindex(dj.index)
     find["joint"] = {
         "top1_and_rules": round(float(
-            (dj.union_top1 & (dj.rules_est == dj.fault)).mean()), 4),
+            (dj.sheet_top1 & (dj.rules_est == dj.fault)).mean()), 4),
         "top1_and_ml": round(float(
-            (dj.union_top1 & (ml_ok == dj.fault)).mean()), 4),
+            (dj.sheet_top1 & (ml_ok == dj.fault)).mean()), 4),
         "kinsheet_and_ml": round(float(
-            ((dj.union_top1 | dj.union_shaft2) & (ml_ok == dj.fault))
+            ((dj.sheet_top1 | dj.sheet_shaft2) & (ml_ok == dj.fault))
             .mean()), 4)}
 
     # ---- patterns ----
@@ -128,14 +128,13 @@ def main():
          & (bd.lt_uns_abs > 0.1)).mean()), 3)
 
     # speed figure by archetype
-    g = df.groupby("archetype")[["union_top1", "union_top3",
-                                 "union_shaft2"]].mean()
+    g = df.groupby("archetype")[["union_top1", "sheet_top1",
+                                 "sheet_top3"]].mean()
     fig, ax = plt.subplots(figsize=(7.2, 3.4))
     x = np.arange(len(g))
-    ax.bar(x - 0.25, g.union_top1, 0.25, label="top-1", color="#0FB5A6")
-    ax.bar(x, g.union_top3, 0.25, label="top-3", color="#666")
-    ax.bar(x + 0.25, g.union_shaft2, 0.25, label="driven-shaft capture",
-           color="#d97")
+    ax.bar(x - 0.25, g.union_top1, 0.25, label="plain top-1", color="#999")
+    ax.bar(x, g.sheet_top1, 0.25, label="sheet top-1", color="#0FB5A6")
+    ax.bar(x + 0.25, g.sheet_top3, 0.25, label="sheet top-3", color="#666")
     ax.set_xticks(x, g.index, rotation=20, fontsize=7)
     ax.legend(fontsize=8); ax.set_ylabel("rate @1%")
     ax.set_title("V2 blind speed by archetype (union arm)", fontsize=10)

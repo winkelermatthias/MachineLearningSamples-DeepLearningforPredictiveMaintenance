@@ -98,7 +98,11 @@ def one_run(i):
     extra += BS.envelope_candidate(x, V2.FS)
     arms = {"pure": PS.estimate_speed_shor(x, V2.FS, meta=meta),
             "union": PS.estimate_speed_shor(x, V2.FS, meta=meta,
-                                            extra_candidates=extra)}
+                                            extra_candidates=extra),
+            "sheet": PS.estimate_speed_sheet(x, V2.FS,
+                                             V2.kinematic_sheet(m),
+                                             meta=meta,
+                                             extra_candidates=extra)}
     others = [v for v in (m.get("f2"), m.get("f3"), m.get("fc"))
               if v and abs(v / f0 - 1) > TOL]
     out = {"run_id": i, "archetype": m["archetype"], "f_true": f0,
@@ -123,12 +127,12 @@ def one_run(i):
 
     for k, v in judge_patterns(pf, pa, pc, f0, truth).items():
         out[f"pt_{k}"] = v
-    for k, v in judge_patterns(pf, pa, pc, out["union_f_hat"],
+    for k, v in judge_patterns(pf, pa, pc, out["sheet_f_hat"],
                                truth).items():
         out[f"pe_{k}"] = v
 
     led_t = SC.ledger(x, V2.FS, f0, spr=256, uns_hi=16.0)
-    led_e = SC.ledger(x, V2.FS, out["union_f_hat"], spr=256, uns_hi=16.0)
+    led_e = SC.ledger(x, V2.FS, out["sheet_f_hat"], spr=256, uns_hi=16.0)
     out["rules_true"] = SC.rules_from_ledger(led_t)
     out["rules_est"] = SC.rules_from_ledger(led_e)
     for k, v in (led_t or {}).items():
@@ -158,17 +162,17 @@ def main():
     print(f"wall {time.time()-t0:.0f}s")
 
     print("\n== SPEED vs input shaft (tol 1%) ==")
-    for arm in ("pure", "union"):
+    for arm in ("pure", "union", "sheet"):
         print(f"{arm:6s} top1 {df[f'{arm}_top1'].mean():.3f} "
               f"top3 {df[f'{arm}_top3'].mean():.3f} "
               f"octave {df[f'{arm}_octave'].mean():.3f} "
               f"driven-shaft-capture {df[f'{arm}_shaft2'].mean():.3f}")
     print("\nunion by archetype:")
-    print(df.groupby("archetype")[["union_top1", "union_top3",
-                                   "union_shaft2"]].mean().round(3)
+    print(df.groupby("archetype")[["union_top1", "sheet_top1",
+                                   "sheet_top3"]].mean().round(3)
           .to_string())
     print("\nunion by speed class:")
-    print(df.groupby("low_speed")[["union_top1", "union_top3"]]
+    print(df.groupby("low_speed")[["sheet_top1", "sheet_top3"]]
           .mean().round(3).to_string())
     print("\n== PATTERNS ==")
     for pre, lab in (("pt", "true-speed"), ("pe", "est-speed")):
@@ -181,8 +185,8 @@ def main():
           f"est speed {(df.rules_est == df.fault).mean():.3f}")
     print(pd.crosstab(df.fault, df.rules_true).to_string())
     print("\n== JOINT ==")
-    print(f"union top1 AND rules_est correct: "
-          f"{(df.union_top1 & (df.rules_est == df.fault)).mean():.3f}")
+    print(f"sheet top1 AND rules_est correct: "
+          f"{(df.sheet_top1 & (df.rules_est == df.fault)).mean():.3f}")
 
 
 if __name__ == "__main__":
