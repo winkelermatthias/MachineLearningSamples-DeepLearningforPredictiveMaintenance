@@ -1448,6 +1448,25 @@ on the way:
 
 T61–T63 pin all three; 75 tests green.
 
+## Iteration 32: the audit backlog is cleared
+
+The last unpinned mechanisms are now tests
+(`tests/test_isolation_pins.py`): adaptive alarm gates (a
+noisy-baseline machine never alarms on a rise a fixed 6 dB gate
+would fire on; a quiet one alarms on a genuine 4.5 dB rise), the
+rejected-2×-probe fix (neighbor humps stay intact — the −114 dB
+class), raw-gap hump merging (genuinely distinct tones stay separate
+— and three fixture revisions along the way were the mechanism
+*working*: tones whose smears touch, or that sit at small rationals,
+SHOULD merge or read as a lattice), and the floor-relative gate (a
+tone at 0.3% of total energy survives — the belt-lattice class).
+
+**79 tests green. All 15 findings of the iteration-28 audit are now
+actioned, pinned, or documented.** The program's remaining
+high-value moves all require external data: the MAFAULDA release
+upload (gate ready since iteration 14), or any real fleet with
+repeated per-asset records for the tracking/alarm machinery.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND
