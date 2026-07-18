@@ -314,6 +314,26 @@ speed stage, measured twice now.
 - speed top-1 AND ML fault correct: **0.500** (iteration-1 equivalent
   ≈ 0.207) — the cascade is 2.4× better end-to-end.
 
+## Addendum: the misalignment 1x rule (Matthias, 2026-07-11)
+
+Field rule adopted into the rules arm and pinned by mechanism test T25:
+**the 1x must be there when the 2x is — a bare 2x-ish line with a small
+slip offset is never misalignment** (in the field it is the electrical
+2LF at order 2/(1−s)). Implemented as two guards on the misalignment
+branch: a1 genuinely present (> 0.12) and the electrical shape
+(2x-dominant with no 3x companion) excluded even when a 1x exists.
+
+Measured on the stored 2,000-run ledgers: zero accuracy cost, one false
+misalignment removed, zero misalignment recall lost. The near-null
+result is itself the finding: **SimForge always injects 0.25 residual
+imbalance, so the masquerade population (weak 1x + strong slip-offset
+2x) does not exist in the corpus** — the simulator cannot currently
+stress the rule that field experience says matters. SimForge v1.2 must
+draw residual imbalance in 0.05–0.35 (and emit motor points with the
+2LF line at its true slip offset as the dominant low-band feature) so
+this failure mode is measurable. Until then the rule rides along as a
+free robustness guard, ledger-logged as attempt #9.
+
 ## Verdict and next moves (ranked, mechanism in hand)
 
 Peak-Shor is PROMOTED as the O1 candidate engine (gate-logged). The
