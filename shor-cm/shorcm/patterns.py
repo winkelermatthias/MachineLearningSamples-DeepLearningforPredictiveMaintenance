@@ -832,6 +832,29 @@ class GeneralTracker:
                 out[str(r["id"])] = td
         return out
 
+    def reframe(self, ratio):
+        """A decisive speed-frame correction arrived (belief flip):
+        re-key order-based identities by `ratio` = f_new / f_old —
+        orders observed under the old frame were o_old = o_true *
+        f_new / f_old... i.e. divide by `ratio` to express them in the
+        corrected frame. Energy histories carry over (band integrals
+        are frame-independent to first order); instances are marked so
+        downstream consumers know the early points are re-keyed, not
+        re-measured."""
+        for r in self.reg:
+            t, q = r["id"][0], list(r["id"])
+            if t in ("HARM",) and abs(q[1] - 1.0) < 0.03:
+                q[1] = round(q[1] / ratio, 2)
+            elif t in ("NEARRAT", "TONE"):
+                q[1] = round(q[1] / ratio, 1)
+            elif t == "SIDEBAND":
+                q[1] = round(q[1] / ratio, 1)
+                q[2] = round(q[2] / ratio, 2)
+            elif t == "BAND":
+                q[1] = round(q[1] / ratio, 0)
+            r["id"] = tuple(q)
+            r["reframed"] = True
+
     def groups(self):
         """Cluster instances that are kinematically ONE source: a
         bearing tone (NEARRAT), its modulation fan (SIDEBAND at the

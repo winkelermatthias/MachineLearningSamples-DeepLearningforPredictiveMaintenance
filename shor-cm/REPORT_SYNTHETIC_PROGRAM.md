@@ -1263,6 +1263,47 @@ speed-frame error (the nameplate prior at its current weight is
 ineffective — weight gating on synthetic dev is the queued fix), and
 CWRU fault-size ordering doesn't track the synthetic severity notion.
 
+## Iteration 27: probabilistic speed belief — the design works, the parameters don't yet
+
+Matthias's directive after the CWRU no-1× lesson: hold the speed
+*probabilistically* when the shaft is invisible, recover decisively
+when a developing fault makes the 1× undeniable, and use cross-sensor
+intelligence. Built as `shorcm/speedbelief.py`:
+
+- a persistent per-asset **posterior over a log-spaced speed grid**
+  (octave structure explicit: ⅓×…3× locks representable), seeded by
+  the nameplate — which on a truly quiet machine is the only anchor;
+- **rational-family evidence** (the Shor reading, one level up): a 3×
+  lock is *evidence for* the fundamental at c/3 — each candidate votes
+  kin bumps across its family and the prior selects within it;
+- a **correlated-evidence temper**: re-measuring an unchanged spectrum
+  is not new information, so a static wrong lock cannot out-shout the
+  nameplate, while an emerging fault lattice arrives at full weight;
+- **decisive-flip corrections** (posterior gap sustained over several
+  records) and `GeneralTracker.reframe(ratio)` — history is re-keyed,
+  not restarted, when the frame was wrong;
+- cross-sensor fusion in hypothesis space with online per-sensor
+  reliability (explicitly NOT the raw score averaging killed in
+  iteration 20).
+
+T56 pins the exact requested behavior end-to-end: no shaft evidence +
+confidently 3×-locked estimator → belief holds the right octave at an
+honest ~0.5; fault develops → converges to 0.96; a wrong early
+commitment fires exactly one correction and the tracker re-keys. T57
+pins misleading-mount downweighting.
+
+**Corpus-scale, honestly: not deployable yet.** On 40 weak-1×
+synthetic fleets the belief beats the per-record baseline only in the
+no-1× phase (0.13 vs 0.07) and loses badly after onset (0.23 vs
+0.43); half its corrections are false; CWRU cross-sensor lands 0.148.
+The mechanism is right and the parameterization is wrong — the
+identified defect is the reliability feedback (honest sensors get
+punished for disagreeing with a prior-driven MAP during the quiet
+phase; both CWRU sensors were driven to the floor). Two live patches
+were tried, both made it worse, both reverted — this surface needs
+the stored-series offline-sweep discipline that fixed the CUSUM
+channel, queued as the next iteration.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND
