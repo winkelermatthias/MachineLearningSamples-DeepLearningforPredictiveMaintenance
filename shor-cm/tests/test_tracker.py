@@ -196,3 +196,23 @@ def test_T43_multi_instance_nearrat_registry():
     grow_k = min(orders, key=lambda k: abs(orders[k] - 3.05))
     conf_k = min(orders, key=lambda k: abs(orders[k] - 4.62))
     assert alarms[grow_k] and not alarms[conf_k], (alarms, orders)
+
+
+def test_T45_cascade_api_end_to_end():
+    """The deployment API: frozen-artifact schema, single-record output
+    contract, and the monitor's streaming contract, on two fresh
+    machines. This is the surface MAFAULDA/Relos data will hit."""
+    from shorcm import simforge_mc as MC
+    from shorcm.cascade import Cascade
+    casc = Cascade()                     # no frozen models: rules-only
+    for i in (5, 12):
+        m, X = MC.sample_run_mc(900_000 + i)
+        out = casc.analyze_record(X, MC.FS, V2.kinematic_sheet(m),
+                                  meta={"component": "motor"})
+        assert "speed_hz" in out and "speed_confidence" in out
+        assert "fault_rules" in out and "patterns_hz" in out
+        assert "severity_drivers" in out and "axial" in out
+    mon = casc.monitor(V2.kinematic_sheet(m), f_ref=m["f_shaft"])
+    for t in range(3):
+        rec = mon.feed(t, X, MC.FS)
+        assert "alarms" in rec and "speed_locked_hz" in rec
