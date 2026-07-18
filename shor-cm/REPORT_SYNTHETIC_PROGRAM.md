@@ -1304,6 +1304,60 @@ were tried, both made it worse, both reverted — this surface needs
 the stored-series offline-sweep discipline that fixed the CUSUM
 channel, queued as the next iteration.
 
+## Iteration 28: the big look — sidecar audit + opportunity tests, and the biggest speed fix yet
+
+Per Matthias's directive, two sidecar agents ran in parallel with the
+main line:
+
+**Test sidecar** — 13 new tests (`tests/test_contracts.py`,
+`tests/test_robustness.py`), all green with zero xfails: the
+train/serve feature contract is now permanently pinned (the v4-class
+order skew can never ship silently again), share-closure holds in both
+domains, and the system *survived every future-issue probe* — DC
+offset + clipping, 1.5-second records, +8% in-record speed ramps, two
+simultaneous faults, velocity-integrated signals, 60%-saturated
+impulsive bearings — while NaN and dead-channel inputs raise cleanly
+instead of fabricating patterns.
+
+**Audit sidecar** — `work/audit_iter28.md`, 15 ranked findings across
+unpinned mechanisms, contract seams, and future issues. Three were
+actioned immediately:
+
+1. **Degenerate-margin overconfidence** (real contract violation): a
+   drowned or single-candidate record produced a margin against the
+   −99 sentinel, which the isotonic calibrator clamps to its MAXIMUM —
+   confidence ~1.0 on garbage. Guarded (confidence 0.0 + abstain) and
+   pinned.
+2. **Name-exact model contract**: models retrained on a named
+   DataFrame (identical metrics), so the feature pin is by name, not
+   just count.
+3. **The mains mask was deleting 2-pole machines.** The blanket
+   ±1.5 Hz grid-hum mask removed the 1×/2× of every mains machine
+   whose shaft sits near 50/60 Hz — from candidate generation AND
+   scoring. Measured on the corpus: that class (13.5% of machines) ran
+   at speed_ok **0.348** vs 0.663 for everyone else. The fix is the
+   narrowness principle a third time (crystal hum vs broad shaft
+   line, using the concentration channel spectral_peaks already
+   carries): **0.348 → 0.648, parity restored**, non-grid machines
+   within noise, 69 tests green. The largest single speed gain in the
+   program.
+
+**Main line meanwhile** — the SpeedBelief offline sweep (162 configs
+on stored dev series, the CUSUM discipline) found **zero admissible
+configs**, and the dev-selected confidence-gated hybrid FAILED its
+confirm on the untouched eval block (0.419 vs 0.431; quiet-phase
+advantage vanished). The line is closed: SpeedBelief remains a
+mechanism-level tool (T56/T57 — nameplate-anchored octave holding,
+decisive-flip recovery, tracker reframe) for registry-anchored assets,
+not a general speed improvement.
+
+Remaining audit backlog, ranked: unit/scale contract for field data,
+input-hygiene gate at the adapter layer, load-varying VFD electrical
+lines (simulator and detector blind spots currently aligned),
+monitor two-frame unification + PatternTracker reframe, kinematic
+sheet-vs-evidence contradiction flag, and pins for the 3×-arbitration,
+adaptive gates, and remaining isolation mechanisms.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND

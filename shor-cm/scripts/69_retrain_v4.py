@@ -46,14 +46,14 @@ def main():
             "C_ledger+pf+pfe": le + PT.PF_COLS + PT.PF_ENV_COLS}
     oof = {}
     for tag, cols in sets.items():
-        X = d[cols].values
+        X = d[cols]
         pred = np.full(len(d), -1)
         for tr, te in GroupKFold(5).split(X, y, groups):
             mdl = lgb.LGBMClassifier(n_estimators=400,
                                      learning_rate=0.05, num_leaves=31,
                                      random_state=20260709, verbose=-1)
-            mdl.fit(X[tr], y[tr])
-            pred[te] = mdl.predict(X[te])
+            mdl.fit(X.iloc[tr], y[tr])
+            pred[te] = mdl.predict(X.iloc[te])
         oof[tag] = pred
     mf1 = {t: round(float(f1_score(y, p, average="macro")), 4)
            for t, p in oof.items()}
@@ -66,15 +66,15 @@ def main():
     flt = (d.fault != "healthy").values
     sev_oof = {}
     for tag in ("B_ledger+pf", "C_ledger+pf+pfe"):
-        X = d[sets[tag]].values
+        X = d[sets[tag]]
         pred = np.full(len(d), np.nan)
         for tr, te in GroupKFold(5).split(X, d.severity.values, groups):
             tr_f = tr[flt[tr]]
             mdl = lgb.LGBMRegressor(n_estimators=400, learning_rate=0.05,
                                     num_leaves=31, random_state=20260709,
                                     verbose=-1)
-            mdl.fit(X[tr_f], d.severity.values[tr_f])
-            pred[te] = mdl.predict(X[te])
+            mdl.fit(X.iloc[tr_f], d.severity.values[tr_f])
+            pred[te] = mdl.predict(X.iloc[te])
         sev_oof[tag] = pred
     m = flt & np.isfinite(sev_oof["C_ledger+pf+pfe"])
     rho = {t: round(float(spearmanr(d.severity.values[m],
@@ -86,15 +86,15 @@ def main():
 
     use_pfe = gate["promote"]
     cols = sets["C_ledger+pf+pfe" if use_pfe else "B_ledger+pf"]
-    X = d[cols].values
+    X = d[cols]
     mdl = lgb.LGBMClassifier(n_estimators=400, learning_rate=0.05,
                              num_leaves=31, random_state=20260709,
                              verbose=-1)
-    mdl.fit(X, y)
+    mdl.fit(X, y)          # named DataFrame: name-exact contract
     sev = lgb.LGBMRegressor(n_estimators=400, learning_rate=0.05,
                             num_leaves=31, random_state=20260709,
                             verbose=-1)
-    sev.fit(X[flt], d.severity.values[flt])
+    sev.fit(X[flt.tolist()] if not hasattr(X, 'iloc') else X.iloc[np.flatnonzero(flt)], d.severity.values[flt])
     dc = pd.read_parquet("experiments/confidence/records.parquet")
     iso = IsotonicRegression(out_of_bounds="clip", y_min=0, y_max=1)
     iso.fit(dc.margin12.values, dc.correct.values.astype(float))
