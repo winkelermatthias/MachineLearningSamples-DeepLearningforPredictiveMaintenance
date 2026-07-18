@@ -232,6 +232,100 @@ def estimate_speed_shor(x, fs, meta=None, top=3, refine=True,
             for (s, c, ev), w in zip(out[:top], conf[:top])]
 
 
+# ---------------- kinematic-sheet conditioned speed ----------------
+
+def sheet_expected_orders(sheet):
+    """Expected order set (relative to the INPUT shaft) from a kinematic
+    sheet: {'ratio': f_out/f_in or None, 'mesh': z1 or None,
+    'passage': vane/blade count on the output shaft or None,
+    'planetary': (Zs, Zp, Zr, Np) or None}. Weights are coarse
+    amplitude priors."""
+    exp = {1.0: 1.0, 2.0: 0.4, 3.0: 0.25}
+    r = sheet.get("ratio")
+    if r and abs(r - 1) > 0.02:
+        exp[r] = 0.5
+        exp[2 * r] = 0.25
+        if sheet.get("passage"):
+            exp[sheet["passage"] * r] = 0.5
+    elif sheet.get("passage"):
+        exp[float(sheet["passage"])] = 0.5
+    if sheet.get("mesh"):
+        exp[float(sheet["mesh"])] = 0.6
+    pl = sheet.get("planetary")
+    if pl:
+        Zs, Zp, Zr, Np = pl
+        rc = Zs / (Zs + Zr)
+        exp[rc] = 0.4
+        exp[Np * rc] = 0.35
+        exp[Zr * rc] = 0.6                       # mesh order
+        if sheet.get("passage"):
+            exp[sheet["passage"] * rc] = 0.5
+    return exp
+
+
+def sheet_match(pf, pa, c, exp, rtol=0.012):
+    """Weighted fraction of the sheet's expected orders found under
+    hypothesis c (peak within rtol at w * expected order)."""
+    tot = hit = 0.0
+    for o_e, w in exp.items():
+        tot += w
+        m = np.abs(pf / c - o_e) < max(rtol * o_e, 0.01)
+        if m.any():
+            hit += w
+    return hit / (tot + 1e-12)
+
+
+def estimate_speed_sheet(x, fs, sheet, meta=None, top=3,
+                         extra_candidates=()):
+    """Blind speed WITH the asset's kinematic sheet: every candidate c
+    additionally spawns derived input-shaft hypotheses c/r for each
+    known transmission ratio (a driven-lattice hit becomes evidence FOR
+    the input), and scoring blends rational structure with the sheet
+    template match."""
+    pf, pa, pc = spectral_peaks(x, fs)
+    cands = list(pair_candidates(pf, pa))
+    cands += [v for v in spacing_candidates(pf, pa) if LO <= v <= HI]
+    cands += [v for v in extra_candidates if LO <= v <= HI]
+    ratios = []
+    if sheet.get("ratio") and abs(sheet["ratio"] - 1) > 0.02:
+        ratios.append(sheet["ratio"])
+    if sheet.get("planetary"):
+        Zs, Zp, Zr, Np = sheet["planetary"]
+        ratios.append(Zs / (Zs + Zr))
+    derived = [c / r for c in cands for r in ratios if LO <= c / r <= HI]
+    full = []
+    for c in cands + derived:
+        for mlt in (1.0, 0.5, 2.0):
+            v = c * mlt
+            if LO <= v <= HI and all(abs(v / u - 1) > 0.012 for u in full):
+                full.append(v)
+    if not full:
+        return [{"hz": float("nan"), "confidence": 0.0, "ev": {}}]
+    exp = sheet_expected_orders(sheet)
+    scored = []
+    for c in full[:40]:
+        sc, ev = hz_structure_score(pf, pa, c)
+        sm = sheet_match(pf, pa, c, exp)
+        ev["sheet"] = round(sm, 2)
+        scored.append((sc + 2.5 * sm, c, ev))
+    scored.sort(key=lambda t: -t[0])
+    out = []
+    for sc, c, ev in scored:
+        try:
+            _, mt = T.phase_from_comb(x, fs, f_nom=c, prior_rel_sigma=0.008)
+            c = float(mt["rate_hz"])
+        except Exception:
+            pass
+        if all(abs(c / c0 - 1) > 0.008 for _, c0, _ in out):
+            out.append((sc, c, ev))
+        if len(out) >= max(top, 3):
+            break
+    s = np.array([v for v, _, _ in out])
+    conf = np.exp(s - s.max()); conf = conf / conf.sum()
+    return [{"hz": round(c, 3), "confidence": round(float(w), 3), "ev": ev}
+            for (v, c, ev), w in zip(out[:top], conf[:top])]
+
+
 # ---------------- multi-periodicity pattern ledger ----------------
 
 def pattern_ledger_peaks(pf, pa, pc, f0, qmax=8, rtol=0.012):

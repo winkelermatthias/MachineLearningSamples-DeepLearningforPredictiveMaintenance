@@ -531,6 +531,40 @@ The killed attempt is ledger-logged with its mechanism; the recall
 bottleneck for growth detection remains the blind-speed stage, exactly
 as the cascade analysis predicted.
 
+## Iterations 5–6: frame consistency and the kinematic sheet
+
+**Iteration 5 — speed lock v2 (FrameSelector, T37): PARTIAL.** The
+killed v1's autopsy specified the design: warmup consensus by
+coordinate ascent (record 1 has no special authority) + per-record
+scoring by invariant-fingerprint consistency + a structural quality
+term (integer-mass fraction — a consistently ALIASED frame is as
+self-consistent as the true one; only frame quality separates them,
+which T37 proved by failing first). Fleet result: locked top-1
+0.349 → 0.370, false alarms 0.035 (v1: 0.069; adaptive gate: 0.012).
+Better than v1 in every column, but marginal in absolute terms — the
+candidate list's top-3 recall (0.63) bounds ANY frame-selection scheme.
+The bottleneck is candidate generation on geared machines, which is
+exactly what iteration 6 attacks.
+
+**Iteration 6 — kinematic-sheet-conditioned speed (T38): PROMOTED.**
+The asset registry knows the transmission: ratio, mesh teeth, passage
+count, planetary set. Two mechanisms: every candidate c spawns derived
+input-shaft hypotheses c/r (a driven-lattice hit becomes evidence FOR
+the input instead of a rival), and scoring blends rational structure
+with a sheet template match. On all 1,107 geared/belt/planetary corpus
+runs (bit-identical seeds):
+
+| archetype | plain top-1 | sheet top-1 | plain top-3 | sheet top-3 |
+|---|---|---|---|---|
+| belt fan | 0.335 | **0.479** | 0.556 | 0.708 |
+| 1-stage gearbox | 0.247 | **0.459** | 0.498 | 0.700 |
+| 2-stage gearbox | 0.237 | **0.385** | 0.556 | 0.712 |
+| planetary | 0.255 | **0.426** | 0.490 | 0.681 |
+| **all geared** | 0.267 | **0.437** | 0.523 | **0.699** |
+
++17 pp top-1 across the board — the single largest speed gain of the
+program, and it comes from metadata every deployment has.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND

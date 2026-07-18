@@ -115,3 +115,34 @@ def test_T36_temporal_speed_lock_suppresses_octave_flips():
     cands_move = [{"hz": 39.0, "confidence": 0.85},
                   {"hz": 78.0, "confidence": 0.15}]
     assert abs(TK.select_speed(cands_move, 30.0) - 39.0) < 1e-9
+
+
+def test_T37_frame_selector_consistency_beats_flips_and_first_error():
+    """Records of one machine at wandering speed; candidate lists contain
+    the true frame and octave aliases. Confidence prefers the alias on
+    some records INCLUDING record 1. FrameSelector must recover the true
+    frame nearly everywhere; v1 select_speed locks onto record-1's error."""
+    rng = np.random.default_rng(60)
+    prof = {1.0: 1.0, 2.0: 0.45, 3.0: 0.3, 5.0: 0.22, 6.0: 0.35}
+    T = 10
+    sel = TK.FrameSelector(warmup=5)
+    chosen, truth = [], []
+    for t in range(T):
+        f = 30.0 * (1 + 0.12 * np.sin(1.3 * t))
+        truth.append(f)
+        pf = np.array([k * f * (1 + rng.normal(0, 0.002)) for k in prof])
+        pa = np.array([v * (1 + 0.1 * rng.normal()) for v in prof.values()])
+        # confidence flips to the octave on even records (incl. t=0)
+        if t % 2 == 0:
+            cands = [{"hz": 2 * f, "confidence": 0.5},
+                     {"hz": f, "confidence": 0.35},
+                     {"hz": f / 2, "confidence": 0.15}]
+        else:
+            cands = [{"hz": f, "confidence": 0.5},
+                     {"hz": 2 * f, "confidence": 0.3},
+                     {"hz": f / 2, "confidence": 0.2}]
+        chosen.append(sel.observe(cands, pf, pa))
+    # apply retroactive warmup choices
+    chosen[:5] = sel.warmup_choices
+    ok = sum(abs(c / f - 1) < 0.02 for c, f in zip(chosen, truth))
+    assert ok >= 9, (ok, [round(c / f, 2) for c, f in zip(chosen, truth)])
