@@ -71,8 +71,10 @@ def test_T34_order_invariant_tracking_under_variable_speed():
             got += 1
         tr.update(t, en, mm["f_shaft"])
     assert got >= 6, f"NEARRAT found in only {got}/8 records"
-    td = tr.trends(min_n=6).get("NEARRAT")
-    assert td is not None and not td["alarm"], td
+    tds = {k: d for k, d in tr.trends(min_n=6).items()
+           if k.startswith("NEARRAT#")}
+    assert tds, "no NEARRAT instance accumulated 6+ records"
+    assert not any(d["alarm"] for d in tds.values()), tds
 
 
 def test_T35_band_energy_calibration():
@@ -172,3 +174,25 @@ def test_T39_gmf_band_energy_calibration():
         if done >= 5:
             return
     assert done >= 3, "too few gear cases sampled"
+
+
+def test_T43_multi_instance_nearrat_registry():
+    """A growing bearing and a CONSTANT confuser at another order must
+    keep separate identities: the growing instance alarms, the constant
+    one stays quiet, orders stay resolved."""
+    rng = np.random.default_rng(90)
+    tr = TK.PatternTracker(f_ref=30.0)
+    for t in range(16):
+        e_bear = 1e-3 * 10 ** (1.4 * t / 15) * (1 + 0.1 * rng.standard_normal())
+        e_conf = 0.05 * (1 + 0.15 * rng.standard_normal())
+        lst = [(max(e_conf, 1e-6), 4.62 * (1 + rng.normal(0, 0.005))),
+               (max(e_bear, 1e-6), 3.05 * (1 + rng.normal(0, 0.008)))]
+        tr.update(t, {"NEARRAT_LIST": lst, "NEARRAT": max(lst)}, 30.0)
+    tds = tr.trends()
+    nr = {k: d for k, d in tds.items() if k.startswith("NEARRAT#")}
+    assert len(nr) == 2, nr.keys()
+    alarms = {k: d["alarm"] for k, d in nr.items()}
+    orders = {k: tr.nearrat[int(k.split('#')[1])]["order"] for k in nr}
+    grow_k = min(orders, key=lambda k: abs(orders[k] - 3.05))
+    conf_k = min(orders, key=lambda k: abs(orders[k] - 4.62))
+    assert alarms[grow_k] and not alarms[conf_k], (alarms, orders)
