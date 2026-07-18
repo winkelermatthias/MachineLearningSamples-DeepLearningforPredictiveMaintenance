@@ -92,7 +92,8 @@ def cwru(casc):
     import scipy.io as sio
     rows = []
     root = Path("data/cwru/12k_Drive_End_Bearing_Fault_Data")
-    files = [(p, p.parts[-3]) for p in sorted(root.rglob("*.mat"))]
+    files = [(p, next(c for c in p.parts if c in ("IR", "OR", "B")))
+             for p in sorted(root.rglob("*.mat"))]
     files += [(p, "Normal") for p in
               sorted(Path("data/cwru/Normal").glob("*.mat"))]
     for p, cls in files:
@@ -203,8 +204,15 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     casc = Cascade.load(MODELS)
     res = {"models": MODELS, "tag": TAG}
+    only = os.environ.get("DS", "").split(",") if os.environ.get("DS") \
+        else None
+    if (OUT / "findings.json").exists():              # merge partial
+        res = json.loads((OUT / "findings.json").read_text())
+        res.update({"models": MODELS, "tag": TAG})
     for name, fn in (("cwru", cwru), ("mfpt", mfpt), ("seu", seu),
                      ("windturbine", windturbine)):
+        if only and name not in only:
+            continue
         try:
             res[name] = fn(casc)
             print(f"{name} done {time.time()-t0:.0f}s", flush=True)
