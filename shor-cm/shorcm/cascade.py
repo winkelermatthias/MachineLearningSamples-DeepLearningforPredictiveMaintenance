@@ -101,8 +101,9 @@ class Cascade:
         # envelope evidence surface: impulsive bearing faults live in
         # the HF-resonance envelope, not the raw order spectrum (the
         # MFPT transfer gate measured raw attribution 0.0 there)
+        from . import patterns as PT
+        pats_env = None
         try:
-            from . import patterns as PT
             pats_env, _, band = PT.decompose_envelope(x0, fs, f_hat)
             out["patterns_envelope"] = [
                 {"type": p["type"], "params": p["params"],
@@ -116,7 +117,6 @@ class Cascade:
         if self.fault_model is not None and led is not None:
             feats = [led.get(f, 0.0) for f in SC.LEDGER_FEATURES_V2]
             if self.meta.get("fault_model", {}).get("features_pf"):
-                from . import patterns as PT
                 try:
                     pats, _ = PT.decompose(x0, fs, f_hat,
                                            sheet=sheet or None)
@@ -124,6 +124,9 @@ class Cascade:
                 except Exception:
                     pfd = dict.fromkeys(PT.PF_COLS, 0.0)
                 feats = feats + [pfd[c] for c in PT.PF_COLS]
+            if self.meta.get("fault_model", {}).get("features_pfe"):
+                pfe = PT.pattern_features_env(pats_env or [])
+                feats = feats + [pfe[c] for c in PT.PF_ENV_COLS]
             proba = self.fault_model.predict_proba([feats])[0]
             i = int(np.argmax(proba))
             ps = np.sort(proba)

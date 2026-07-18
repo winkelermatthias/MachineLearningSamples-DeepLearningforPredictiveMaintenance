@@ -1226,6 +1226,43 @@ soft octave-scale bonus) — in deployment the asset registry always
 knows approximate RPM, and on a healthy machine it is the only anchor
 there is.
 
+## Iteration 26 (part 2): v4 models — the envelope reaches the classifiers
+
+The training corpus was regenerated end-to-end with the impulsive
+renderer and the patched estimator (2,000 runs, deployment-condition
+est-speed), and the classifiers retrained with the envelope feature
+block (`pfe_*`). Dev gate (GroupKFold by speed band, α = 0.05/46):
+blind 6-way mF1 ledger 0.670 → +pf 0.706 → **+pfe 0.742**; severity
+OOF Spearman 0.657 → 0.687. Frozen as v4.
+
+The held-out certification also caught a **silent train/serve defect**
+that OOF metrics are structurally blind to: training consumed ledger
+columns in parquet order while the API feeds the canonical order —
+same 24 features, different positions, fault accuracy silently
+collapsed to 0.667. Fixed (canonical order at train time), and the
+episode is the strongest argument yet for API-only held-out
+certification.
+
+**Certified (held-out, API-only, now ~half-impulsive corpus):** fault
+0.798, speed 0.588/0.787, ECE 0.028 (≤ 0.05 contract MET), subtype
+0.926.
+
+**Real-data before → after (v3 → v4 frozen models, same gates):**
+
+| gate | v3 | v4 |
+|---|---|---|
+| MFPT bearing recall (0 baseline FPs) | 0.529 | **1.000** |
+| MFPT severity vs baseline | FAIL | **PASS** |
+| Wind-turbine severity trend (real degradation) | 0.447 | **0.694 PASS** |
+| CWRU bearing recall | 0.533 | **0.900** |
+| CWRU envelope subtype (model-independent) | PASS | PASS |
+| SEU fault discrimination | FAIL | FAIL (planetary features pending) |
+
+Open, documented: CWRU normals still false-alarm through the 3×
+speed-frame error (the nameplate prior at its current weight is
+ineffective — weight gating on synthetic dev is the queued fix), and
+CWRU fault-size ordering doesn't track the synthetic severity notion.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND

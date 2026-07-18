@@ -32,7 +32,8 @@ from shorcm import patterns as PT                    # noqa: E402
 from shorcm.cascade import Cascade                   # noqa: E402
 
 WORKERS = int(os.environ.get("WORKERS", 4))
-OUT = Path("experiments/cwru")
+OUT = Path(os.environ.get("OUT_DIR", "experiments/cwru"))
+NOM = bool(int(os.environ.get("NOM", 0)))
 ROOT = Path("data/cwru")
 ORDERS = {"IR": 5.4152, "OR": 3.5848, "B": 2.3567}
 
@@ -90,7 +91,9 @@ def one(args):
     x = np.asarray(m[de], float).ravel()
     rpm = float(np.asarray(m[rpmk]).ravel()[0]) if rpmk else np.nan
     f_true = rpm / 60.0 if np.isfinite(rpm) else np.nan
-    out = casc().analyze_record(x, float(fs), {})
+    out = casc().analyze_record(x, float(fs), {},
+                            meta={"f_nom": f_true} if NOM
+                            and np.isfinite(f_true) else None)
     row = {"record": path.stem, "label": lab, "subtype": sub,
            "size": size, "f_true": f_true,
            "f_hat": out.get("speed_hz"),

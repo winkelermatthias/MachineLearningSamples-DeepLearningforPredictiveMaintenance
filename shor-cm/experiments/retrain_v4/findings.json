@@ -1,0 +1,25 @@
+{
+ "n": 1999,
+ "mF1": {
+  "A_ledger": 0.6704,
+  "B_ledger+pf": 0.7059,
+  "C_ledger+pf+pfe": 0.742
+ },
+ "gate_C_vs_B": {
+  "promote": true,
+  "delta_mean": 0.03588839498660431,
+  "delta_lo_alpha_adj": 0.012255777834350032,
+  "alpha": 0.0010869565217391304,
+  "attempts": 46,
+  "guardrails_ok": true
+ },
+ "severity_spearman": {
+  "B_ledger+pf": 0.657,
+  "C_ledger+pf+pfe": 0.687
+ },
+ "frozen": {
+  "features_pfe": true,
+  "n_features": 47
+ },
+ "wall_s": 52.9
+}

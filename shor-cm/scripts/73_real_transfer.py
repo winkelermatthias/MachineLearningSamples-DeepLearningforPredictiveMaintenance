@@ -43,7 +43,8 @@ from shorcm import patterns as PT                    # noqa: E402
 from shorcm.cascade import Cascade                   # noqa: E402
 
 WORKERS = int(os.environ.get("WORKERS", 4))
-OUT = Path("experiments/real_transfer")
+OUT = Path(os.environ.get("OUT_DIR", "experiments/real_transfer"))
+NOM = bool(int(os.environ.get("NOM", 0)))
 
 MFPT = sorted(Path("data/mfpt").glob("*.mat"))
 SEU = sorted(Path("data/seu").glob("*.csv"))
@@ -84,7 +85,9 @@ def near_pattern(pats, order, tol=0.06):
 
 def mfpt_one(path):
     x, fs, sheet, meta = AD.from_mfpt_mat(str(path))
-    out = casc().analyze_record(x, fs, sheet)
+    out = casc().analyze_record(
+        x, fs, sheet,
+        meta={"f_nom": meta["rate_hz"]} if NOM else None)
     name = path.stem
     lab = "baseline" if "baseline" in name else \
         ("outer" if "Outer" in name else "inner")
@@ -117,7 +120,9 @@ def seu_one(args):
         x, fs, sheet, meta = AD.from_seu_csv(str(p), t0=t0)
         if len(x) < 4 * fs:
             return None
-        out = casc().analyze_record(x, fs, sheet)
+        out = casc().analyze_record(
+            x, fs, sheet,
+            meta={"f_nom": meta["rate_hz"]} if NOM else None)
     except Exception:
         return None
     grp = "gearset" if p.name.startswith("gearset") else "bearingset"

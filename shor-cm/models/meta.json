@@ -1,9 +1,9 @@
 {
- "frozen_at": "iteration-19",
+ "frozen_at": "iteration-26",
  "fault_model": {
   "algo": "lightgbm-6way",
-  "train": "experiments/v2 est-speed ledgers + pattern-layer features",
-  "n": 2000,
+  "train": "corpus_v3 (impulsive renderer, est-speed condition)",
+  "n": 1999,
   "features": [
    "a1",
    "a2",
@@ -50,6 +50,13 @@
    "pf_floor",
    "pf_wander"
   ],
+  "features_pfe": [
+   "pfe_top",
+   "pfe_tot",
+   "pfe_n",
+   "pfe_frac",
+   "pfe_harm"
+  ],
   "classes": [
    "healthy",
    "imbalance",
@@ -59,20 +66,20 @@
    "gear"
   ]
  },
- "calibrator": {
-  "algo": "isotonic(margin12)",
-  "train": "experiments/confidence",
-  "n": 1199
- },
  "severity_model": {
   "algo": "lightgbm-reg",
-  "train": "faulted rows, same features",
-  "n": 1681,
-  "gate": "OOF spearman 0.732, all-class >= 0.462 (experiments/severity)"
+  "n": 1680,
+  "oof_spearman": {
+   "B_ledger+pf": 0.657,
+   "C_ledger+pf+pfe": 0.687
+  }
+ },
+ "calibrator": {
+  "algo": "isotonic(margin12)",
+  "n": 1199
  },
  "seeds": {
-  "corpus_v2": 20260710,
-  "confidence": 20260710,
+  "corpus": 20260710,
   "model": 20260709
  },
  "subtype_threshold_ax_ratio_2": 0.61
