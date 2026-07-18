@@ -1151,6 +1151,43 @@ Honest fail kept: SEU's bearingset envelope delta is flat (0.05) —
 that rig's bearing faults on the planetary channel are not impulsive
 in the same sense; documented, not chased.
 
+## Iteration 25: real run-to-failure — quiet for 30 days, alarm on day 31
+
+Data acquisition first: Google Drive is blocked at this environment's
+proxy (three unblock routes documented for Matthias), but **git clone
+of public GitHub repositories works** — which opens every
+GitHub-hosted dataset directly. Two immediate pulls:
+
+- `mathworks/WindTurbineHighSpeedBearingPrognosis-Data` — **a real
+  50-day run-to-failure sequence** (one 6-s record per day, vibration
+  + tacho, a real inner-race fault develops; Bechhoefer, CC BY-NC-SA)
+- `s-whynot/CWRU-dataset` — the full canonical CWRU bearing benchmark
+  (890 MB, Normal + 12k/48k DE + 12k FE, fault sizes 0.007–0.028")
+  staged for the next gate
+
+The wind-turbine gate (pre-registered W1–W4, frozen models, API only)
+is the first test of the program's core promise — *track pattern
+energy over time; alarm when it grows* — on real degradation:
+
+| judgment | result |
+|---|---|
+| W1 alarm timing (fire in last two-thirds, never in first third) | **PASS — first alarm day 31 of 50, quiet days 1–30** |
+| W2 envelope defect emergence (Spearman day vs share) | **PASS — 0.858** |
+| W3 frozen severity trend | FAIL (0.447, bar 0.5) |
+| W4 blind per-record speed | FAIL (0.10; fleet-locked 0.16, supplementary) |
+
+One measurement amendment, recorded: the alarm series must track
+**absolute envelope defect energy with non-detections skipped** —
+zero-filling absent detections poisoned the baseline scatter (an
+87 dB gate), and the defect *share* saturates because overall
+vibration grows with the fault too. Criteria unchanged.
+
+The two fails are the same two transfer limits already on the
+backlog: the severity head has never seen envelope features, and
+blind per-record speed against a dominant gearbox mesh is the known
+hard case (this rig's per-record candidates are wrong outright, so
+temporal locking cannot rescue them).
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND
