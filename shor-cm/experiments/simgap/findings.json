@@ -1,0 +1,108 @@
+{
+  "n_real_windows": 24,
+  "n_real_records": 15,
+  "real_by_dataset": {
+    "cwru": 7,
+    "mfpt": 3,
+    "seu": 8,
+    "wt": 6
+  },
+  "n_sim_windows_v2": 120,
+  "n_sim_windows_v6": 120,
+  "auc_v2_vs_real": 0.9906,
+  "auc_v6_vs_real": 0.9816,
+  "contract_P3-33-D1": {
+    "target": "auc_v6 <= auc_v2 - 0.05",
+    "delta": 0.009,
+    "verdict": "MISSED"
+  },
+  "realism_band_0.5_0.8": {
+    "v2_in_band": false,
+    "v6_in_band": false
+  },
+  "top_discriminating_v2": [
+    {
+      "feature": "psd_crest",
+      "gain": 1099.0
+    },
+    {
+      "feature": "band_09",
+      "gain": 590.0
+    },
+    {
+      "feature": "band_18",
+      "gain": 539.0
+    },
+    {
+      "feature": "band_03",
+      "gain": 326.0
+    },
+    {
+      "feature": "band_04",
+      "gain": 315.0
+    },
+    {
+      "feature": "band_22",
+      "gain": 298.0
+    },
+    {
+      "feature": "spec_entropy",
+      "gain": 268.0
+    },
+    {
+      "feature": "band_05",
+      "gain": 197.0
+    },
+    {
+      "feature": "band_07",
+      "gain": 161.0
+    },
+    {
+      "feature": "spec_flatness",
+      "gain": 135.0
+    }
+  ],
+  "top_discriminating_v6": [
+    {
+      "feature": "peak_density",
+      "gain": 980.0
+    },
+    {
+      "feature": "band_22",
+      "gain": 750.0
+    },
+    {
+      "feature": "env_flatness",
+      "gain": 409.0
+    },
+    {
+      "feature": "band_04",
+      "gain": 369.0
+    },
+    {
+      "feature": "band_01",
+      "gain": 349.0
+    },
+    {
+      "feature": "band_09",
+      "gain": 292.0
+    },
+    {
+      "feature": "band_10",
+      "gain": 254.0
+    },
+    {
+      "feature": "band_06",
+      "gain": 245.0
+    },
+    {
+      "feature": "band_12",
+      "gain": 240.0
+    },
+    {
+      "feature": "band_23",
+      "gain": 204.0
+    }
+  ],
+  "wall_s": 384.5
+}
