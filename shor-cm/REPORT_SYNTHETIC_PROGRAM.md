@@ -201,6 +201,142 @@ Negative results are results: every number above is from committed
 parquet/JSON, every attempt is in the loop ledger, and the failing
 guardrail is reported as failing.
 
+---
+
+# Iteration 2: peak-Shor periodicity discovery + triple judgment
+
+Question asked (Matthias): "did you consider Shor on spectral peaks to
+find the periodicity anywhere present?" Answer: iteration 1 had only
+half-versions (comb grid, cepstrum, and CF-snapping AFTER assuming a
+speed). Iteration 2 implements the literal Shor move — continued-fraction
+rationalization of PEAK-PAIR RATIOS, hypothesis-free — and re-judges the
+system on speed, patterns, and fault, separately and together.
+
+## What was built (`shorcm/peakshor.py`, mechanism tests T20–T23 first)
+
+1. **Pair-ratio candidate generation**: snap f_j/f_i → n/m (CF, n,m ≤ 10);
+   every snapped pair votes f_i/m for the lattice generator. Weighted
+   clustering yields candidates. Greedy re-application on unexplained
+   peaks finds SECOND periodicities (neighbor machines) — periodicity
+   "anywhere present", no grid, no speed prior.
+2. **Hz-domain rational-structure scoring** (~20× cheaper than the
+   resample-per-candidate baseline, so every candidate gets full
+   scrutiny; angular refinement only for the final top-3). New explicit
+   alias signatures both ways: q=2 half-integer forest (double-speed
+   error) and even-integer-only family (half-speed error), with the
+   looseness disambiguator (genuine half-order families bring 2.5×/3.5×
+   members; aliases cannot).
+3. **C3 rule enforced in snapping**: q ≥ 2 rationals must also have small
+   numerator (≤ 10) — an 11/7 "snap" is Farey noise, not kinematics.
+4. **Order-domain ledger repair** (found by chasing the O4 guardrail):
+   cluster adjacent peaks; cluster WIDTH is the drifting discriminator.
+   A severe bearing smears into sub-peaks that individually false-snap
+   (18/5, 29/8 — C3 in action) and defeat the local-floor test; treated
+   as one wide cluster it is unmistakable NEARRAT evidence, exempt from
+   fixed-line masking (a fixed line cannot be wide). Plus concentration
+   gate on comb-mask bases. New bearing severity driver: `uns_abs`.
+5. **2LF ladder autopsy**: candidates DID hit truth on 11/20 motor runs
+   but died in the octave-expansion dedupe + top-18 truncation.
+   Reordering fixed the discard; measured effect of the repair alone:
+   ~zero (top-1 0.208 vs 0.228) — the ladder was never the bottleneck.
+   Kept for the union arm, closed as a finding.
+6. **Isotonic confidence calibration** fitted on even speed bands,
+   evaluated on odd bands.
+
+## Triple judgment on the same 2,000-run corpus (bit-identical seeds)
+
+**SPEED (separately)** — tolerance 1%:
+
+| arm | top-1 | top-3 | octave errors |
+|---|---|---|---|
+| baseline (pinned, iter 1) | 0.228 | 0.558 | 0.092 |
+| baseline + ladder repair (n=400) | 0.208 | 0.580 | 0.135 |
+| **peak-Shor pure** | 0.523 | 0.774 | 0.206 |
+| **union (peak-Shor + all generators)** | **0.546** | **0.800** | 0.208 |
+
+Per fault (union): imbalance 0.76, healthy 0.66, bearing 0.49,
+looseness 0.42, misalignment 0.40 (was 0.076 — the q2-forest signature
+works). Residual failure mode is now honest octave ambiguity: looseness
+53% octave errors, which is the mathematically real f₀-vs-f₀/2 GCD
+degeneracy of a half-order lattice (the generator of {0.5,1,1.5,2}·f₀
+IS f₀/2); breaking it needs amplitude-profile priors, queued below.
+Calibration: ECE 0.216 → 0.151 (isotonic, held-out bands). Still far
+from the 0.05 contract — the confidence signal itself is weak, not just
+miscalibrated.
+
+**PATTERNS (separately, given true speed)** — vs exact SimForge
+composition truth (now emitted by the instrumented generator,
+bit-identical waveforms):
+
+| family | recall | precision |
+|---|---|---|
+| SHAFT harmonics | 0.81 | 0.93 |
+| VANE pass | 0.93 | (in SHAFT) |
+| HALF (looseness ladder) | 0.945 | 0.65 |
+| BEARING drifting tone (order-domain cluster) | 0.63 | — |
+| BEARING (Hz-domain label) | 0.28 | 0.08 |
+| HUM grid family | 0.50 | 0.65 |
+| NEIGHBOR second lattice | 0.32 | 0.63 |
+| ELEC not-misattributed to shaft | 0.86 | — |
+
+Read: shaft-locked structure is solid; drifting-tone patterns belong to
+the order domain (Hz-domain width can't discriminate because wander
+smears the whole shaft lattice too — negative result, documented in
+code); weak-amplitude confusers (hum 0.10, neighbor harmonics) sit at
+the peak-guard edge. Under ESTIMATED speed all pattern metrics scale
+with speed accuracy (shaft recall 0.61) — patterns inherit O1's errors,
+as designed and now measured.
+
+**FAULT (separately and together)** — rules and ML on the repaired
+evidence ledger, grouped 5-fold OOF:
+
+| condition | rules acc | rules mF1 | ML acc | ML mF1 |
+|---|---|---|---|---|
+| true speed ("separate") | 0.617 | 0.644 | **0.940** | **0.941** |
+| estimated speed ("together") | 0.416 | 0.400 | 0.852 | 0.854 |
+
+Both promotion gates PASS at the ledger-tightened α = 0.0125 (lower
+bounds +0.27 / +0.43). Coverage-accuracy at 90% coverage: 0.894.
+The ledger repair moved true-speed ML from 0.878-class to 0.941 —
+bearing recall was the unlock.
+
+**SEVERITY (separately, true speed, observational ρ)**: imbalance→a1
+**0.996**, misalignment→a2/a1 **0.873**, looseness→e_half **0.937**,
+bearing→uns_abs 0.304 observational across machines (paired sweeps:
+rising trend, worst-3 machines mean ρ 0.83; residual wiggles are
+peak-list quantization, zero-violation guardrail formally applies to
+the monotone-constrained model output). Under estimated speed severity
+drivers collapse (misalignment −0.07) — severity CANNOT outrun the
+speed stage, measured twice now.
+
+**TOGETHER (end-to-end blind cascade)**:
+- speed top-1 AND rules fault correct: **0.327**
+- speed top-1 AND ML fault correct: **0.500** (iteration-1 equivalent
+  ≈ 0.207) — the cascade is 2.4× better end-to-end.
+
+## Verdict and next moves (ranked, mechanism in hand)
+
+Peak-Shor is PROMOTED as the O1 candidate engine (gate-logged). The
+program's honest state: speed top-3 0.80 against a 0.99 contract, with
+one dominant, well-understood failure class (octave degeneracy).
+
+1. Octave disambiguation via amplitude-profile priors + the coherence
+   ratio at half-orders (locked-vs-noise test on the disputed 0.5×
+   line) — targets looseness/misalignment octaves, worth ~10 pp top-1.
+2. Multi-channel fusion (SimForge v1.2: correlated channels, radial vs
+   axial ratios) — misalignment axial share is unused evidence.
+3. VFD electrical line as a speed SENSOR (anti-correlated wander
+   discriminator from PHASE2 §2.2) — the f_e line is high-Q and
+   currently only masked, never exploited.
+4. Longer records / more blocks: the C6 maps say bearing separability
+   grows like √N; 4 s at 16 kHz is 30–60 blocks; field records are
+   minutes.
+5. Confidence: replace softmax-over-scores with margin features
+   (score gap, vote mass, alias-partner gap) + isotonic; target
+   ECE ≤ 0.05 before any real-data gate.
+6. Then the reverse-validation transfer gate on MAFAULDA dev — decides
+   ITERATE vs SHIP for the whole program.
+
 ## Artifacts
 
 | Path | Content |
@@ -211,5 +347,9 @@ guardrail is reported as failing.
 | `experiments/massive/ledger.parquet` | 18-feature physics ledger + rules predictions |
 | `experiments/massive/ml_findings.json` | O1/O3/O4 headline numbers |
 | `experiments/massive/*.png` | reliability, degradation, coverage-accuracy, confusion, monotonicity |
-| `work/loop_ledger.jsonl` | 4 attempt entries (constitution-compliant) |
+| `work/loop_ledger.jsonl` | 8 attempt entries (constitution-compliant) |
 | `work/deviations.md` | Docker→venv substitution, real-data wave deferred |
+| `experiments/peakshor/results.parquet` | iteration 2: 2,000 runs × 3 arms × triple judgment |
+| `experiments/peakshor/iter2_findings.json` | iteration-2 headline numbers |
+| `experiments/peakshor/*.png` | speed arms, calibration, coverage-accuracy |
+| `shorcm/peakshor.py` + tests T20–T23 | the peak-Shor engine |
