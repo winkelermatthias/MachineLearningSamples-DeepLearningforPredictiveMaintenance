@@ -1,0 +1,14 @@
+{
+ "n_faulted": 1681,
+ "spearman_all": 0.732,
+ "spearman_per_class": {
+  "bearing": 0.662,
+  "gear": 0.462,
+  "imbalance": 0.843,
+  "looseness": 0.814,
+  "misalignment": 0.675
+ },
+ "auc_healthy_vs_severe": 0.884,
+ "gate_rho_0.6_all_0.45_per_class": true,
+ "wall_s": 3.0
+}

@@ -996,6 +996,53 @@ Also recorded: the pure-ELEC attribution tail (2.9 dB) was autopsied
 and is a detection-limit effect on lines at 1e-4..1e-3 of total
 energy, not a mechanism — documented, no iteration spent.
 
+## Iteration 20: two speed-fusion ideas killed — with the autopsy that matters
+
+Blind speed top-1 (0.586, truth in top-3 at 0.786) was attacked twice;
+both attempts were killed by their probes, and the autopsies are worth
+more than a small win would have been:
+
+1. **Pattern-frame rescoring** (pick the top-3 candidate whose
+   decomposition has the least FLOOR): fixed 5 / broke 32 of 100. The
+   vocabulary is frame-covariant *by design* — under a doubled frame
+   HALFHARM names the lattice, under a halved frame HARM(r) does — so
+   FLOOR share carries no octave information. A frame discriminator
+   needs frame-specific priors, which the sheet template already is.
+2. **Candidate-level multi-channel fusion** (union candidate pool,
+   evidence summed across channels — the design queued when
+   confirmation-style peak fusion was killed): every combination
+   (mean, max, z-normalized; radials-only or all three) *degraded*
+   top-1, and the union pool changed nothing. Two findings: candidate
+   coverage is not the constraint (ranking is), and cross-channel
+   structure evidence misleads the ranker — radial-DE alone is the
+   best available ranking signal.
+
+Consequence for the backlog: further top-1 gains must come from the
+score itself or from fleet temporal locking (already deployed) — not
+from more channels or more candidates. Library untouched (the fused
+estimator was reverted, not shipped).
+
+## Iteration 21: O4 ordinal severity — the last PHASE2 objective delivered
+
+A LightGBM severity head on the same ledger + pattern features
+(faulted machines only, GroupKFold by speed band), with the gate
+pre-registered before training: OOF Spearman ρ ≥ 0.6 overall and
+≥ 0.45 in every class.
+
+- **ρ = 0.732 overall** — imbalance 0.843, looseness 0.814,
+  misalignment 0.675, bearing 0.662, gear 0.462 (all clear the bar)
+- healthy-vs-severe AUC 0.884
+- Frozen as `models/severity_lgbm.joblib`; `analyze_record` now emits
+  `severity_score` ∈ [0, 1] (smoke: 0.488 mild vs 0.914 severe on the
+  same machine)
+
+With O1 (speed + calibrated confidence), O2 (isolating pattern ledger
++ tracking), O3 (fault with abstention) and now O4 (ordinal severity),
+every PHASE2 blind-cascade objective has a certified or gated
+implementation on synthetic data. Combined with per-instance growth
+alarms, the monitor now answers the practical question directly: what
+is wrong, how bad is it NOW, and is it getting worse.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND

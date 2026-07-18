@@ -45,6 +45,12 @@ def main():
     iso = IsotonicRegression(out_of_bounds="clip", y_min=0, y_max=1)
     iso.fit(dc.margin12.values, dc.correct.values.astype(float))
 
+    flt = d.fault != "healthy"                 # O4: severity head,
+    sev = lgb.LGBMRegressor(n_estimators=400,  # faulted machines only
+                            learning_rate=0.05, num_leaves=31,
+                            random_state=20260709, verbose=-1)
+    sev.fit(X[flt.values], d.severity.values[flt.values])
+
     meta = {"frozen_at": "iteration-19",
             "fault_model": {"algo": "lightgbm-6way",
                             "train": "experiments/v2 est-speed ledgers "
@@ -56,10 +62,15 @@ def main():
             "calibrator": {"algo": "isotonic(margin12)",
                            "train": "experiments/confidence",
                            "n": int(len(dc))},
+            "severity_model": {"algo": "lightgbm-reg",
+                               "train": "faulted rows, same features",
+                               "n": int(flt.sum()),
+                               "gate": "OOF spearman 0.732, all-class "
+                                       ">= 0.462 (experiments/severity)"},
             "seeds": {"corpus_v2": 20260710, "confidence": 20260710,
                       "model": 20260709},
             "subtype_threshold_ax_ratio_2": 0.61}
-    Cascade(mdl, iso, meta).save(OUT)
+    Cascade(mdl, iso, meta, severity_model=sev).save(OUT)
     print(json.dumps({"frozen": True, "n_fault": len(d),
                       "n_cal": len(dc),
                       "wall_s": round(time.time() - t0, 1)}, indent=1))
