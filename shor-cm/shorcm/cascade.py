@@ -220,7 +220,7 @@ class MachineMonitor:
             try:
                 pats, _ = PT.decompose(x0, fs, f_lock,
                                        sheet=self.sheet or None)
-                self.gen.update(t, pats)
+                self.gen.update(t, pats, f_speed=f_lock)
                 rec["patterns"] = [
                     {"type": p["type"], "params": p["params"],
                      "share": round(p["share"], 4)}

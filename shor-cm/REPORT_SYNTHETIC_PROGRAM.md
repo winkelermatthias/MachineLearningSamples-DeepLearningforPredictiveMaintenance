@@ -1389,6 +1389,39 @@ IR 0.178 → 0.443, OR −0.248 → 0.081; wind-turbine trend still PASS at
 removing it traded synthetic fit for real transfer — the direction
 this program exists to prefer.
 
+## Iteration 30: the VFD blind spot — half dissolved, half armed
+
+The audit's F5 (a load-varying VFD's electrical lines satisfy every
+single-record bearing signature; simulator and detector blind
+together) got its mechanism: across records, a fixed-Hz source read
+in the order domain moves as 1/speed (log-log slope −1) while a true
+bearing order stays flat (slope 0). Built into the `GeneralTracker`
+(order observations per instance + `fixed_source` classification),
+with **Hz-continuity stitching** — a fixed source fragments across
+order-keyed identities under big speed swings (found by T60 itself);
+matching on order×speed keeps it one instance, and a bearing cannot
+false-match. The monitor feeds its locked speed through
+automatically.
+
+The pre-registered fleet judgment then reshaped the threat model:
+
+- **V2 PASS** — zero true bearing instances wrongly flagged under
+  load variation (the safeguard never suppresses a real fault).
+- **V1 FAIL as registered, with autopsy**: the steady-drive
+  electrical threat is *already neutralized* — 2·f_e is captured as
+  crystal-narrow FIXEDHZ by iteration 16's narrowness defense
+  (measured directly), so it never becomes bearing-shaped evidence.
+  The healthy-fleet NEARRAT instances are noise humps, not disguised
+  electrical lines: the V1 premise was miscast. And slip-only load
+  swings (~1.5% speed span, the common field case) sat below the
+  slope gate — lowered to 0.8% with a minimum of 8 observations
+  (slope SE ≈ 0.1 there, 0 vs −1 stays separable).
+
+Net: the discriminator stands as a deployment safeguard for the case
+the simulator cannot currently render — real VFD lines with PWM
+jitter that evade the crystal test — pinned by T60, proven harmless
+by V2, and waiting for real fleet data to bind. 72 tests green.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND
