@@ -912,6 +912,36 @@ neither crystal nor shaft-locked), and the group-alarm gain was not
 realized on this corpus (energy grew in the same-type instance;
 mechanism held in reserve, pinned by T51).
 
+## Iteration 17: the pattern layer joins the deployment API — monitor gap closed
+
+The general-pattern decomposer and tracker are now part of the
+deployment surface. `MachineMonitor.feed()` returns, alongside the
+existing key-based channel:
+
+- `patterns` — the isolating decomposition of each record (type,
+  params, share) at the locked speed frame;
+- `pattern_alarms` — group-level growth alarms from the
+  `GeneralTracker` (kinematically-linked instances alarm as one
+  source). T45 pins the extended contract.
+
+**Held-out A/B** (seed block 99M — the same protocol and seeds as the
+iteration-14 certification, consumed only through the API; 60 fleets ×
+16 records, VFD speed swings):
+
+| alarm channel | false-alarm machines | growth recall | median delay |
+|---|---|---|---|
+| key-based (certified) | 8.9% | 0.600 | 7.0 |
+| **pattern groups (new)** | **2.2%** | **0.667** | 7.5 |
+
+The key channel reproduces its certified 8.9% false-alarm rate
+exactly, and the pattern channel closes that known gap — **4× fewer
+false-alarm machines at higher recall** and comparable delay. The
+alarm-persistence policy queued at certification is no longer needed
+for false-alarm control. Right-type attribution on the growing
+machines is 0.533 blind (the fleet-level analysis of iteration 16
+showed 0.647 at scale); both channels stay in the API so the fault
+classifier and the growth detector can disagree visibly.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND

@@ -1,0 +1,18 @@
+{
+ "n_fleet": 60,
+ "n_growing": 15,
+ "records": 16,
+ "seed_block": "99M (held-out)",
+ "key": {
+  "false_alarm_machines": 0.089,
+  "growth_recall": 0.6,
+  "median_delay": 7.0
+ },
+ "pat": {
+  "false_alarm_machines": 0.022,
+  "growth_recall": 0.667,
+  "median_delay": 7.5,
+  "growth_right_type": 0.533
+ },
+ "wall_s": 554.9
+}
