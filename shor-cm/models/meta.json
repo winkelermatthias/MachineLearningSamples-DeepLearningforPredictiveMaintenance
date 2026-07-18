@@ -1,8 +1,8 @@
 {
- "frozen_at": "iteration-14",
+ "frozen_at": "iteration-19",
  "fault_model": {
   "algo": "lightgbm-6way",
-  "train": "experiments/v2 est-speed ledgers",
+  "train": "experiments/v2 est-speed ledgers + pattern-layer features",
   "n": 2000,
   "features": [
    "a1",
@@ -29,6 +29,26 @@
    "gmf_rel",
    "gmf_sb_count",
    "gmf_sb_energy"
+  ],
+  "features_pf": [
+   "pf_harm1",
+   "pf_harm1_2x1x",
+   "pf_harm1_n",
+   "pf_harm_oth",
+   "pf_half",
+   "pf_half_n",
+   "pf_sb_seed",
+   "pf_sb_blind",
+   "pf_sb_spacing",
+   "pf_nearrat_top",
+   "pf_nearrat_tot",
+   "pf_nearrat_n",
+   "pf_nearrat_frac",
+   "pf_fixedhz",
+   "pf_tone",
+   "pf_band",
+   "pf_floor",
+   "pf_wander"
   ],
   "classes": [
    "healthy",

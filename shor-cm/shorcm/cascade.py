@@ -95,6 +95,15 @@ class Cascade:
         out["fault_rules"] = SC.rules_from_ledger(led)
         if self.fault_model is not None and led is not None:
             feats = [led.get(f, 0.0) for f in SC.LEDGER_FEATURES_V2]
+            if self.meta.get("fault_model", {}).get("features_pf"):
+                from . import patterns as PT
+                try:
+                    pats, _ = PT.decompose(x0, fs, f_hat,
+                                           sheet=sheet or None)
+                    pfd = PT.pattern_features(pats)
+                except Exception:
+                    pfd = dict.fromkeys(PT.PF_COLS, 0.0)
+                feats = feats + [pfd[c] for c in PT.PF_COLS]
             proba = self.fault_model.predict_proba([feats])[0]
             i = int(np.argmax(proba))
             ps = np.sort(proba)

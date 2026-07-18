@@ -1,0 +1,35 @@
+{
+ "n": 2000,
+ "mF1": {
+  "ledger": 0.7146687758218494,
+  "ledger+pattern": 0.7486689414394521
+ },
+ "gate": {
+  "promote": true,
+  "delta_mean": 0.033783440335288975,
+  "delta_lo_alpha_adj": 0.004393811684784738,
+  "alpha": 0.0013513513513513514,
+  "attempts": 37,
+  "guardrails_ok": true
+ },
+ "features_added": [
+  "pf_harm1",
+  "pf_harm1_2x1x",
+  "pf_harm1_n",
+  "pf_harm_oth",
+  "pf_half",
+  "pf_half_n",
+  "pf_sb_seed",
+  "pf_sb_blind",
+  "pf_sb_spacing",
+  "pf_nearrat_top",
+  "pf_nearrat_tot",
+  "pf_nearrat_n",
+  "pf_nearrat_frac",
+  "pf_fixedhz",
+  "pf_tone",
+  "pf_band",
+  "pf_floor",
+  "pf_wander"
+ ]
+}

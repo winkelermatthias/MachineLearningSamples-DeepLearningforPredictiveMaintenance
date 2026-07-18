@@ -971,6 +971,31 @@ No collateral damage: every other family unchanged or slightly better
 identity is what fixes gear *tracking* — the fused lump previously
 re-registered under drifting blind identities record to record.
 
+## Iteration 19: the pattern layer feeds the fault classifier — blind 6-way 0.775 → 0.815
+
+The isolating decomposition's shares are exactly the physics the
+6-way classifier was missing: the 2x/1x log-ratio inside the HARM(1)
+family (Matthias's misalignment rule as a *learned* feature), the
+half-ladder share (looseness), the seeded GMF share (gear), the
+off-integer NEARRAT share and its fractional order (bearing), FLOOR
+share and measured wander. Eighteen `pf_*` features
+(`patterns.pattern_features`, one implementation shared by training
+and deployment) now ride alongside the ledger features.
+
+- **Dev gate** (2,000 est-speed runs, GroupKFold by speed band,
+  paired bootstrap at α = 0.05/37): blind mF1 **0.715 → 0.749**,
+  α-adjusted lower bound of the delta +0.44pp > 0 — PROMOTED.
+- **Frozen + re-certified** (`models/` refrozen, `frozen_at:
+  iteration-19`; held-out 88M/99M seeds through the API only): blind
+  6-way fault accuracy **0.775 → 0.815**; speed top-1/top-3
+  0.586/0.786 and ECE 0.026 (≤ 0.05 contract still MET) unchanged;
+  misalignment subtype 0.913. `analyze_record` computes the pf block
+  automatically when the frozen meta declares it.
+
+Also recorded: the pure-ELEC attribution tail (2.9 dB) was autopsied
+and is a detection-limit effect on lines at 1e-4..1e-3 of total
+energy, not a mechanism — documented, no iteration spent.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND

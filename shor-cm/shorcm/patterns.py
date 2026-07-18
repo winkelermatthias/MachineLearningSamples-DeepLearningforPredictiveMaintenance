@@ -637,13 +637,74 @@ def decompose(x, fs, f_hat, spr=256, sheet=None):
     e_claimed = sum(p["energy"] for p in pats)
     for p in pats:
         p["share"] = float(p["energy"] / (sp.e_tot + 1e-15))
-    pats.append({"type": "FLOOR", "params": {},
+    pats.append({"type": "FLOOR",
+                 "params": {"wander_frac": round(sp.wander_frac, 5)},
                  "energy": float(max(sp.e_tot - e_claimed, 0.0)),
                  "share": float(max(1.0 - e_claimed / (sp.e_tot + 1e-15),
                                     0.0)),
                  "members": []})
     pats.sort(key=lambda p: -p["share"])
     return pats, sp.e_tot
+
+
+# ---------------- fixed-size feature block for the fault ML ----------
+
+PF_COLS = ["pf_harm1", "pf_harm1_2x1x", "pf_harm1_n", "pf_harm_oth",
+           "pf_half", "pf_half_n", "pf_sb_seed", "pf_sb_blind",
+           "pf_sb_spacing", "pf_nearrat_top", "pf_nearrat_tot",
+           "pf_nearrat_n", "pf_nearrat_frac", "pf_fixedhz", "pf_tone",
+           "pf_band", "pf_floor", "pf_wander"]
+
+
+def pattern_features(pats, wander_frac=None):
+    """Fixed-size numeric summary of one record's decomposition, for
+    the 6-way fault classifier. Shares (not raw energies) so machines
+    of different overall level are comparable."""
+    if wander_frac is None:
+        wander_frac = next((p["params"].get("wander_frac", 0.0)
+                            for p in pats if p["type"] == "FLOOR"), 0.0)
+    d = dict.fromkeys(PF_COLS, 0.0)
+    nr = []
+    for p in pats:
+        s, t = p.get("share", 0.0), p["type"]
+        if t == "HARM" and abs(p["params"]["base"] - 1.0) < 0.03:
+            d["pf_harm1"] += s
+            d["pf_harm1_n"] = float(len(p["members"]))
+            mem = {round(mo): me for mo, me in p["members"]}
+            if mem.get(1, 0) > 0:
+                d["pf_harm1_2x1x"] = float(
+                    np.log10((mem.get(2, 0) + 1e-12) / (mem[1] + 1e-12)))
+        elif t == "HARM":
+            d["pf_harm_oth"] += s
+        elif t == "HALFHARM":
+            d["pf_half"] += s
+            d["pf_half_n"] = float(len(p["members"]))
+        elif t == "SIDEBAND":
+            if p["params"].get("seeded"):
+                d["pf_sb_seed"] += s
+            else:
+                d["pf_sb_blind"] += s
+                d["pf_sb_spacing"] = max(d["pf_sb_spacing"],
+                                         p["params"]["spacing"])
+        elif t == "NEARRAT":
+            nr.append((s, p["params"]["order"]))
+        elif t == "FIXEDHZ":
+            d["pf_fixedhz"] += s
+        elif t == "TONE":
+            d["pf_tone"] += s
+        elif t == "BAND":
+            d["pf_band"] += s
+        elif t == "FLOOR":
+            d["pf_floor"] = s
+    if nr:
+        nr.sort(reverse=True)
+        d["pf_nearrat_top"] = nr[0][0]
+        d["pf_nearrat_tot"] = sum(s for s, _ in nr)
+        d["pf_nearrat_n"] = float(len(nr))
+        o = nr[0][1]
+        d["pf_nearrat_frac"] = abs(o - round(o))
+    d["pf_wander"] = float(wander_frac)
+    return d
 
 
 # ---------------- generalized tracking ----------------

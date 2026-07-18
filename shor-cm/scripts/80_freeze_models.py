@@ -27,8 +27,12 @@ def main():
     t0 = time.time()
     import lightgbm as lgb
     from sklearn.isotonic import IsotonicRegression
+    from shorcm import patterns as PT
     df = pd.read_parquet("experiments/v2/results.parquet")
-    feats = [f"le_{f}" for f in SC.LEDGER_FEATURES_V2]
+    pf = pd.read_parquet(
+        "experiments/pattern_features/pattern_features.parquet")
+    df = df.merge(pf, on="run_id", how="inner")
+    feats = [f"le_{f}" for f in SC.LEDGER_FEATURES_V2] + PT.PF_COLS
     d = df.dropna(subset=feats)
     X = d[feats].values
     y = pd.Categorical(d.fault, categories=FAULTS6).codes
@@ -41,11 +45,13 @@ def main():
     iso = IsotonicRegression(out_of_bounds="clip", y_min=0, y_max=1)
     iso.fit(dc.margin12.values, dc.correct.values.astype(float))
 
-    meta = {"frozen_at": "iteration-14",
+    meta = {"frozen_at": "iteration-19",
             "fault_model": {"algo": "lightgbm-6way",
-                            "train": "experiments/v2 est-speed ledgers",
+                            "train": "experiments/v2 est-speed ledgers "
+                                     "+ pattern-layer features",
                             "n": int(len(d)),
                             "features": SC.LEDGER_FEATURES_V2,
+                            "features_pf": PT.PF_COLS,
                             "classes": FAULTS6},
             "calibrator": {"algo": "isotonic(margin12)",
                            "train": "experiments/confidence",

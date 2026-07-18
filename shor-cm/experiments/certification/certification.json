@@ -9,14 +9,14 @@
   "emit_top1": 0.7031
  },
  "fault": {
-  "ml_acc": 0.7747,
+  "ml_acc": 0.8153,
   "rules_acc": 0.4447,
-  "ml_acc_emitted": 0.7822,
-  "fault_coverage": 0.983
+  "ml_acc_emitted": 0.8218,
+  "fault_coverage": 0.984
  },
  "misalignment_subtype": {
-  "n": 216,
-  "accuracy": 0.921
+  "n": 229,
+  "accuracy": 0.913
  },
  "tracking": {
   "growth_recall_fault_key": 0.467,
@@ -25,5 +25,5 @@
   "median_delay": 7.0,
   "n_growing": 15
  },
- "wall_s": 248.6
+ "wall_s": 1544.6
 }
