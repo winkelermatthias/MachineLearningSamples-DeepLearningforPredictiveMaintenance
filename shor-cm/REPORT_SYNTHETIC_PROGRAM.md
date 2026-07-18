@@ -833,6 +833,85 @@ seed threshold), and right-type growth attribution at 0.588 (energy
 often grows in a *sibling* pattern, e.g. the bearing's fan instead of
 its tone; instance-merge policy queued).
 
+## Iteration 16: isolation hardening — six mechanisms found and fixed
+
+Iteration 15's corpus judgment left HUM at 12.6 dB, BEARING at 5.5 dB
+and ELEC at 7.2 dB median attribution error. Autopsying the worst
+machines exposed six distinct mechanisms, each now fixed and pinned by
+a test:
+
+1. **Fixed lines on shaft half-integers were blanket-exempted.** The
+   crystal-narrowness override extracts them anyway when the line is
+   1–2 Hz-bins wide *and* a shaft-locked line at that frequency would
+   visibly smear (expected wander width ≥ 3 bins — below that the
+   discriminator has no power and the exemption stands, protecting
+   low-order shaft lines). T50 pins both directions.
+2. **FIXEDHZ overcredit on humps (up to 15 dB).** A wide claim
+   credited against the *global* floor swallows whatever hump the line
+   sits on. Now: claim only the smear width, credit only the
+   local-background-subtracted line energy; the hump slice under it
+   goes to FLOOR, not to the line.
+3. **Unconditional 2x probes punctured neighbors.** The NEARRAT 2x
+   band was claimed even when rejected, and a wide probe mis-centered
+   at 2·o swallowed *neighboring* bearing humps whole. All probes are
+   now dry-run first, claimed only on acceptance, and narrow.
+4. **Extended-margin merging fused distinct tones.** Humps 0.2 orders
+   apart across genuinely cold valleys merged into one centerless
+   pseudo-hump that failed every downstream gate and fell to BAND.
+   Merging now keys on the raw-edge gap (< 4% of order), not on
+   extended-interval overlap.
+5. **The e_tot-relative gate killed small real tones.** A belt lattice
+   at 0.2% of total energy is a pattern; a noise blob is not. The
+   anti-clutter gate is now relative to the floor energy inside the
+   band (> 4×), not to the machine's total.
+6. **A bearing pair at (o, 2o) mimics a second-shaft lattice.** The
+   second-lattice HARM stage now requires block coherence (a gear
+   ratio is phase-locked; a bearing drifts); drifting pairs fall
+   through to NEARRAT where they belong.
+
+Plus: the hump scan now covers 1.2–20 orders (geared-down bearings
+land below 1.8; big-bearing 2x reaches past 16), on-integer coherent
+humps become TONE (a wander-smeared vane-pass, not floor), and the
+`GeneralTracker` gained kinematic **alarm groups** (NEARRAT +
+co-carrier SIDEBAND + TONE cluster as one physical source; a bearing
+growing only in its modulation fan alarms as a bearing — T51).
+
+The judgment itself was amended once more (v3, recorded): truth
+families that **collide in frequency** are judged as composites — on a
+mains machine ELEC at 2·f_e sits exactly on the 120 Hz hum, one
+physical line that no decomposition can split; and PASSAGE credits
+NEARRAT capture, because a belt/gearbox blade-pass rides the *driven*
+shaft — non-integer order, creep-drifting, blind-indistinguishable
+from a bearing tone.
+
+**Corpus judgment** (same 600 machines / 60 fleets, judgment v3),
+iteration 15 → 16, median |dB| error / recall within 3 dB:
+
+| truth family | iteration 15 | iteration 16 |
+|---|---|---|
+| SHAFT harmonics | 0.31 / 0.835 | **0.14 / 0.941** |
+| second shaft | 1.56 / 0.559 | **0.54 / 0.789** |
+| vane/blade passage | 3.69 / 0.485 | **0.30 / 0.760** |
+| bearing | 5.51 / 0.448 | **1.70 / 0.590** |
+| electrical | 7.24 / 0.378 | **3.09 / 0.497** |
+| mains hum | 12.57 / 0.342 | **1.24 / 0.695** |
+| GMF + sidebands | 1.60 / 0.606 | 1.60 / 0.595 |
+| HALF ladder | 0.21 / 0.927 | 0.16 / 0.901 |
+
+Fleet tracking under ±20% speed: identity persistence 0.929, growth
+alarm on the right type **0.647** (was 0.588), false-alarm machines
+**2.3%** (was 4.7%; the key-based monitor sat at 8.9%). Median FLOOR
+share on faulted machines dropped 0.324 → 0.278 — more of the
+spectrum now has a name. Share-sum identity stays exact (max
+deviation 0.0).
+
+Remaining weak links: GMF recall at high order (wander smears mesh +
+fan into one band — a kinematic-sheet-guided band split is the queued
+fix), pure-ELEC at 3.1 dB (slip-wandering electrical lines are
+neither crystal nor shaft-locked), and the group-alarm gain was not
+realized on this corpus (energy grew in the same-type instance;
+mechanism held in reserve, pinned by T51).
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND
