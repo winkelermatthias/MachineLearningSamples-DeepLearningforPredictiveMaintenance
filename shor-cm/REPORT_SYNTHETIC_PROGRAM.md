@@ -1499,3 +1499,54 @@ repeated per-asset records for the tracking/alarm machinery.
 | `experiments/peakshor/iter2_findings.json` | iteration-2 headline numbers |
 | `experiments/peakshor/*.png` | speed arms, calibration, coverage-accuracy |
 | `shorcm/peakshor.py` + tests T20–T23 | the peak-Shor engine |
+
+---
+
+## Iteration 33 (Phase 3, cloud session, 2026-07-18): SimForge v6 + the first honest blind program
+
+Pre-registered contracts: `work/contracts.jsonl` (P3-33-D1/D2/B1).
+Constitution: `PHASE3.md`; audit that motivated it: `REVIEW_EXTERNAL_AUDIT.md`.
+All real-data numbers below are BLIND end-to-end (`analyze_record`, no
+oracle speed anywhere — the M1 fix) with Wilson 95% CIs; everything in
+this session is dev-real (no sealed-real budget spent).
+
+**Built.** SimForge v6 (`shorcm/simforge_v6.py`, pins T64–T70): physical
+units through a sensor chain, 2–4-mode transmission paths, non-Gaussian
+burst noise, per-impact bearing slip jitter (+ extended-spall, incipient
+modes), in-record speed ramps/steps, load-varying VFD/pole-pass lines.
+Plus the external baseline B1 (fast kurtogram + envelope spectrum
+significance test), the sim-vs-real discriminator gate, and fully blind
+gate scripts. 86 tests green.
+
+**D1 MISSED (realism gate).** Discriminator AUC: v2 0.991, v6 0.982
+(needed −0.05; got −0.009; realism band 0.5–0.8 not reached). The
+giveaway moved from `psd_crest` to `peak_density`/top-band/envelope
+flatness: real records carry far denser spectral content than both
+forges. The v7 fix list is now evidence-ranked.
+
+**D2 MET (transfer gate).** Retraining on the harder v6 corpus HALVED
+the synthetic self-score (OOF macro-F1 0.506 vs ~0.8; blind speed_ok
+0.398) and IMPROVED real transfer everywhere: CWRU blind bearing recall
+0.717 → **0.967** (CIs 0.592–0.815 → 0.886–0.991), normal FPs 3/4 → 2/4;
+MFPT 17/17 with baseline FPs 2/3 → **0/3**; SEU healthy FPs 4/4 → 3/4.
+Simulator ease was inflating self-assessment while hurting transfer —
+the founding Phase-3 suspicion, now measured.
+
+**B1 reported (the 1990s bar).** B1: CWRU detection 1.0 (CI 0.94–1.0),
+subtype 0.633, 3/4 normal FP; MFPT 17/17 + 17/17 subtype; WT trend alarm
+day 11/50. Frozen v5 blind LOSES to B1 on CWRU detection. v6 reaches
+CI-overlap with B1 (0.967) with fewer FPs and adds classification +
+severity. B1 stays ahead on early warning (day 11 vs the tracker's 31).
+
+**Unmoved (the honest tail).** Blind speed hit5 on CWRU: 0.0 for both
+models (octave 0.344) — T1 state-space tracker remains priority one.
+Blind envelope capture unchanged (0.567 CWRU, 10/17 MFPT — envelope
+stage untouched this iteration). SEU 6-way: 1/16 both. WT per-record
+discrimination weak (4/10 early vs 7/10 late bearing calls).
+
+**Promoted:** `models_v6/` (fault + severity heads; speed head and
+confidence calibrator carried from v5, documented in meta lineage).
+
+**Next (evidence-ranked):** T1 speed tracker; envelope stage retraining
+with v6 incipient modes; v7 forge targeting `peak_density`/band-22 gap;
+SEU-class gearbox program; MAFAULDA locally (PRIORITY ONE, unchanged).
