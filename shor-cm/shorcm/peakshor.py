@@ -286,13 +286,13 @@ def sheet_match(pf, pa, c, exp, rtol=0.012):
 
 
 def estimate_speed_sheet(x, fs, sheet, meta=None, top=3,
-                         extra_candidates=()):
+                         extra_candidates=(), peaks=None):
     """Blind speed WITH the asset's kinematic sheet: every candidate c
     additionally spawns derived input-shaft hypotheses c/r for each
     known transmission ratio (a driven-lattice hit becomes evidence FOR
     the input), and scoring blends rational structure with the sheet
     template match."""
-    pf, pa, pc = spectral_peaks(x, fs)
+    pf, pa, pc = peaks if peaks is not None else spectral_peaks(x, fs)
     cands = list(pair_candidates(pf, pa))
     cands += [v for v in spacing_candidates(pf, pa) if LO <= v <= HI]
     cands += [v for v in extra_candidates if LO <= v <= HI]

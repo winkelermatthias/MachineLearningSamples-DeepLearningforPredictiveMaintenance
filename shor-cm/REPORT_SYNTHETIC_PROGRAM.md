@@ -688,6 +688,26 @@ frames as zero-energy instead of crediting the wrong cluster.
 every cell functional; the program-level gap is now entirely the
 blind-speed stage plus the blocked real-data transfer.
 
+## Iteration 13: multi-channel SimForge v2.1 — new capability + a clean kill
+
+`shorcm/simforge_mc.py` renders three channels (radial drive-end, AXIAL,
+radial driven-end) with SHARED component phases and per-channel gains
+from the vibration casebook — angular misalignment axial-dominant,
+driven families stronger at the NDE, independent noise paths (T44).
+
+| attempt | verdict | measured |
+|---|---|---|
+| Axial-ratio misalignment subtype (angular vs parallel/coupling) | **PROMOTED — new capability** | AUC **0.972**, holdout accuracy **93.1%** at ax_ratio_2 > 0.61. Unmeasurable with one radial channel |
+| Cross-channel peak fusion (≥2 of 3 confirm) for speed | **KILLED** | fused top-1 0.553 → 0.502: confirmation drops single-channel-strong TRUE peaks; noise peaks were never the constraint. Next design: candidate-level fusion (union of per-channel candidates, scored across all channels) |
+
+**Real-data lead**: the Relos platform MCP surfaced during this
+iteration — the equipment registry answers (100+ assets with classes,
+ISO zones, health scores), but sensor/timeseries calls fail with
+upstream auth errors. If that auth is stabilized, platform waveforms
+can serve the real-data transfer role while the MAFAULDA egress
+(`www02.smt.ufrj.br`, still 403) stays closed. Both blockers are
+Matthias-side switches; everything downstream is committed and ready.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND
