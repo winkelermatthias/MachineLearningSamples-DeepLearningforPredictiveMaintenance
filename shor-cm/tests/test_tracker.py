@@ -73,3 +73,45 @@ def test_T34_order_invariant_tracking_under_variable_speed():
     assert got >= 6, f"NEARRAT found in only {got}/8 records"
     td = tr.trends(min_n=6).get("NEARRAT")
     assert td is not None and not td["alarm"], td
+
+
+def test_T35_band_energy_calibration():
+    """A phase-walking tone of known amplitude: band-integrated NEARRAT
+    energy must land near a^2/2 (within ~2.5 dB) and grow monotonically
+    with amplitude — the peak-tip sum underestimated it badly."""
+    fs, dur, f0 = 16384, 4.0, 33.0
+    n = int(dur * fs)
+    rng = np.random.default_rng(50)
+    t = np.arange(n) / fs
+    ph = 2 * np.pi * f0 * t
+    es = []
+    for amp in (0.3, 0.6, 1.2):
+        rw = np.cumsum(rng.normal(0, 0.6 / np.sqrt(fs / f0), n))
+        x = 0.3 * rng.standard_normal(n) \
+            + 0.25 * np.cos(ph + 0.1) \
+            + amp * np.cos(3.57 * ph + rw)
+        en = TK.pattern_energies(x, fs, f0)
+        assert en is not None and en["NEARRAT"][0] > 0
+        e, o_c = en["NEARRAT"]
+        assert abs(o_c - 3.57) < 0.08, o_c
+        err_db = 10 * np.log10(e / (amp ** 2 / 2))
+        assert abs(err_db) < 2.5, (amp, e, err_db)
+        es.append(e)
+    assert es[0] < es[1] < es[2]
+
+
+def test_T36_temporal_speed_lock_suppresses_octave_flips():
+    cands_good = [{"hz": 30.0, "confidence": 0.5},
+                  {"hz": 60.0, "confidence": 0.3},
+                  {"hz": 15.0, "confidence": 0.2}]
+    # estimator flips to the octave with higher confidence; history says 30
+    cands_flip = [{"hz": 60.0, "confidence": 0.55},
+                  {"hz": 30.1, "confidence": 0.35},
+                  {"hz": 15.0, "confidence": 0.10}]
+    assert abs(TK.select_speed(cands_good, None) - 30.0) < 1e-9
+    assert abs(TK.select_speed(cands_flip, 30.0) - 30.1) < 1e-9
+    # genuine large operating move: history must not veto a strong,
+    # clearly better candidate forever (band is wide)
+    cands_move = [{"hz": 39.0, "confidence": 0.85},
+                  {"hz": 78.0, "confidence": 0.15}]
+    assert abs(TK.select_speed(cands_move, 30.0) - 39.0) < 1e-9

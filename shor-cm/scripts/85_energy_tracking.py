@@ -90,9 +90,11 @@ def one_machine(i):
     f_base = m["f_shaft"]
     tr_t = TK.PatternTracker(f_ref=f_base)
     tr_e = TK.PatternTracker(f_ref=f_base)
+    tr_l = TK.PatternTracker(f_ref=f_base)
     fkey = TK.FAULT_KEY.get(m["fault"])
     tfam = TRUE_KEY.get(m["fault"])
     rows = []
+    f_prev = None
     for t in range(RECORDS):
         rng = V2.rng_for_run((40_000_000 + i, t))
         if m["population"] == "vfd":
@@ -116,19 +118,30 @@ def one_machine(i):
                                      meta={"component": "motor"})
         f_hat = est[0]["hz"] if np.isfinite(est[0]["hz"]) else f_base
         en_e = TK.pattern_energies(x, V2.FS, f_hat)
+        f_lock = TK.select_speed(est, f_prev)
+        if not np.isfinite(f_lock) or f_lock <= 0:
+            f_lock = f_hat
+        f_prev = f_lock
+        en_l = en_e if abs(f_lock / f_hat - 1) < 1e-3 \
+            else TK.pattern_energies(x, V2.FS, f_lock)
         tr_t.update(t, en_t, mm["f_shaft"])
         tr_e.update(t, en_e, f_hat)
+        tr_l.update(t, en_l, f_lock)
         row = {"machine": i, "t": t, "scenario": scn, "fault": m["fault"],
                "archetype": m["archetype"], "population": m["population"],
                "sev": mm["severity"], "f_op": mm["f_shaft"],
                "speed_scale": sc,
-               "spd_ok": abs(f_hat / mm["f_shaft"] - 1) <= 0.01}
+               "spd_ok": abs(f_hat / mm["f_shaft"] - 1) <= 0.01,
+               "spd_lock_ok": abs(f_lock / mm["f_shaft"] - 1) <= 0.01}
         if fkey and en_t is not None:
             v = en_t[fkey]
             row["e_tracked_true"] = v[0] if isinstance(v, tuple) else v
         if fkey and en_e is not None:
             v = en_e[fkey]
             row["e_tracked_est"] = v[0] if isinstance(v, tuple) else v
+        if fkey and en_l is not None:
+            v = en_l[fkey]
+            row["e_tracked_lock"] = v[0] if isinstance(v, tuple) else v
         if tfam:
             row["e_true"] = true_energy(truth, *tfam)
         if en_t is not None:                       # speed-invariance probe
@@ -138,14 +151,19 @@ def one_machine(i):
     res = {"machine": i, "scenario": scn, "fault": m["fault"],
            "archetype": m["archetype"], "population": m["population"],
            "onset": prof[1] if prof else np.nan}
-    for arm, tr in (("true", tr_t), ("est", tr_e)):
+    for arm, tr in (("true", tr_t), ("est", tr_e), ("lock", tr_l)):
         tds = tr.trends()
+        tda = tr.trends(adaptive=True)
         alarms = {k: d for k, d in tds.items() if d["alarm"]}
         res[f"{arm}_any_alarm"] = bool(alarms)
+        res[f"{arm}_any_alarm_adaptive"] = bool(
+            any(d["alarm"] for d in tda.values()))
         res[f"{arm}_alarm_keys"] = ",".join(sorted(alarms))
         if fkey:
             d = tds.get(fkey, {})
             res[f"{arm}_fault_alarm"] = bool(d.get("alarm", False))
+            res[f"{arm}_fault_alarm_adaptive"] = bool(
+                tda.get(fkey, {}).get("alarm", False))
             res[f"{arm}_fault_rise_db"] = float(d.get("rise_db", np.nan))
             res[f"{arm}_fault_slope"] = float(d.get("slope", np.nan))
             fa = tr.first_alarm(fkey)
@@ -175,10 +193,11 @@ def main():
     from scipy.stats import spearmanr
     find = {"fleet": FLEET, "records": RECORDS,
             "scenarios": dm.scenario.value_counts().to_dict(),
-            "blind_speed_top1": round(float(dr.spd_ok.mean()), 3)}
+            "blind_speed_top1": round(float(dr.spd_ok.mean()), 3),
+            "locked_speed_top1": round(float(dr.spd_lock_ok.mean()), 3)}
     # 1 energy fidelity per faulted machine
     fid = {}
-    for arm in ("true", "est"):
+    for arm in ("true", "est", "lock"):
         rows = []
         for (mach, fam), g in dr.dropna(
                 subset=[f"e_tracked_{arm}", "e_true"]).groupby(
@@ -197,7 +216,7 @@ def main():
     find["energy_fidelity"] = fid
     # 2 growth detection
     det = {}
-    for arm in ("true", "est"):
+    for arm in ("true", "est", "lock"):
         grow = dm[dm.scenario == "growing_fault"]
         other = dm[dm.scenario != "growing_fault"]
         from sklearn.metrics import roc_auc_score
@@ -211,9 +230,13 @@ def main():
         det[arm] = {
             "recall_growing": round(float(grow[f"{arm}_fault_alarm"]
                                           .mean()), 3),
+            "recall_growing_adaptive": round(float(
+                grow[f"{arm}_fault_alarm_adaptive"].mean()), 3),
             "auc_grow_vs_stationary": round(float(auc), 3),
             "false_alarm_rate_machines": round(float(
                 other[f"{arm}_any_alarm"].mean()), 3),
+            "false_alarm_rate_adaptive": round(float(
+                other[f"{arm}_any_alarm_adaptive"].mean()), 3),
             "median_detection_delay_records": (round(float(
                 delays.median()), 1) if len(delays) else None),
             "n_growing": len(grow)}

@@ -59,6 +59,9 @@ def pattern_energies(x, fs, f_hat, spr=256):
         else:
             clusters.append([(oo, aa)])
     best = (0.0, 0.0)
+    do = o[1] - o[0]
+    floor_a = float(np.median(A))
+    ENBW = 1.5                             # hann noise bandwidth in bins
     for cl in clusters:
         a_c = sum(a for _, a in cl)
         o_c = sum(o_ * a for o_, a in cl) / (a_c + 1e-15)
@@ -70,7 +73,15 @@ def pattern_energies(x, fs, f_hat, spr=256):
             fr = None
         drifting = width > 0.004 or len(cl) >= 3 or fr is None
         if drifting and abs(o_c - round(o_c)) > tol:
-            e_c = sum(a ** 2 / 2 for _, a in cl)
+            # BAND energy, not peak tips: a phase-walking tone smears
+            # its power across the cluster band. Integrate |A|^2 over
+            # the band (+guard), subtract the floor's share, divide by
+            # the window ENBW so a steady tone calibrates to a^2/2.
+            i0 = max(int((cl[0][0] - 0.015 * o_c) / do), 0)
+            i1 = min(int((cl[-1][0] + 0.015 * o_c) / do) + 1, len(A))
+            band = A[i0:i1]
+            e_c = float(max(np.sum(band ** 2) / 2
+                            - len(band) * floor_a ** 2 / 2, 0.0)) / ENBW
             if e_c > best[0]:
                 best = (e_c, o_c)
     out["NEARRAT"] = best
@@ -135,7 +146,11 @@ class PatternTracker:
             if e > 0:
                 self.series.setdefault(k, []).append((t, np.log10(e)))
 
-    def trends(self, min_n=6):
+    def trends(self, min_n=6, adaptive=False):
+        """adaptive=True: per-key gate from the commissioning scatter —
+        max(3 dB, 3 x the key's own baseline std in dB) — instead of the
+        global 6 dB. Keys with tight baselines alarm earlier; noisy keys
+        pay a higher bar."""
         out = {}
         for k, pts in self.series.items():
             if len(pts) < min_n:
@@ -146,10 +161,13 @@ class PatternTracker:
             tau, p = kendalltau(t, y)
             base = np.median(y[:3])
             rise_db = 10.0 * float(np.median(y[-3:]) - base)
+            gate = ALARM_DB
+            if adaptive and len(y) >= 5:
+                gate = max(3.0, 3.0 * 10.0 * float(np.std(y[:5])))
             out[k] = {"slope": slope, "mk_p": float(p),
-                      "rise_db": rise_db,
+                      "rise_db": rise_db, "gate_db": float(gate),
                       "alarm": bool(slope > 0 and p < ALARM_P
-                                    and rise_db > ALARM_DB),
+                                    and rise_db > gate),
                       "n": len(pts)}
         return out
 
@@ -172,3 +190,23 @@ class PatternTracker:
 
 FAULT_KEY = {"imbalance": "SHAFT_1", "misalignment": "SHAFT_2",
              "looseness": "HALF", "bearing": "NEARRAT", "gear": "GMF"}
+
+
+def select_speed(cands, f_prev, band=0.35):
+    """Temporal speed lock: a monitored machine is never blind-per-
+    record. Among O1's top-k candidates, blend the estimator's own
+    confidence with consistency against the machine's speed history:
+    a candidate near f_prev (within the plausible operating move `band`
+    in log terms) gets a bonus; octave jumps of the coordinate frame are
+    what this suppresses. Returns the selected hz."""
+    if f_prev is None or not np.isfinite(f_prev):
+        return cands[0]["hz"]
+    best, best_s = cands[0]["hz"], -1e9
+    for c in cands:
+        if not np.isfinite(c["hz"]) or c["hz"] <= 0:
+            continue
+        d = abs(np.log(c["hz"] / f_prev))
+        s = c["confidence"] + 0.6 * np.exp(-(d / band) ** 2)
+        if s > best_s:
+            best, best_s = c["hz"], s
+    return best
