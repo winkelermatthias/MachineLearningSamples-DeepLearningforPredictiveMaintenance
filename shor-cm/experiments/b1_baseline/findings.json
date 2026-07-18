@@ -8,9 +8,9 @@
       1.0
     ],
     "subtype_correct_given_any": [
-      0.233,
-      0.144,
-      0.354
+      0.633,
+      0.507,
+      0.744
     ],
     "normal_false_alarms": "3/4 (ANECDOTE n<30)",
     "per_class_recall": {
@@ -21,7 +21,7 @@
       ],
       "OR": [
         1.0,
-        0.51,
+        0.879,
         1.0
       ],
       "B": [
@@ -556,8 +556,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "156_0",
-        "class": "007",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 5250.0,
@@ -572,8 +572,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "158_1",
-        "class": "007",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 5250.0,
@@ -588,8 +588,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "159_2",
-        "class": "007",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 5625.0,
@@ -604,8 +604,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "160_3",
-        "class": "007",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 4500.0,
@@ -620,8 +620,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "144_0",
-        "class": "007",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 4500.0,
@@ -636,8 +636,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "145_1",
-        "class": "007",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 4500.0,
@@ -652,8 +652,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "146_2",
-        "class": "007",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 4500.0,
@@ -668,8 +668,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "147_3",
-        "class": "007",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 5625.0,
@@ -684,8 +684,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "130@6_0",
-        "class": "007",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 5625.0,
@@ -700,8 +700,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "131@6_1",
-        "class": "007",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 5625.0,
@@ -716,8 +716,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "132@6_2",
-        "class": "007",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 5625.0,
@@ -732,8 +732,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "133@6_3",
-        "class": "007",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 4875.0,
@@ -812,8 +812,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "258_0",
-        "class": "021",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 3750.0,
@@ -828,8 +828,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "259_1",
-        "class": "021",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 3750.0,
@@ -844,8 +844,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "260_2",
-        "class": "021",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 1500.0,
@@ -860,8 +860,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "261_3",
-        "class": "021",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 3375.0,
@@ -876,8 +876,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "246_0",
-        "class": "021",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 3375.0,
@@ -892,8 +892,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "247_1",
-        "class": "021",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 3375.0,
@@ -908,8 +908,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "248_2",
-        "class": "021",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 3375.0,
@@ -924,8 +924,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "249_3",
-        "class": "021",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 3750.0,
@@ -940,8 +940,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "234_0",
-        "class": "021",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 3750.0,
@@ -956,8 +956,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "235_1",
-        "class": "021",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 3750.0,
@@ -972,8 +972,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "236_2",
-        "class": "021",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 4500.0,
@@ -988,8 +988,8 @@
         "detected": true,
         "called": "BPFO",
         "file": "237_3",
-        "class": "021",
-        "truth_order": ""
+        "class": "OR",
+        "truth_order": "BPFO"
       },
       {
         "band_lo": 12000.0,
@@ -1715,5 +1715,5 @@
     ]
   },
   "seu": "excluded: bearing geometry unpublished in mirror",
-  "wall_s": 415.4
+  "wall_s": 414.6
 }

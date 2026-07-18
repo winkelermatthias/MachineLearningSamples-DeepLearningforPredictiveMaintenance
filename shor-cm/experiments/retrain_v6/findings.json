@@ -1,0 +1,10 @@
+{
+  "n_corpus": 2000,
+  "n_usable": 2000,
+  "speed_ok_rate": 0.398,
+  "oof_macro_f1": 0.5057,
+  "oof_acc": 0.5315,
+  "note": "synthetic-internal; claims come from blind real gates",
+  "oof_severity_spearman": 0.4029,
+  "wall_s": 512.7
+}

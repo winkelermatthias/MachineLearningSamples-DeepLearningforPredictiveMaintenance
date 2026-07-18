@@ -2,7 +2,1232 @@
   "models": "models",
   "tag": "v5",
   "cwru": {
-    "error": "KeyError('007')"
+    "n_fault": 60,
+    "n_normal": 4,
+    "speed_hit5": [
+      0.0,
+      0.0,
+      0.057
+    ],
+    "speed_octave": [
+      0.344,
+      0.239,
+      0.466
+    ],
+    "bearing_recall_ml": [
+      0.717,
+      0.592,
+      0.815
+    ],
+    "blind_env_capture_truth_order": [
+      0.567,
+      0.441,
+      0.684
+    ],
+    "normal_bearing_fp": "3/4 (ANECDOTE)",
+    "fault_abstain_rate": [
+      0.0,
+      -0.0,
+      0.06
+    ],
+    "rows": [
+      {
+        "speed_hz": 59.889,
+        "speed_conf": 0.418,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.658,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 1.83,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": false,
+          "BSF": true
+        },
+        "file": "118_0",
+        "class": "B"
+      },
+      {
+        "speed_hz": 70.689,
+        "speed_conf": 0.321,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.755,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 2.07,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": false,
+          "BSF": false
+        },
+        "file": "119_1",
+        "class": "B"
+      },
+      {
+        "speed_hz": 80.321,
+        "speed_conf": 0.418,
+        "abstain_speed": true,
+        "fault_ml": "gear",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.825,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 2.55,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": true,
+          "BSF": false
+        },
+        "file": "120_2",
+        "class": "B"
+      },
+      {
+        "speed_hz": 51.609,
+        "speed_conf": 0.477,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.809,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 1.47,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": false,
+          "BSF": true
+        },
+        "file": "121_3",
+        "class": "B"
+      },
+      {
+        "speed_hz": 59.963,
+        "speed_conf": 0.511,
+        "abstain_speed": false,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.676,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 1.67,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": false,
+          "BSF": false
+        },
+        "file": "185_0",
+        "class": "B"
+      },
+      {
+        "speed_hz": 79.61,
+        "speed_conf": 0.477,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.652,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 2.05,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": false,
+          "BSF": false
+        },
+        "file": "186_1",
+        "class": "B"
+      },
+      {
+        "speed_hz": 80.241,
+        "speed_conf": 0.418,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.589,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 2.96,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": false,
+          "BSF": false
+        },
+        "file": "187_2",
+        "class": "B"
+      },
+      {
+        "speed_hz": 51.636,
+        "speed_conf": 0.511,
+        "abstain_speed": false,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.737,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 1.89,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": false,
+          "BSF": true
+        },
+        "file": "188_3",
+        "class": "B"
+      },
+      {
+        "speed_hz": 89.909,
+        "speed_conf": 0.46,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.715,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 2.34,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": true,
+          "BSF": true
+        },
+        "file": "222_0",
+        "class": "B"
+      },
+      {
+        "speed_hz": 79.762,
+        "speed_conf": 0.492,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.675,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 2.03,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": false,
+          "BSF": true
+        },
+        "file": "223_1",
+        "class": "B"
+      },
+      {
+        "speed_hz": 90.102,
+        "speed_conf": 0.375,
+        "abstain_speed": true,
+        "fault_ml": "gear",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.78,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 2.88,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": true,
+          "BSF": false
+        },
+        "file": "224_2",
+        "class": "B"
+      },
+      {
+        "speed_hz": 51.679,
+        "speed_conf": 0.477,
+        "abstain_speed": true,
+        "fault_ml": "gear",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.822,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 2.97,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": false,
+          "BSF": false
+        },
+        "file": "225_3",
+        "class": "B"
+      },
+      {
+        "speed_hz": 5.982,
+        "speed_conf": 0.492,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.704,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 2.4,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": false,
+          "BSF": false
+        },
+        "file": "3005_0",
+        "class": "B"
+      },
+      {
+        "speed_hz": 23.598,
+        "speed_conf": 0.418,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.806,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 2.36,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": true,
+          "BSF": true
+        },
+        "file": "3006_1",
+        "class": "B"
+      },
+      {
+        "speed_hz": 100.361,
+        "speed_conf": 0.477,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.705,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 2.09,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": false,
+          "BSF": true
+        },
+        "file": "3007_2",
+        "class": "B"
+      },
+      {
+        "speed_hz": 22.96,
+        "speed_conf": 0.477,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.787,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 1.84,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": false,
+          "BSF": false
+        },
+        "file": "3008_3",
+        "class": "B"
+      },
+      {
+        "speed_hz": 54.006,
+        "speed_conf": 0.477,
+        "abstain_speed": true,
+        "fault_ml": "looseness",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.765,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 3.78,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": false,
+          "BSF": false
+        },
+        "file": "105_0",
+        "class": "IR"
+      },
+      {
+        "speed_hz": 53.205,
+        "speed_conf": 0.477,
+        "abstain_speed": true,
+        "fault_ml": "gear",
+        "fault_rules": "gear",
+        "abstain_fault": false,
+        "severity": 0.804,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 4.11,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": false,
+          "BSF": false
+        },
+        "file": "106_1",
+        "class": "IR"
+      },
+      {
+        "speed_hz": 85.899,
+        "speed_conf": 0.46,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.757,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 3.12,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": true,
+          "BSF": true
+        },
+        "file": "107_2",
+        "class": "IR"
+      },
+      {
+        "speed_hz": 51.653,
+        "speed_conf": 0.492,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.783,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 1.98,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": true,
+          "BSF": false
+        },
+        "file": "108_3",
+        "class": "IR"
+      },
+      {
+        "speed_hz": 59.939,
+        "speed_conf": 0.321,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.778,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 2.32,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": true,
+          "BSF": false
+        },
+        "file": "169_0",
+        "class": "IR"
+      },
+      {
+        "speed_hz": 59.794,
+        "speed_conf": 0.418,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.803,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 2.26,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": true,
+          "BSF": true
+        },
+        "file": "170_1",
+        "class": "IR"
+      },
+      {
+        "speed_hz": 89.932,
+        "speed_conf": 0.418,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.784,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 2.95,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": true,
+          "BSF": true
+        },
+        "file": "171_2",
+        "class": "IR"
+      },
+      {
+        "speed_hz": 69.036,
+        "speed_conf": 0.321,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.801,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 1.89,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": false,
+          "BSF": true
+        },
+        "file": "172_3",
+        "class": "IR"
+      },
+      {
+        "speed_hz": 90.971,
+        "speed_conf": 0.321,
+        "abstain_speed": true,
+        "fault_ml": "gear",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.922,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 3.12,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": true,
+          "BSF": true
+        },
+        "file": "209_0",
+        "class": "IR"
+      },
+      {
+        "speed_hz": 87.263,
+        "speed_conf": 0.321,
+        "abstain_speed": true,
+        "fault_ml": "gear",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.817,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 3.79,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": true,
+          "BSF": true
+        },
+        "file": "210_1",
+        "class": "IR"
+      },
+      {
+        "speed_hz": 89.723,
+        "speed_conf": 0.375,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.74,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 2.16,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": true,
+          "BSF": true
+        },
+        "file": "211_2",
+        "class": "IR"
+      },
+      {
+        "speed_hz": 65.862,
+        "speed_conf": 0.418,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.86,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 2.13,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": true,
+          "BSF": true
+        },
+        "file": "212_3",
+        "class": "IR"
+      },
+      {
+        "speed_hz": 71.302,
+        "speed_conf": 0.418,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.661,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 1.66,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": true,
+          "BSF": false
+        },
+        "file": "3001_0",
+        "class": "IR"
+      },
+      {
+        "speed_hz": 70.334,
+        "speed_conf": 0.375,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.808,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 1.92,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": true,
+          "BSF": false
+        },
+        "file": "3002_1",
+        "class": "IR"
+      },
+      {
+        "speed_hz": 69.348,
+        "speed_conf": 0.418,
+        "abstain_speed": true,
+        "fault_ml": "healthy",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.689,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 1.2,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": true,
+          "BSF": false
+        },
+        "file": "3003_2",
+        "class": "IR"
+      },
+      {
+        "speed_hz": 68.376,
+        "speed_conf": 0.418,
+        "abstain_speed": true,
+        "fault_ml": "healthy",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.785,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 0.92,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": false,
+          "BSF": true
+        },
+        "file": "3004_3",
+        "class": "IR"
+      },
+      {
+        "speed_hz": 71.943,
+        "speed_conf": 0.321,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.751,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 2.09,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": false,
+          "BSF": true
+        },
+        "file": "156_0",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 59.95,
+        "speed_conf": 0.321,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.817,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 2.02,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": true,
+          "BSF": false
+        },
+        "file": "158_1",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 31.727,
+        "speed_conf": 0.418,
+        "abstain_speed": true,
+        "fault_ml": "gear",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.901,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 3.07,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": true,
+          "BSF": true
+        },
+        "file": "159_2",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 51.623,
+        "speed_conf": 0.46,
+        "abstain_speed": true,
+        "fault_ml": "gear",
+        "fault_rules": "gear",
+        "abstain_fault": false,
+        "severity": 0.905,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 2.73,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": false,
+          "BSF": true
+        },
+        "file": "160_3",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 89.891,
+        "speed_conf": 0.418,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.802,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 2.52,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": true,
+          "BSF": false
+        },
+        "file": "144_0",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 53.212,
+        "speed_conf": 0.418,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.784,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 3.64,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": false,
+          "BSF": true
+        },
+        "file": "145_1",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 52.594,
+        "speed_conf": 0.46,
+        "abstain_speed": true,
+        "fault_ml": "gear",
+        "fault_rules": "gear",
+        "abstain_fault": false,
+        "severity": 0.835,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 3.37,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": true,
+          "BSF": false
+        },
+        "file": "146_2",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 51.685,
+        "speed_conf": 0.477,
+        "abstain_speed": true,
+        "fault_ml": "gear",
+        "fault_rules": "gear",
+        "abstain_fault": false,
+        "severity": 0.822,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 3.19,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": false,
+          "BSF": false
+        },
+        "file": "147_3",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 59.898,
+        "speed_conf": 0.375,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.748,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 2.36,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": true,
+          "BSF": false
+        },
+        "file": "130@6_0",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 35.363,
+        "speed_conf": 0.477,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.892,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 1.96,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": false,
+          "BSF": false
+        },
+        "file": "131@6_1",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 89.757,
+        "speed_conf": 0.418,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.839,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 1.93,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": true,
+          "BSF": false
+        },
+        "file": "132@6_2",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 51.681,
+        "speed_conf": 0.46,
+        "abstain_speed": true,
+        "fault_ml": "gear",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.68,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 3.26,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": false,
+          "BSF": true
+        },
+        "file": "133@6_3",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 59.947,
+        "speed_conf": 0.375,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.741,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 1.4,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": true,
+          "BSF": false
+        },
+        "file": "197@6_0",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 79.39,
+        "speed_conf": 0.321,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.865,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 3.26,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": false,
+          "BSF": true
+        },
+        "file": "198@6_1",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 89.75,
+        "speed_conf": 0.321,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.707,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 1.9,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": false,
+          "BSF": false
+        },
+        "file": "199@6_2",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 60.42,
+        "speed_conf": 0.321,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.755,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 3.32,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": true,
+          "BSF": true
+        },
+        "file": "200@6_3",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 59.823,
+        "speed_conf": 0.477,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.693,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 3.26,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": true,
+          "BSF": false
+        },
+        "file": "258_0",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 48.236,
+        "speed_conf": 0.418,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.794,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 3.37,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": true,
+          "BSF": false
+        },
+        "file": "259_1",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 38.227,
+        "speed_conf": 0.375,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.829,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 2.35,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": false,
+          "BSF": true
+        },
+        "file": "260_2",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 51.504,
+        "speed_conf": 0.418,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.848,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 2.82,
+        "env_capture": {
+          "BPFO": false,
+          "BPFI": true,
+          "BSF": true
+        },
+        "file": "261_3",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 59.791,
+        "speed_conf": 0.4,
+        "abstain_speed": true,
+        "fault_ml": "imbalance",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.82,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 1.44,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": true,
+          "BSF": false
+        },
+        "file": "246_0",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 47.125,
+        "speed_conf": 0.418,
+        "abstain_speed": true,
+        "fault_ml": "gear",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.875,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 2.06,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": true,
+          "BSF": false
+        },
+        "file": "247_1",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 46.359,
+        "speed_conf": 0.321,
+        "abstain_speed": true,
+        "fault_ml": "imbalance",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.903,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 1.43,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": true,
+          "BSF": false
+        },
+        "file": "248_2",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 87.898,
+        "speed_conf": 0.4,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.753,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 2.43,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": true,
+          "BSF": false
+        },
+        "file": "249_3",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 76.806,
+        "speed_conf": 0.321,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.804,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 2.78,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": false,
+          "BSF": true
+        },
+        "file": "234_0",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 75.74,
+        "speed_conf": 0.418,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.817,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 3.01,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": true,
+          "BSF": true
+        },
+        "file": "235_1",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 74.584,
+        "speed_conf": 0.418,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.893,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 3.01,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": true,
+          "BSF": true
+        },
+        "file": "236_2",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 80.236,
+        "speed_conf": 0.418,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.876,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 2.05,
+        "env_capture": {
+          "BPFO": true,
+          "BPFI": false,
+          "BSF": false
+        },
+        "file": "237_3",
+        "class": "OR"
+      },
+      {
+        "speed_hz": 51.666,
+        "speed_conf": 0.477,
+        "abstain_speed": true,
+        "fault_ml": "imbalance",
+        "fault_rules": "healthy",
+        "abstain_fault": false,
+        "severity": 0.756,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 5.46,
+        "file": "100_Normal_3",
+        "class": "Normal"
+      },
+      {
+        "speed_hz": 59.935,
+        "speed_conf": 0.477,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "bearing",
+        "abstain_fault": false,
+        "severity": 0.711,
+        "speed_hit5": false,
+        "speed_octave": true,
+        "wall_s": 2.24,
+        "file": "97_Normal_0",
+        "class": "Normal"
+      },
+      {
+        "speed_hz": 79.839,
+        "speed_conf": 0.477,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "healthy",
+        "abstain_fault": true,
+        "severity": 0.638,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 5.14,
+        "file": "98_Normal_1",
+        "class": "Normal"
+      },
+      {
+        "speed_hz": 79.839,
+        "speed_conf": 0.477,
+        "abstain_speed": true,
+        "fault_ml": "bearing",
+        "fault_rules": "healthy",
+        "abstain_fault": true,
+        "severity": 0.638,
+        "speed_hit5": false,
+        "speed_octave": false,
+        "wall_s": 5.17,
+        "file": "99_Normal_2",
+        "class": "Normal"
+      }
+    ]
   },
   "mfpt": {
     "n_fault": 17,
@@ -1398,5 +2623,5 @@
       }
     ]
   },
-  "wall_s": 437.0
+  "wall_s": 165.4
 }

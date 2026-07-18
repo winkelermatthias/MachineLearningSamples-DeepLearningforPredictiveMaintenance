@@ -1,0 +1,19 @@
+{
+  "version": "v6-iter33",
+  "corpus": "experiments/corpus_v6 (SimForge v6, BASE_SEED6 20260718, N=2000)",
+  "fault_model": {
+    "features_pf": true,
+    "features_pfe": true,
+    "classes": [
+      "healthy",
+      "imbalance",
+      "misalignment",
+      "looseness",
+      "bearing",
+      "gear"
+    ]
+  },
+  "conf_isotonic": "copied from v5 (speed head unchanged): ",
+  "trained_utc": "2026-07-18T16:43:39Z",
+  "lineage_prev": "v5"
+}
