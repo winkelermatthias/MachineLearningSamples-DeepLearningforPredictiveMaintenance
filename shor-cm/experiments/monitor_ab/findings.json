@@ -9,10 +9,15 @@
   "median_delay": 7.0
  },
  "pat": {
-  "false_alarm_machines": 0.022,
+  "false_alarm_machines": 0.0,
   "growth_recall": 0.667,
   "median_delay": 7.5,
   "growth_right_type": 0.533
  },
- "wall_s": 554.9
+ "cus": {
+  "false_alarm_machines": 0.311,
+  "growth_recall": 0.933,
+  "median_delay": 5.5
+ },
+ "wall_s": 542.6
 }

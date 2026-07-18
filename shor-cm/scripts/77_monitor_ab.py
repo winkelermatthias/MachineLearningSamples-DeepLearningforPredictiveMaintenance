@@ -50,7 +50,7 @@ def one_fleet(i):
     f_base = m["f_shaft"]
     mon = Cascade().monitor(V2.kinematic_sheet(m), f_ref=f_base)
     r0 = 3
-    first_key, first_pat = None, None
+    first_key, first_pat, first_cus = None, None, None
     for t in range(RECORDS):
         rng = V2.rng_for_run((99_500_000 + i, t))
         sc = float(np.clip(1 + 0.18 * np.sin(1.7 * t + i)
@@ -76,16 +76,23 @@ def one_fleet(i):
             first_key = t
         if rec["pattern_alarms"] and first_pat is None:
             first_pat = t
+        if first_cus is None and any(
+                d["alarm"] for d in mon.gen.cusum().values()):
+            first_cus = t
     want = WANT_TYPES.get(m["fault"], ())
     right_pat = any(set(g["types"]) & set(want)
                     for g in mon.gen.trends_grouped() if g["alarm"])
     return {"machine": i, "scenario": scn, "fault": m["fault"],
             "key_alarm": first_key is not None,
             "pat_alarm": first_pat is not None,
+            "cus_alarm": first_cus is not None,
             "key_delay": (first_key - r0) if (first_key is not None
                                               and scn == "growing")
             else np.nan,
             "pat_delay": (first_pat - r0) if (first_pat is not None
+                                              and scn == "growing")
+            else np.nan,
+            "cus_delay": (first_cus - r0) if (first_cus is not None
                                               and scn == "growing")
             else np.nan,
             "pat_right_type": bool(right_pat)}
@@ -103,7 +110,7 @@ def main():
     quiet = df[df.scenario != "growing"]
     find = {"n_fleet": len(df), "n_growing": len(grow),
             "records": RECORDS, "seed_block": "99M (held-out)"}
-    for ch in ("key", "pat"):
+    for ch in ("key", "pat", "cus"):
         find[ch] = {
             "false_alarm_machines": round(float(
                 quiet[f"{ch}_alarm"].mean()), 3),

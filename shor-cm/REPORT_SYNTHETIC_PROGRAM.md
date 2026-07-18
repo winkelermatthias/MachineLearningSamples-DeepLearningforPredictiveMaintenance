@@ -1043,6 +1043,30 @@ implementation on synthetic data. Combined with per-instance growth
 alarms, the monitor now answers the practical question directly: what
 is wrong, how bad is it NOW, and is it getting worse.
 
+## Iteration 22: the early-warning hypothesis, killed properly
+
+Median growth-alarm delay is ~7.5 records, and the obvious suspect was
+the trend gate's need for 6 points. A sequential CUSUM channel was
+built to test it (`GeneralTracker.cusum`, T53). At naive parameters it
+looked spectacular on held-out fleets — recall 0.933 at delay 5.5 —
+and was unusable: 31% false-alarm machines, because a 4-record
+baseline badly underestimates energy scatter under ±20% speed swings.
+
+The parameter sweep was run on DEV seeds only (48 fleets, series
+collected once, swept offline — the held-out block stayed clean). With
+honest robust scatter (MAD of successive differences), false alarms
+drop to 5.6% — and the delay reverts to 7.0–7.5, exactly the trend
+gate. **Alarm delay is set by detectability — the energy must clear
+the baseline scatter — not by the trend test's point count.** The
+pre-registered gate (materially lower delay at equal-or-lower FA)
+fails; the hypothesis is dead and the backlog item is closed, not
+deferred.
+
+What survives, honestly labeled: at the dev-selected configuration the
+CUSUM channel has **recall 1.0 versus the trend channel's 0.667** at
+5.6% machine-level FA — it stays in the library as a supplementary
+high-recall channel, explicitly outside the certified alarm contract.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND

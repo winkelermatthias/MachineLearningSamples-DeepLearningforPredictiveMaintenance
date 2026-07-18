@@ -823,6 +823,39 @@ class GeneralTracker:
             out.setdefault(find(i), []).append(i)
         return list(out.values())
 
+    def cusum(self, warmup=4, k_sigma=1.0, h_sigma=9.0):
+        """SUPPLEMENTARY high-recall growth channel (not part of the
+        certified alarm contract): one-sided CUSUM on log10-energy
+        against a warmup baseline. The early-warning hypothesis was
+        KILLED on dev — with honest (robust) scatter estimation the
+        delay matches the trend gate, because delay is set by
+        detectability, not by the trend test's 6-point need. What
+        survives: dev recall 1.0 vs the trend channel's 0.667 at 5.6%
+        machine-level FA. Sigma is floored by the median absolute
+        successive difference over the WHOLE series — a 4-point
+        baseline underestimates speed-swing scatter badly (31% FA)."""
+        out = {}
+        for r in self.reg:
+            pts = r["pts"]
+            if len(pts) <= warmup:
+                continue
+            base = np.array([y for _, y in pts[:warmup]])
+            mu = float(np.median(base))
+            sig = max(float(np.std(base)), 0.06)
+            dif = np.diff([y for _, y in pts])
+            if len(dif) >= 3:
+                sig = max(sig, 1.4826 * float(np.median(np.abs(dif)))
+                          / np.sqrt(2))
+            s, fired_t, smax = 0.0, None, 0.0
+            for t, y in pts[warmup:]:
+                s = max(0.0, s + (y - mu) / sig - k_sigma)
+                smax = max(smax, s)
+                if s > h_sigma and fired_t is None:
+                    fired_t = t
+            out[str(r["id"])] = {"alarm": fired_t is not None,
+                                 "t": fired_t, "stat": round(smax, 2)}
+        return out
+
     def trends_grouped(self, adaptive=True):
         """Group-level view: a group alarms when ANY member alarms —
         a modulated bearing may grow in its fan while its tone sits

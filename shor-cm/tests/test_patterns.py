@@ -221,6 +221,32 @@ def test_T52_sheet_seeded_mesh_fan_under_heavy_wander():
     assert not sb2 or sum(p["energy"] for p in sb2) < 0.1 * e_true, sb2
 
 
+def _feed(tr, t, e):
+    tr.update(t, [{"type": "NEARRAT", "params": {"order": 4.3},
+                   "energy": e, "members": [(4.3, e)], "share": 0.2}])
+
+
+def test_T53_cusum_recall_channel():
+    """The supplementary CUSUM channel: fires on a genuine 14 dB
+    growth (its value is RECALL, not earliness — the early-warning
+    hypothesis was killed on dev: delay is set by detectability, not
+    by the trend test's 6-point need) and stays quiet on a stationary
+    noisy instance."""
+    rng = np.random.default_rng(21)
+    tr = PT.GeneralTracker()
+    for t in range(16):
+        sev = max(t - 3, 0) / 12
+        e = 1e-3 * 10 ** (1.4 * sev) * (1 + 0.12 * rng.standard_normal())
+        _feed(tr, t, max(e, 1e-6))
+    assert any(d["alarm"] for d in tr.cusum().values()), tr.cusum()
+    # stationary: fluctuating +/- but flat -> quiet
+    tr2 = PT.GeneralTracker()
+    for t in range(16):
+        e = 3e-3 * (1 + 0.25 * rng.standard_normal())
+        _feed(tr2, t, max(e, 1e-6))
+    assert not any(d["alarm"] for d in tr2.cusum().values()), tr2.cusum()
+
+
 def test_T49_general_tracking_under_varying_speed():
     """A growing SIDEBAND fan and a constant HARM family, speed moving
     +/-15% record to record: identities persist, the sideband instance
