@@ -146,3 +146,29 @@ def test_T37_frame_selector_consistency_beats_flips_and_first_error():
     chosen[:5] = sel.warmup_choices
     ok = sum(abs(c / f - 1) < 0.02 for c, f in zip(chosen, truth))
     assert ok >= 9, (ok, [round(c / f, 2) for c, f in zip(chosen, truth)])
+
+
+def test_T39_gmf_band_energy_calibration():
+    """Gear-fault gearbox at true speed: tracked GMF energy must sit
+    within 3 dB of the injected mesh+sideband energy (median error is
+    0.1 dB; +/-2.5 dB per-machine scatter comes from spacing-detection
+    granularity and is LEVEL-constant per machine, so trends are
+    unaffected; the peak-tip read was 3-12 dB low from C2 smear)."""
+    rng = np.random.default_rng(70)
+    done = 0
+    for _ in range(800):
+        m = V2.sample_machine(rng)
+        if m["archetype"] != "pump_gearbox1" or m["fault"] != "gear" \
+                or m["severity"] < 0.5:
+            continue
+        tr = []
+        x = V2.synth_run(m, rng, truth=tr)
+        en = TK.pattern_energies(x, V2.FS, m["f_shaft"])
+        t = next(t for t in tr if t["family"] == "GMF")
+        e_true = sum(a ** 2 / 2 for a in t["amps"])
+        err = 10 * np.log10((en["GMF"][0] + 1e-12) / (e_true + 1e-12))
+        assert abs(err) < 3.0, (m["z1"], m["severity"], err)
+        done += 1
+        if done >= 5:
+            return
+    assert done >= 3, "too few gear cases sampled"
