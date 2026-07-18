@@ -1067,6 +1067,54 @@ CUSUM channel has **recall 1.0 versus the trend channel's 0.667** at
 5.6% machine-level FA — it stays in the library as a supplementary
 high-recall channel, explicitly outside the certified alarm contract.
 
+## Iteration 23: REAL DATA — the transfer gate runs, and earns its keep
+
+MAFAULDA's host remains blocked at the egress proxy (re-probed,
+recorded — never substituted). But two real datasets are reachable
+through GitHub raw mirrors and were pulled, adapted, and pushed
+through the FROZEN cascade, API-only, with judgments **pre-registered
+in the script header before the first run**:
+
+- **MFPT bearing set** (mathworks mirror, CC BY-NC-SA): 20 records,
+  25 Hz shaft, NICE bearing with published BPFO 3.245 / BPFI 4.755.
+- **SEU DDS gearbox** (cathysiyu mirror): 20 files × 10 windows,
+  motor 20/30 Hz, planetary-x channel, tooth counts unpublished →
+  blind sheet. (Mirror quirk found and recorded: bearingset internal
+  titles are swapped vs filenames — filenames canonical.)
+
+| judgment | result |
+|---|---|
+| J1 MFPT speed ≤3% | **FAIL** 0.30 (octave errors on impulse-dominated records) |
+| J2 bearing detection | **PASS** — recall 0.529 on faults, **0** false calls on baselines |
+| J3 patterns at defect orders | **FAIL 0.0** — the headline finding |
+| J4 severity ordering | FAIL |
+| J5 SEU speed ≤4% | **PASS** 0.70 on health (outer-race windows 1.00) |
+| J6 SEU fault discrimination | FAIL (6-way emits only healthy/looseness) |
+| J7 SEU sideband delta | FAIL |
+
+**The mechanisms, each verified, are the product:**
+
+1. **Impulsive bearings.** MFPT fault energy lives in high-frequency
+   resonance bands as impulse trains — the raw order spectrum carries
+   essentially nothing at BPFO/BPFI, which is why J3 reads 0.0 while
+   the classifier still detects bearings (J2) from broadband/floor
+   character. An envelope probe (2–9 kHz bandpass → Hilbert →
+   decimate → decompose) makes the structure appear immediately
+   (inner race: dominant NEARRAT share 0.25; baseline: nothing).
+   SimForge generates bearing faults as drifting *tones* — the gate
+   just measured that sim-to-real gap. Fix, next iteration: an
+   **envelope channel with the phase reference taken from the raw
+   carrier**, plus an impulsive bearing mode in SimForge so the
+   synthetic gate covers it.
+2. **Planetary frames.** SEU's mesh sits at a non-integer order
+   (~13×) of the motor shaft; blind — without tooth counts — the
+   gear-keyed features never fire, so the 6-way falls back to
+   healthy/looseness. The pattern layer itself names the structure
+   (NEARRAT/fans); the *features* don't consume non-integer mesh
+   evidence without a sheet. Fix: planetary-aware blind features.
+3. **What transfers today:** bearing detection with zero false
+   alarms, and blind speed on a real gearbox rig at 20/30 Hz.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND
