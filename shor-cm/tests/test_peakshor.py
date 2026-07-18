@@ -133,3 +133,29 @@ def test_T40_sheet_octave_arbitration_fixes_looseness_frame():
         if abs(est[0]["hz"] / mm["f_shaft"] - 1) < 0.01:
             ok += 1
     assert ok >= 4, f"true frame on only {ok}/6 records"
+
+
+def test_T41_guided_subguard_gear_sidebands():
+    """Mesh sidebands below the global peak guard: with the spectrum
+    handed to the ledger, the GEAR family must recover them; without it,
+    they are invisible."""
+    import numpy as np
+    fs, f0, z = 16384, 20.0, 37
+    n = int(4.0 * fs)
+    t = np.arange(n) / fs
+    ph = 2 * np.pi * f0 * t
+    rng = np.random.default_rng(80)
+    x = 0.6 * rng.standard_normal(n) + 0.5 * np.cos(ph)
+    x += 0.5 * np.cos(z * ph + 1.0)              # mesh, strong
+    for k in (1, 2, 3):                          # sub-guard sidebands
+        for sgn in (-1, 1):
+            x += 0.022 * np.cos((z + sgn * k) * ph + rng.uniform(0, 6))
+    pf, pa, pc = PS.spectral_peaks(x, fs)
+    spec = PS.spectrum(x, fs)
+    led_no = {d["family"]: d for d in
+              PS.pattern_ledger_peaks(pf, pa, pc, f0)}
+    led_sp = {d["family"]: d for d in
+              PS.pattern_ledger_peaks(pf, pa, pc, f0, spec=spec)}
+    n_no = led_no.get("GEAR", {"n": 0})["n"]
+    n_sp = led_sp.get("GEAR", {"n": 0})["n"]
+    assert n_sp >= n_no + 2, (n_no, n_sp)
