@@ -3,7 +3,7 @@
  "fault_model": {
   "algo": "lightgbm-6way",
   "train": "corpus_v3 (impulsive renderer, est-speed condition)",
-  "n": 1999,
+  "n": 2000,
   "features": [
    "a1",
    "a2",
@@ -68,10 +68,10 @@
  },
  "severity_model": {
   "algo": "lightgbm-reg",
-  "n": 1680,
+  "n": 1681,
   "oof_spearman": {
-   "B_ledger+pf": 0.657,
-   "C_ledger+pf+pfe": 0.687
+   "B_ledger+pf": 0.563,
+   "C_ledger+pf+pfe": 0.587
   }
  },
  "calibrator": {

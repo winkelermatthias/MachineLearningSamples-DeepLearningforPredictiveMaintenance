@@ -31,6 +31,10 @@ def one(i):
     row = {"run_id": i, "fault": m["fault"], "subtype": m.get("subtype"),
            "severity": m["severity"], "archetype": m["archetype"],
            "f_true": m["f_shaft"], "population": m["population"]}
+    # unit-RMS normalization: identical to the analyze_record entry
+    # treatment (audit F1) so train and serve see the same scale
+    x = x - x.mean()
+    x = x / max(float(np.sqrt(np.mean(x ** 2))), 1e-12)
     sheet = V2.kinematic_sheet(m)
     est = PS.estimate_speed_sheet(x, V2.FS, sheet)
     f_hat = est[0]["hz"] if est and np.isfinite(est[0]["hz"]) else None

@@ -1,25 +1,25 @@
 {
- "n": 1999,
+ "n": 2000,
  "mF1": {
-  "A_ledger": 0.6704,
-  "B_ledger+pf": 0.7059,
-  "C_ledger+pf+pfe": 0.742
+  "A_ledger": 0.6747,
+  "B_ledger+pf": 0.6949,
+  "C_ledger+pf+pfe": 0.7346
  },
  "gate_C_vs_B": {
   "promote": true,
-  "delta_mean": 0.03588839498660431,
-  "delta_lo_alpha_adj": 0.012255777834350032,
-  "alpha": 0.0010869565217391304,
-  "attempts": 46,
+  "delta_mean": 0.03953101184343914,
+  "delta_lo_alpha_adj": 0.017377390003480396,
+  "alpha": 0.0009615384615384616,
+  "attempts": 52,
   "guardrails_ok": true
  },
  "severity_spearman": {
-  "B_ledger+pf": 0.657,
-  "C_ledger+pf+pfe": 0.687
+  "B_ledger+pf": 0.563,
+  "C_ledger+pf+pfe": 0.587
  },
  "frozen": {
   "features_pfe": true,
   "n_features": 47
  },
- "wall_s": 52.9
+ "wall_s": 52.4
 }

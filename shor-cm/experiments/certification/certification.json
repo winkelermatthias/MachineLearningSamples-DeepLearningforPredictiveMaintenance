@@ -2,28 +2,28 @@
  "n_single": 1500,
  "n_fleet": 60,
  "speed": {
-  "top1": 0.588,
-  "top3": 0.7867,
-  "ece": 0.0282,
-  "emit_coverage": 0.501,
-  "emit_top1": 0.7031
+  "top1": 0.614,
+  "top3": 0.8373,
+  "ece": 0.0384,
+  "emit_coverage": 0.499,
+  "emit_top1": 0.7543
  },
  "fault": {
-  "ml_acc": 0.798,
-  "rules_acc": 0.4473,
-  "ml_acc_emitted": 0.8043,
-  "fault_coverage": 0.985
+  "ml_acc": 0.794,
+  "rules_acc": 0.4467,
+  "ml_acc_emitted": 0.8011,
+  "fault_coverage": 0.989
  },
  "misalignment_subtype": {
-  "n": 231,
-  "accuracy": 0.926
+  "n": 241,
+  "accuracy": 0.913
  },
  "tracking": {
   "growth_recall_fault_key": 0.467,
-  "growth_any_alarm": 0.6,
-  "false_alarm_machines": 0.067,
-  "median_delay": 7.0,
+  "growth_any_alarm": 0.667,
+  "false_alarm_machines": 0.044,
+  "median_delay": 6.5,
   "n_growing": 15
  },
- "wall_s": 1610.7
+ "wall_s": 1603.8
 }

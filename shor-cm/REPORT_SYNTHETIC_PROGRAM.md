@@ -1358,6 +1358,37 @@ monitor two-frame unification + PatternTracker reframe, kinematic
 sheet-vs-evidence contradiction flag, and pins for the 3×-arbitration,
 adaptive gates, and remaining isolation mechanisms.
 
+## Iteration 29: field-data readiness — hygiene, scale invariance, and v5 certified
+
+The top two audit items, delivered as one entry-seam change and a
+full freeze cycle:
+
+- **`shorcm/hygiene.py`** — NaN gaps repaired (short) or rejected
+  (long), dropout runs and clipping flagged (a dropout is the most
+  leptokurtic thing in a record — unflagged it would capture the
+  envelope band selector and fabricate bearing evidence), DC removed,
+  dead/short records raise `SignalHygieneError`. Flags surface in the
+  API output.
+- **Scale invariance** — unit-RMS normalization at the API entry,
+  mirrored exactly in corpus generation: unknown field gains and unit
+  systems cannot move a single model input (T59 pins x vs 137x
+  end-to-end through the frozen models; absolute level preserved as
+  `signal_rms`).
+
+**Certified v5** (held-out, all of iterations 28–29 in): speed top-1
+**0.588 → 0.614**, top-3 **0.787 → 0.837** — the mains-mask fix
+delivering at certification scale; ECE 0.038 (contract MET); fault
+0.794 (scale invariance cost classification nothing); tracking
+false-alarm machines 0.067 → **0.044**, delay 6.5.
+
+One honest trade, priced: synthetic severity OOF dropped 0.687 →
+0.587 — absolute level *was* worth ~0.1 ρ in-sim. But on **real**
+data severity improved everywhere it is measured (CWRU size-ordering
+IR 0.178 → 0.443, OR −0.248 → 0.081; wind-turbine trend still PASS at
+0.667): the level feature was partly a synthetic-units crutch, and
+removing it traded synthetic fit for real transfer — the direction
+this program exists to prefer.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND
