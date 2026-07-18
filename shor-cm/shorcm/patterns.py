@@ -296,6 +296,88 @@ def decompose(x, fs, f_hat, spr=256, sheet=None):
                              "energy": e2, "members": m2})
                 break
 
+    # ---- 4b sheet-seeded mesh fans: the asset registry KNOWS the
+    # tooth count — at high order, wander smears mesh + fan beyond
+    # blind detection (smear = wander*order vs fan spacing ~1); seed
+    # the carrier and spacings from the kinematic sheet ----
+    if sheet:
+        mesh_orders, spacings = [], [1.0]
+        if sheet.get("mesh"):
+            zg = float(sheet["mesh"])
+            mesh_orders += [zg, 2.0 * zg]
+        pl = sheet.get("planetary")
+        if pl:
+            Zs, Zp, Zr, Np = pl
+            rc = Zs / (Zs + Zr)
+            mesh_orders += [Zr * rc, 2 * Zr * rc]
+            spacings += [rc, Np * rc]
+        if sheet.get("ratio"):
+            spacings.append(float(sheet["ratio"]))
+        for o_g in mesh_orders:
+            if not (4.0 < o_g < sp.max_o - 1):
+                continue
+            i_g = int(round(o_g / sp.do))
+            if sp.claimed[i_g]:
+                continue
+            # resolved-fan attempt at known spacings
+            best = None
+            for d in spacings:
+                mem = []
+                for k in (1, 2, 3):
+                    for sgn in (-1, 1):
+                        o_m = o_g + sgn * k * d
+                        if not (0.5 < o_m < sp.max_o):
+                            continue
+                        a = sp.amp_at(o_m)
+                        j = int(round(o_m / sp.do))
+                        loc = np.median(
+                            sp.A[max(j - 40, 0):j + 40]) + 1e-15
+                        if a > 3.5 * loc:
+                            mem.append(o_m)
+                if len(mem) >= 2 and (best is None
+                                      or len(mem) > len(best[1])):
+                    best = (d, mem)
+            e, members = 0.0, []
+            a_c = sp.amp_at(o_g)
+            loc_c = np.median(sp.A[max(i_g - 40, 0):i_g + 40]) + 1e-15
+            has_c = a_c > 3.0 * loc_c
+            if best is not None and (has_c or len(best[1]) >= 3):
+                d, mem = best
+                if has_c:
+                    w = max(_tone_halfw(o_g),
+                            1.5 * sp.wander_frac * o_g)
+                    ec = sp.band(o_g - w, o_g + w)
+                    e += ec
+                    members.append((round(float(o_g), 3), ec))
+                for o_m in mem:
+                    w = min(max(_tone_halfw(o_m),
+                                1.5 * sp.wander_frac * o_m), 0.35 * d)
+                    em = sp.band(o_m - w, o_m + w)
+                    e += em
+                    members.append((round(float(o_m), 3), em))
+                dlt = d
+            else:
+                # fused case: one lump around the mesh order — claim a
+                # BOUNDED region (fan extent), gated on local density
+                dmax = max(spacings)
+                ext = min(1.5 * sp.wander_frac * o_g + 2.0 * dmax,
+                          3.2 * dmax)
+                e_p = sp.band(o_g - ext, o_g + ext, claim=False)
+                nb = 2 * ext / sp.do
+                floor_e = nb * sp.floor ** 2 / 2 / ENBW
+                if e_p <= 5.0 * floor_e:
+                    continue
+                e = sp.band(o_g - ext, o_g + ext)
+                members = [(round(float(o_g), 3), e)]
+                dlt = dmax
+            if e > 0:
+                pats.append({"type": "SIDEBAND",
+                             "params": {"carrier": round(float(o_g), 3),
+                                        "spacing": round(float(dlt), 3),
+                                        "carrier_visible": bool(has_c),
+                                        "seeded": True},
+                             "energy": e, "members": members})
+
     # ---- 5 SIDEBAND fans (with or without carrier) ----
     for _pass in range(2):
         rem = sp.unclaimed_peaks(guard=4.0)

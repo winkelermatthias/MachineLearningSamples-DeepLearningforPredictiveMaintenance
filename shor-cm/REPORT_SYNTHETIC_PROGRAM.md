@@ -942,6 +942,35 @@ machines is 0.533 blind (the fleet-level analysis of iteration 16
 showed 0.647 at scale); both channels stay in the API so the fault
 classifier and the growth detector can disagree visibly.
 
+## Iteration 18: sheet-seeded mesh fans — GMF solved, gear tracking transformed
+
+The last weak family was GMF (recall 0.595): at mesh order ~z, the
+wander smear (wander × order ≈ 0.4 orders) approaches the fan spacing
+(~1 order), fusing carrier and sidebands into one lump that blind
+detection cannot resolve. But the asset registry *knows* the tooth
+count — that is what a kinematic sheet is for. `decompose()` now takes
+the sheet and seeds SIDEBAND extraction at the known mesh orders
+(z, 2z; planetary Zr·rc) with the known spacings (input shaft, output
+shaft, carrier, planet-pass): a resolved-fan path when members stand
+out, and a bounded fused-lump fallback (extent capped at 3.2 spacings,
+gated at 5× the floor energy — T52 pins both recovery and the
+no-invention control on a healthy record). `MachineMonitor` passes its
+sheet through automatically.
+
+Corpus judgment, blind → sheet-guided (same 600 machines / 60 fleets):
+
+| metric | blind | sheet-guided |
+|---|---|---|
+| GMF attribution / recall | 1.60 dB / 0.595 | **0.30 dB / 0.772** |
+| growth alarm right type | 0.647 | **0.824** |
+| identity persistence | 0.929 | **0.964** |
+| false-alarm machines | 2.3% | 2.3% |
+
+No collateral damage: every other family unchanged or slightly better
+(ELEC 3.09 → 2.90 dB, SHAFT2 0.54 → 0.51 dB). The stable seeded
+identity is what fixes gear *tracking* — the fused lump previously
+re-registered under drifting blind identities record to record.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND

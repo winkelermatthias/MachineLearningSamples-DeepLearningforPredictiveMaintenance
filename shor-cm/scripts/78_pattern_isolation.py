@@ -25,7 +25,9 @@ from shorcm import patterns as PT                    # noqa: E402
 N_ATTR = int(os.environ.get("N_ATTR", 600))
 N_TRK = int(os.environ.get("N_TRK", 60))
 WORKERS = int(os.environ.get("WORKERS", 4))
-OUT = Path("experiments/patterns")
+SHEET = bool(int(os.environ.get("SHEET", 0)))
+OUT = Path("experiments/patterns_sheet" if SHEET
+           else "experiments/patterns")
 
 # v2 amendment (post-hoc, recorded): (a) bearing truth INCLUDES its
 # modulation sidebands, and an off-integer-carrier SIDEBAND fan is a
@@ -67,7 +69,9 @@ def attr_one(i):
     m, x = V2.sample_run(i + 60_000_000 % 10**9, truth=truth)
     f0 = m["f_shaft"]
     try:
-        pats, e_tot = PT.decompose(x, V2.FS, f0)
+        pats, e_tot = PT.decompose(
+            x, V2.FS, f0,
+            sheet=V2.kinematic_sheet(m) if SHEET else None)
     except Exception:
         return None
     rows = []
@@ -163,7 +167,9 @@ def trk_one(i):
                 mm[k] = mm[k] * sc
         x = V2.synth_run(mm, rng, omega1x=sc ** 2)
         try:
-            pats, _ = PT.decompose(x, V2.FS, mm["f_shaft"])
+            pats, _ = PT.decompose(
+                x, V2.FS, mm["f_shaft"],
+                sheet=V2.kinematic_sheet(m) if SHEET else None)
         except Exception:
             continue
         tr.update(t, pats)

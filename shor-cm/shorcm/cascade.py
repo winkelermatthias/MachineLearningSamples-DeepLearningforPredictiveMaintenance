@@ -161,7 +161,8 @@ class MachineMonitor:
         rec["patterns"] = []
         if np.isfinite(f_lock) and f_lock > 0:
             try:
-                pats, _ = PT.decompose(x0, fs, f_lock)
+                pats, _ = PT.decompose(x0, fs, f_lock,
+                                       sheet=self.sheet or None)
                 self.gen.update(t, pats)
                 rec["patterns"] = [
                     {"type": p["type"], "params": p["params"],
