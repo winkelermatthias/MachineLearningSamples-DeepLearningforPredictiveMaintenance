@@ -1422,6 +1422,32 @@ the simulator cannot currently render — real VFD lines with PWM
 jitter that evade the crystal test — pinned by T60, proven harmless
 by V2, and waiting for real fleet data to bind. 72 tests green.
 
+## Iteration 31: one frame, earned trust — the audit backlog tail
+
+Three remaining audit seams closed, with one live fabrication caught
+on the way:
+
+- **One frame (S5).** The monitor diagnosed at the per-record top-1
+  and tracked at the temporal lock — two frames per record. Now
+  `analyze_record` accepts a forced frame and the monitor re-analyzes
+  whenever the lock disagrees by more than 2%: diagnosis and tracking
+  share one frame, visibly (`frame_forced`).
+- **Reframe in production (S10).** Decisive lock flips (2×, 3×, ½×,
+  ⅓×) now re-key the tracker registry in the live monitor path
+  (`frame_correction`) — history preserved through a frame
+  correction, exactly what iteration 27 built and nothing called.
+- **Earned sheet trust (S7).** The kinematic sheet is registry data
+  and can be wrong. Contradiction flags (`mesh_unsupported`,
+  `ratio_unsupported`) now surface when the evidence doesn't support
+  it — and building the test caught a real fabrication: a wrong tooth
+  count could pass the fused-lump gate on flat broadband and
+  manufacture "seeded mesh energy". Fixed with a ring-elevation gate
+  (a real smeared mesh is a bump — inner density must exceed 1.8× the
+  surrounding ring); wrong sheets are now flagged while true smeared
+  meshes capture exactly as before (GMF spot-check 0.31 dB / 0.70).
+
+T61–T63 pin all three; 75 tests green.
+
 ## What fixes the weak links (next backlog)
 
 1. Bearing per-record energy: integrate the full drifting-cluster BAND

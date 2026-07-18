@@ -389,6 +389,23 @@ def decompose(x, fs, f_hat, spr=256, sheet=None, ph=None,
                 floor_e = nb * sp.floor ** 2 / 2 / ENBW
                 if e_p <= 5.0 * floor_e:
                     continue
+                # ring elevation: a real smeared mesh is a BUMP; a
+                # wrong tooth count lays this window over flat
+                # broadband and must not manufacture sheet support
+                # (audit S7, found by T63)
+                i0 = max(int((o_g - ext) / sp.do), 1)
+                i1 = min(int((o_g + ext) / sp.do) + 1, len(sp.A))
+                nring = int(1.5 * (i1 - i0))
+                ring = np.concatenate([
+                    sp.A[max(i0 - nring, 0):i0][
+                        ~sp.claimed[max(i0 - nring, 0):i0]],
+                    sp.A[i1:i1 + nring][~sp.claimed[i1:i1 + nring]]])
+                inner = sp.A[i0:i1][~sp.claimed[i0:i1]]
+                elevated = (len(ring) >= 20 and len(inner) >= 10
+                            and float(np.mean(inner ** 2))
+                            > 1.8 * float(np.mean(ring ** 2)))
+                if not elevated:
+                    continue
                 e = sp.band(o_g - ext, o_g + ext)
                 members = [(round(float(o_g), 3), e)]
                 dlt = dmax
@@ -397,7 +414,16 @@ def decompose(x, fs, f_hat, spr=256, sheet=None, ph=None,
                              "params": {"carrier": round(float(o_g), 3),
                                         "spacing": round(float(dlt), 3),
                                         "carrier_visible": bool(has_c),
-                                        "seeded": True},
+                                        "seeded": True,
+                                        # resolved = fan members or a
+                                        # visible carrier stood out; a
+                                        # carrier-less fused lump is
+                                        # CAPTURE, not evidence that
+                                        # the sheet is right
+                                        # every emitted seed is now
+                                        # supported: fan/carrier OR a
+                                        # ring-elevated lump
+                                        "resolved": True},
                              "energy": e, "members": members})
 
     # ---- 5 SIDEBAND fans (with or without carrier) ----
