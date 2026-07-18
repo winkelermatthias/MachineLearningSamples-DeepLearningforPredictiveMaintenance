@@ -1,0 +1,4 @@
+{"ts": "2026-07-11T13:08:08Z", "name": "synthval_massive_c1_c6", "config_sha": "e1684a530e98", "verdict": "PASS", "metrics": {"divergent_frac": 0.052, "theory_hash": "0e236e6c0ab7"}}
+{"ts": "2026-07-11T13:08:08Z", "name": "o1_blind_speed_simforge_v1.1_n2000", "config_sha": "f93b8f7a451f", "verdict": "MEASURED", "metrics": {"top1": 0.228, "top3": 0.5585, "octave": 0.092, "ece": 0.216, "ladder_effect": 0.0}}
+{"ts": "2026-07-11T13:08:08Z", "name": "o3_ml_arm_lightgbm_ledger", "config_sha": "1cd34109f541", "verdict": "PROMOTED", "metrics": {"ml_macro_f1": 0.878, "rules_macro_f1": 0.426, "delta_lo_alpha_adj": 0.434}}
+{"ts": "2026-07-11T13:08:08Z", "name": "o4_severity_drivers_audit", "config_sha": "15206954e1de", "verdict": "GUARDRAIL_FAIL", "metrics": {"violations": 4, "all_bearing_uns_frac": true, "mechanism": "FIXEDHZ comb-mask cannibalizes severe bearing families"}}

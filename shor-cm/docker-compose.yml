@@ -1,0 +1,10 @@
+services:
+  lab:
+    build: .
+    container_name: shorcm-lab
+    volumes:
+      - .:/repo
+    working_dir: /repo
+    command: sleep infinity
+    mem_limit: 14g
+    cpus: "8"
