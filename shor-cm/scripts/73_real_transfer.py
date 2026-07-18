@@ -60,14 +60,25 @@ def casc():
 
 
 def near_pattern(pats, order, tol=0.06):
+    """Type-compatible capture at the kinematic order OR its 2x
+    harmonic (symmetric with the synthetic judgment, whose truth
+    includes harmonics): NEARRAT/TONE order, SIDEBAND carrier, or a
+    HARM family whose base IS the defect rate (a defect-order ladder
+    is the classic envelope signature)."""
+    targets = (order, 2 * order)
     for p in pats:
-        if p["type"] == "NEARRAT" \
-                and abs(p["params"]["order"] / order - 1) < tol:
-            return True
-        if p["type"] == "SIDEBAND":
+        cand = None
+        if p["type"] in ("NEARRAT", "TONE"):
+            cand = p["params"]["order"]
+        elif p["type"] == "SIDEBAND":
             c = p["params"]["carrier"]
-            if abs(c - round(c)) > 0.15 and abs(c / order - 1) < tol:
-                return True
+            if abs(c - round(c)) > 0.15:
+                cand = c
+        elif p["type"] == "HARM" and p["params"]["base"] > 1.5:
+            cand = p["params"]["base"]
+        if cand is not None and any(abs(cand / o - 1) < tol
+                                    for o in targets):
+            return True
     return False
 
 
@@ -90,6 +101,12 @@ def mfpt_one(path):
         row["pat_bpfi"] = near_pattern(pats, AD.MFPT_ORDERS["BPFI"])
     except Exception:
         row["pat_bpfo"] = row["pat_bpfi"] = None
+    try:                       # iteration-24 envelope channel (J3env)
+        pats_e, _, _ = PT.decompose_envelope(x, fs, meta["rate_hz"])
+        row["env_bpfo"] = near_pattern(pats_e, AD.MFPT_ORDERS["BPFO"])
+        row["env_bpfi"] = near_pattern(pats_e, AD.MFPT_ORDERS["BPFI"])
+    except Exception:
+        row["env_bpfo"] = row["env_bpfi"] = None
     return row
 
 
@@ -120,6 +137,14 @@ def seu_one(args):
                                   for p_ in pats)
     except Exception:
         row["pat_sideband"] = None
+    try:                       # iteration-24 envelope channel (J6env)
+        pats_e, _, _ = PT.decompose_envelope(x, fs, meta["rate_hz"])
+        row["env_defect"] = any(
+            p_["type"] in ("NEARRAT", "SIDEBAND")
+            or (p_["type"] == "HARM" and p_["params"]["base"] > 1.5)
+            for p_ in pats_e if p_.get("share", 0) > 0.03)
+    except Exception:
+        row["env_defect"] = None
     return row
 
 
@@ -166,6 +191,22 @@ def main():
     f["J7_sideband_delta"] = round(float(
         ds[gs & ~heal].pat_sideband.mean()
         - ds[gs & heal].pat_sideband.mean()), 3)
+    # iteration-24 amendments (registered before the envelope re-run):
+    # J3env — envelope capture at defect orders >= 0.60 per class;
+    # J6env — envelope defect-pattern presence delta on the SEU
+    # bearingset (faults minus health) > 0.15
+    if "env_bpfo" in dm.columns:
+        f["J3env_bpfo_on_outer"] = round(float(
+            dm[dm.label == "outer"].env_bpfo.mean()), 3)
+        f["J3env_bpfi_on_inner"] = round(float(
+            dm[dm.label == "inner"].env_bpfi.mean()), 3)
+        f["J3env_fp_baseline"] = int(
+            (dm[dm.label == "baseline"].env_bpfo
+             | dm[dm.label == "baseline"].env_bpfi).sum())
+    if "env_defect" in ds.columns:
+        f["J6env_bearing_delta"] = round(float(
+            ds[bs & ~heal].env_defect.mean()
+            - ds[bs & heal].env_defect.mean()), 3)
     f["n_mfpt"], f["n_seu"] = len(dm), len(ds)
 
     f["verdicts"] = {
@@ -180,6 +221,12 @@ def main():
         "J6": bool(f["J6_gear_delta"] > 0.15
                    and f["J6_bearing_delta"] > 0.15),
         "J7": bool(f["J7_sideband_delta"] > 0.15)}
+    if "J3env_bpfo_on_outer" in f:
+        f["verdicts"]["J3env"] = bool(
+            f["J3env_bpfo_on_outer"] >= 0.60
+            and f["J3env_bpfi_on_inner"] >= 0.60)
+    if "J6env_bearing_delta" in f:
+        f["verdicts"]["J6env"] = bool(f["J6env_bearing_delta"] > 0.15)
     f["wall_s"] = round(time.time() - t0, 1)
     (OUT / "findings.json").write_text(json.dumps(f, indent=1))
     print(json.dumps(f, indent=1))

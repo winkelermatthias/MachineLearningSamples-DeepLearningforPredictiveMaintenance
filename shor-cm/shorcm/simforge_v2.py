@@ -176,12 +176,13 @@ def synth_run(m, rng, truth=None, omega1x=1.0):
     omega1x: multiplies the 1x (mass-force) amplitude — imbalance force
     scales with omega^2, so monitoring sequences pass
     (f_op / f_base)^2 here. Pure multiplication: rng order unchanged."""
-    def note(family, freqs, amps, drifting=False):
+    def note(family, freqs, amps, drifting=False, impulsive=False):
         if truth is not None:
             truth.append({"family": family,
                           "freqs_hz": [float(f) for f in freqs],
                           "amps": [float(a) for a in amps],
-                          "drifting": bool(drifting)})
+                          "drifting": bool(drifting),
+                          "impulsive": bool(impulsive)})
     n = int(DUR * FS)
     t = np.arange(n) / FS
     f0 = m["f_shaft"]
@@ -302,16 +303,50 @@ def synth_run(m, rng, truth=None, omega1x=1.0):
         bslip = rng.uniform(0.005, 0.02)
         phb = (bo * (1 + bslip)) * (fsh / f0) * ph
         rw = np.cumsum(rng.normal(0, 0.6 / np.sqrt(FS / max(f0, 3)), n))
-        tone = 0.8 * s * np.cos(phb + rw)
-        if m["subtype"] == "BPFI":                # 1x modulation sidebands
-            tone = tone * (1 + 0.6 * np.cos(fsh / f0 * ph + u()))
-        elif m["subtype"] == "BSF":               # cage modulation
-            tone = tone * (1 + 0.5 * np.cos(brg["FTF"] * fsh / f0 * ph
-                                            + u()))
-        x += tone
-        x += 0.35 * s * np.cos(2 * phb + 2 * rw)
-        bf = bo * (1 + bslip) * fsh
-        note("BEARING", [bf, 2 * bf], [0.8 * s, 0.35 * s], drifting=True)
+        # IMPULSIVE vs tonal rendering: the MFPT transfer gate showed
+        # real early/mid bearing faults put their energy in an HF
+        # resonance excited by an impulse train at the defect rate —
+        # the raw spectrum carries little at the defect order. Mode
+        # and resonance derive DETERMINISTICALLY from already-sampled
+        # fields (no new rng draws: seeded benchmarks stay intact).
+        h = int(m["f_shaft"] * 1e6)
+        impulsive = (h % 100) / 100 < (0.75 - 0.35 * m["severity"])
+        if impulsive:
+            f_res = FS * (0.18 + ((h // 100) % 1000) / 1000 * 0.17)
+            tau = (0.8 + ((h // 7) % 50) / 50 * 1.6) / 1000.0
+            phase_tot = phb + rw
+            k_idx = np.flatnonzero(np.diff(
+                np.floor(phase_tot / (2 * np.pi))) > 0)
+            train = np.zeros(n)
+            if len(k_idx):
+                amp_j = 1 + 0.4 * np.sin(rw[k_idx] * 7.3)
+                if m["subtype"] == "BPFI":        # load-zone modulation
+                    amp_j *= 1 + 0.6 * np.cos(
+                        (fsh / f0) * ph[k_idx] + 0.7)
+                elif m["subtype"] == "BSF":
+                    amp_j *= 1 + 0.5 * np.cos(
+                        brg["FTF"] * (fsh / f0) * ph[k_idx] + 0.7)
+                train[k_idx] = amp_j
+            tk = np.arange(int(5 * tau * FS)) / FS
+            kern = np.exp(-tk / tau) * np.sin(2 * np.pi * f_res * tk)
+            from scipy.signal import fftconvolve
+            x += 2.2 * s * fftconvolve(train, kern)[:n]
+            x += 0.15 * s * np.cos(phb + rw)      # faint tonal residue
+            bf = bo * (1 + bslip) * fsh
+            note("BEARING", [bf, 2 * bf], [0.15 * s, 0.05 * s],
+                 drifting=True, impulsive=True)
+        else:
+            tone = 0.8 * s * np.cos(phb + rw)
+            if m["subtype"] == "BPFI":            # 1x modulation sidebands
+                tone = tone * (1 + 0.6 * np.cos(fsh / f0 * ph + u()))
+            elif m["subtype"] == "BSF":           # cage modulation
+                tone = tone * (1 + 0.5 * np.cos(brg["FTF"] * fsh / f0 * ph
+                                                + u()))
+            x += tone
+            x += 0.35 * s * np.cos(2 * phb + 2 * rw)
+            bf = bo * (1 + bslip) * fsh
+            note("BEARING", [bf, 2 * bf], [0.8 * s, 0.35 * s],
+                 drifting=True)
 
     # electrical (motor point full, driven point -25 dB), hum, neighbor
     eg = 1.0 if m["component"] == "motor" else 10 ** (-25 / 20)

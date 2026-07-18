@@ -98,6 +98,20 @@ class Cascade:
                                                      spec=spec)
         led = SC.ledger(x0, fs, f_hat, spr=256, uns_hi=16.0)
         out["ledger"] = led
+        # envelope evidence surface: impulsive bearing faults live in
+        # the HF-resonance envelope, not the raw order spectrum (the
+        # MFPT transfer gate measured raw attribution 0.0 there)
+        try:
+            from . import patterns as PT
+            pats_env, _, band = PT.decompose_envelope(x0, fs, f_hat)
+            out["patterns_envelope"] = [
+                {"type": p["type"], "params": p["params"],
+                 "share": round(p["share"], 4)}
+                for p in pats_env
+                if p["type"] != "FLOOR" and p["share"] > 0.01]
+            out["envelope_band_hz"] = [round(b) for b in band]
+        except Exception:
+            out["patterns_envelope"] = []
         out["fault_rules"] = SC.rules_from_ledger(led)
         if self.fault_model is not None and led is not None:
             feats = [led.get(f, 0.0) for f in SC.LEDGER_FEATURES_V2]

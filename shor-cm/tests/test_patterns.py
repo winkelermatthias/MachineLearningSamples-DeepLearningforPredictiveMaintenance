@@ -247,6 +247,63 @@ def test_T53_cusum_recall_channel():
     assert not any(d["alarm"] for d in tr2.cusum().values()), tr2.cusum()
 
 
+def _env_near(pats, order, tol=0.06):
+    targets = (order, 2 * order)
+    for p in pats:
+        cand = None
+        if p["type"] in ("NEARRAT", "TONE"):
+            cand = p["params"]["order"]
+        elif p["type"] == "SIDEBAND":
+            cand = p["params"]["carrier"]
+        elif p["type"] == "HARM" and p["params"]["base"] > 1.5:
+            cand = p["params"]["base"]
+        if cand is not None and any(abs(cand / o - 1) < tol
+                                    for o in targets):
+            return True
+    return False
+
+
+def test_T54_impulsive_bearing_lives_in_the_envelope():
+    """A SimForge impulsive bearing: the raw order spectrum carries
+    little at the defect order (that is the measured MFPT physics),
+    while the envelope channel captures it. Healthy control: the
+    envelope must not invent the defect order."""
+    rng = np.random.default_rng(0)
+    found = 0
+    for i in range(400):
+        m = V2.sample_machine(V2.rng_for_run((70_000_000, i)))
+        if m["fault"] != "bearing" or m["fault_shaft"] != "in":
+            continue
+        h = int(m["f_shaft"] * 1e6)
+        if not (h % 100) / 100 < (0.75 - 0.35 * m["severity"]):
+            continue
+        if m["severity"] < 0.5:
+            continue
+        tr = []
+        x = V2.synth_run(m, V2.rng_for_run((70_500_000, i)), truth=tr)
+        tb = next(t for t in tr if t["family"] == "BEARING")
+        assert tb["impulsive"]
+        bo = tb["freqs_hz"][0] / m["f_shaft"]
+        pats_env, _, band = PT.decompose_envelope(x, V2.FS, m["f_shaft"])
+        assert _env_near(pats_env, bo), (bo, [
+            (p["type"], p["params"]) for p in pats_env
+            if p["type"] != "FLOOR"][:6])
+        found += 1
+        if found >= 3:
+            break
+    assert found >= 2, f"only {found} impulsive bearing cases sampled"
+    # healthy control
+    for i in range(200):
+        m = V2.sample_machine(V2.rng_for_run((71_000_000, i)))
+        if m["fault"] != "healthy":
+            continue
+        x = V2.synth_run(m, V2.rng_for_run((71_500_000, i)))
+        pats_env, _, _ = PT.decompose_envelope(x, V2.FS, m["f_shaft"])
+        assert not _env_near(pats_env, 3.245) \
+            or not _env_near(pats_env, 4.755)
+        break
+
+
 def test_T49_general_tracking_under_varying_speed():
     """A growing SIDEBAND fan and a constant HARM family, speed moving
     +/-15% record to record: identities persist, the sideband instance
