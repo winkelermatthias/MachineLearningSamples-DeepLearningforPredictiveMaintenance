@@ -46,6 +46,8 @@ frequencies in Hz, which peaks matched). Then output ONE fenced json block, noth
 
 def smoke_test(teachers):
     """Verify model ids are live and one call works per provider, before spending anything."""
+    import time
+
     from openai import OpenAI
 
     for name, cfg in teachers.items():
@@ -57,27 +59,36 @@ def smoke_test(teachers):
             print(f"[{name}] {cfg['model']}: {status}\n         nearby: {near}")
         except Exception as e:
             print(f"[{name}] models.list unavailable ({type(e).__name__}) — not fatal on some gateways")
-        try:
-            r = client.chat.completions.create(
-                model=cfg["model"],
-                messages=[{"role": "user", "content": "Reply with the single word: pong"}],
-                max_tokens=512, temperature=0,
-            )
-            print(f"[{name}] smoke test → {(r.choices[0].message.content or '').strip()[:60]!r}")
-        except Exception as e:
-            print(f"[{name}] smoke test FAILED: {e}")
+        for attempt in range(4):     # free tiers 429 easily; a rate limit is not a broken setup
+            try:
+                r = client.chat.completions.create(
+                    model=cfg["model"],
+                    messages=[{"role": "user", "content": "Reply with the single word: pong"}],
+                    max_tokens=512, temperature=cfg.get("temperature", 1.0),
+                )
+                print(f"[{name}] smoke test → {(r.choices[0].message.content or '').strip()[:60]!r}")
+                break
+            except Exception as e:
+                if "429" in str(e) and attempt < 3:
+                    wait = 15 * (attempt + 1)
+                    print(f"[{name}] rate-limited (429) — retrying in {wait}s")
+                    time.sleep(wait)
+                    continue
+                print(f"[{name}] smoke test FAILED: {e}")
+                break
 
 
-async def _call_one(client, model, sem, sample, temperature=0.4, max_tokens=4096):
+async def _call_one(client, tcfg, sem, sample, max_tokens=4096):
     async with sem:
         last_err = "empty response"
-        for attempt in range(5):
+        for attempt in range(6):
             try:
                 r = await client.chat.completions.create(
-                    model=model,
+                    model=tcfg["model"],
                     messages=[{"role": "system", "content": SYSTEM_TEACHER},
                               {"role": "user", "content": sample["report"]}],
-                    temperature=temperature, max_tokens=max_tokens,
+                    temperature=tcfg.get("temperature", 1.0),   # kimi-k3 only accepts 1
+                    max_tokens=max_tokens,
                 )
                 msg = r.choices[0].message
                 # reasoning models may split output; prefer visible content
@@ -86,7 +97,10 @@ async def _call_one(client, model, sem, sample, temperature=0.4, max_tokens=4096
                     return sample["id"], text, None
             except Exception as e:
                 last_err = f"{type(e).__name__}: {e}"
-                await asyncio.sleep(2 ** attempt + random.uniform(0, 1))
+                # rate limits deserve patience, not just exponential jitter
+                base = 15 if "429" in last_err else 2 ** attempt
+                await asyncio.sleep(base * (attempt + 1) if "429" in last_err
+                                    else base + random.uniform(0, 1))
         return sample["id"], None, last_err
 
 
@@ -105,7 +119,7 @@ async def _run_teacher(name, cfg, samples, out_dir):
         return
     client = AsyncOpenAI(base_url=cfg["base_url"], api_key=cfg["api_key"], timeout=600)
     sem = asyncio.Semaphore(cfg["concurrency"])
-    coros = [_call_one(client, cfg["model"], sem, s) for s in todo]
+    coros = [_call_one(client, cfg, sem, s) for s in todo]
     ok, fails = 0, []
     with open(path, "a") as fh:
         for fut in tqdm(asyncio.as_completed(coros), total=len(coros), desc=name):

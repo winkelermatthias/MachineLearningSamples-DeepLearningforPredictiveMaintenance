@@ -34,17 +34,22 @@ def get_secret(name):
 
 
 def teacher_registry(nvidia_api_key, moonshot_api_key):
+    # NOTE: NIM also hosts moonshotai/kimi-k2.6 — if you'd rather run both
+    # teachers through NVIDIA alone, point the second entry at that id with
+    # the NIM base_url and your NVIDIA key.
     return {
         "glm-5.2": dict(
             base_url="https://integrate.api.nvidia.com/v1",  # NVIDIA NIM, OpenAI-compatible
             api_key=nvidia_api_key,
             model="z-ai/glm-5.2",
+            temperature=0.4,
             concurrency=6,   # NIM free tier is rate-limited; raise if you have credits
         ),
         "kimi-k3": dict(
             base_url="https://api.moonshot.ai/v1",           # Moonshot, OpenAI-compatible
             api_key=moonshot_api_key,
             model="kimi-k3",  # 'kimi-latest' was retired Jan 2026 -> K3 is the flagship
+            temperature=1.0,  # kimi-k3 rejects anything else ("only 1 is allowed")
             concurrency=4,
         ),
     }
