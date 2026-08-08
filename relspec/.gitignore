@@ -1,0 +1,6 @@
+*.log
+fleet2.json
+fleet.duckdb*
+schema.duckdb*
+__pycache__/
+*.pyc
