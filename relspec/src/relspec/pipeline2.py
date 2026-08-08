@@ -115,7 +115,13 @@ def extract2(x, fs, band_key='default', fr_nominal=None,
         # catch a confidently wrong estimator; only independent evidence can.
         # The acceleration comb defines what "shaft speed" means, so the
         # envelope answer is accepted only when the acc comb corroborates it.
-        fr_a, conf_a = acc_comb_speed(f, a, fr_nominal)
+        # The comb search runs on a FULL-LENGTH FFT, not the Welch amplitude:
+        # Welch's 2.93 Hz bins cannot resolve a 6.4 Hz rotor's comb (the
+        # fleet's slow mixer sat at 35% error until this), while the full
+        # record gives 0.5 Hz bins from the same samples for one extra FFT.
+        af = np.abs(np.fft.rfft(x*np.hanning(len(x))))
+        ff = np.fft.rfftfreq(len(x), 1/fs)
+        fr_a, conf_a = acc_comb_speed(ff, af, fr_nominal)
         agree = conf_a >= 1.3 and abs(fr_e-fr_a) < 0.03*fr_a
         if conf_e >= 1.8 and (agree or conf_a < 1.3):
             fr, conf = fr_e, conf_e

@@ -36,6 +36,9 @@ def pick_records():
 
 def run_config(recs, win_s, k_mad, floor_db, do_patterns=True):
     frames = 0; total_b = 0
+    res_frames = 0; res_b = 0        # residual-only split: the length sweep
+    # changes frames-per-file, so anchor amortisation confounds the mean
+    # unless residual frames are also reported alone
     line_errs = []; loss_rows = []
     for rec in recs:
         fs, x = rec['fs'], rec['x']
@@ -52,8 +55,10 @@ def run_config(recs, win_s, k_mad, floor_db, do_patterns=True):
             seg = x[w*n:(w+1)*n]
             e = extract2(seg, fs, band_key=rec['group'],
                          fr_nominal=rec['fr_nominal'])
-            pa, _ = ca.encode(e.acc_u8, mad_a)
-            pe, _ = ce.encode(e.env_u8, mad_e)
+            pa, ka = ca.encode(e.acc_u8, mad_a)
+            pe, ke = ce.encode(e.env_u8, mad_e)
+            if ka != 'anchor' and ke != 'anchor':
+                res_frames += 1; res_b += len(pa)+len(pe)
             ra, _ = da.decode(pa); re_, _ = de.decode(pe)
             mad_a = np.maximum(0.95*mad_a+0.05*np.abs(e.acc_u8.astype(float)-ra.astype(float)), 1.0)
             mad_e = np.maximum(0.95*mad_e+0.05*np.abs(e.env_u8.astype(float)-re_.astype(float)), 1.0)
@@ -69,6 +74,7 @@ def run_config(recs, win_s, k_mad, floor_db, do_patterns=True):
                 loss_rows += pattern_loss(eo, er, ENV_CENTERS,
                                           min_harmonics=3, f_hi=6.5)
     res = dict(bytes_frame=total_b/max(frames, 1), frames=frames,
+               bytes_residual=res_b/max(res_frames, 1), res_frames=res_frames,
                line_p95=float(np.percentile(line_errs, 95)) if line_errs else None,
                line_med=float(np.median(line_errs)) if line_errs else None)
     if loss_rows:
@@ -96,6 +102,7 @@ if __name__ == '__main__':
         r.update(win_s=win)
         out['length'].append(r)
         print(f'win={win}s  {r["bytes_frame"]:7.1f} B/frame  '
+              f'residual-only {r["bytes_residual"]:7.1f} B  '
               f'line p95 {r["line_p95"]:.2f} dB', flush=True)
     json.dump(out, open('../eval_rd.json', 'w'), default=float)
     print('wrote ../eval_rd.json')
