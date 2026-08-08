@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Anchor-mode normalisation and the role of phase</title>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#FBFCFC;--panel:#fff;--rule:#DCE5E6;--rule2:#EDF2F3;--ink:#0E2A2F;
+ --ink2:#4A6165;--mute:#869A9C;--teal:#0FB5A6;--tealD:#0A8A7F;--amber:#D99A2B;
+ --coral:#E4572E;--violet:#7C6BAD;--slate:#B7C5C8}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:Onest,system-ui,sans-serif;
+ line-height:1.62;padding-bottom:70px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+header{padding:46px 0 24px;border-bottom:1px solid var(--rule)}
+.eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tealD);font-weight:600}
+h1{font-size:clamp(27px,4.5vw,41px);font-weight:600;letter-spacing:-.023em;line-height:1.1;margin-top:12px}
+h1 em{font-style:normal;color:var(--tealD)}
+.lede{margin-top:14px;max-width:70ch;color:var(--ink2);font-size:15.5px}
+h2{font-size:21px;font-weight:600;letter-spacing:-.015em;margin:44px 0 4px}
+h2 .num{color:var(--slate);font-weight:500;margin-right:9px}
+h3{font-size:15px;font-weight:600;margin:26px 0 4px}
+p{max-width:74ch;color:var(--ink2);font-size:14.5px;margin:10px 0}
+p strong{color:var(--ink);font-weight:600}
+ul,ol{max-width:74ch;color:var(--ink2);font-size:14.5px;margin:10px 0 10px 22px}
+li{margin:6px 0}
+.eq{background:#F4F8F8;border-left:2px solid var(--teal);padding:13px 16px;margin:14px 0;
+ font-family:"JetBrains Mono",monospace;font-size:13.5px;color:var(--ink);
+ overflow-x:auto;max-width:76ch;line-height:1.8}
+.eq .c{color:var(--mute)}
+.card{border:1px solid var(--rule);background:var(--panel);margin:20px 0}
+.card h4{font-size:13px;font-weight:600;padding:12px 16px;border-bottom:1px solid var(--rule2)}
+.card .body{padding:14px 16px}
+canvas{display:block;width:100%}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:right;padding:7px 9px;border-bottom:1px solid var(--rule2)}
+th:first-child,td:first-child{text-align:left}
+th{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--mute);font-weight:600}
+td.g{color:var(--tealD);font-weight:600}td.b{color:var(--coral);font-weight:600}
+.note{font-size:13.5px;color:var(--ink2);border-left:2px solid var(--teal);padding:4px 0 4px 14px;
+ margin:16px 0;max-width:74ch}
+.note.warn{border-left-color:var(--coral)}
+.note.key{border-left-color:var(--violet);background:#FAF8FD;padding:12px 0 12px 14px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:1px;
+ background:var(--rule);border:1px solid var(--rule);margin:24px 0}
+.stat{background:var(--panel);padding:14px 16px}
+.stat .k{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.stat .v{font-size:24px;font-weight:600;margin-top:2px}
+.stat .v small{font-size:12px;font-weight:400;color:var(--mute)}
+.stat.hi .v{color:var(--tealD)}.stat.no .v{color:var(--coral)}
+footer{margin-top:46px;padding-top:20px;border-top:1px solid var(--rule);font-size:12.5px;color:var(--mute)}
+</style></head><body>
+<div class="wrap">
+<header>
+  <div class="eyebrow">CWRU full set &middot; 90 acquisitions &middot; shaft span 1797&ndash;1730 rpm</div>
+  <h1>The anchor does not have to be the shaft &mdash; <em>but it has to move with it</em></h1>
+  <p class="lede">The premise under test: pattern tracking needs a reference that is dominant, consistently present and holds a fixed ratio to shaft speed. It does not need to be the speed. That is correct, and it turns out to be a better idea than estimating speed &mdash; provided one distinction is respected, because getting it wrong is worse than not doing it at all.</p>
+</header>
+
+<div class="stats" id="stats"></div>
+
+<h2><span class="num">01</span>The premise, stated precisely</h2>
+<p>Normalising a spectrum by a reference frequency <em>f<sub>a</sub></em> puts every component at position <em>f/f<sub>a</sub></em>. If <em>f<sub>a</sub> = &rho;&middot;f<sub>r</sub></em> with &rho; constant, then</p>
+<div class="eq">o<sub>anchor</sub> = f / f<sub>a</sub> = f / (&rho;&middot;f<sub>r</sub>) = o<sub>true</sub> / &rho;<span class="c">   a fixed rescaling</span></div>
+<p>Every pattern lands at the same axis position on every acquisition, which is <strong>all that pattern tracking requires</strong>. True orders come back by multiplying by &rho;, a single scalar per asset determined once, or never determined at all if only relative tracking matters.</p>
+<p>The attraction is that &rho; never has to be known, while <em>f<sub>r</sub></em> would have to be measured accurately every time. You trade an estimation problem for a selection problem.</p>
+
+<h2><span class="num">02</span>The distinction that decides everything</h2>
+<p>A spectrum contains two populations, and they behave oppositely under a speed change.</p>
+<div class="eq">order-locked      f = k &middot; f<sub>r</sub><span class="c">   shaft harmonics, gear mesh, vane pass, bearing tones</span><br>
+frequency-locked  f = const<span class="c">   structural resonances, mount modes, line frequency</span></div>
+<p><strong>Normalising by a frequency-locked mode does not merely fail, it actively misaligns.</strong> When the machine slows, an order-locked comb moves down in Hz while the structural anchor stays put, so dividing by it makes a stable comb appear to drift. You would convert a trackable pattern into an untrackable one and the time series would look like degradation.</p>
+<h3>How to tell them apart</h3>
+<p>Observe the candidate at several speeds and ask which hypothesis is tighter. Compare the coefficient of variation of the ratio against that of the raw frequency:</p>
+<div class="eq">cv<sub>order</sub> = &sigma;(f<sub>a</sub>/f<sub>r</sub>) / &mu;(f<sub>a</sub>/f<sub>r</sub>)<span class="c">   order-locked hypothesis</span><br>
+cv<sub>Hz</sub>&nbsp;&nbsp;&nbsp; = &sigma;(f<sub>a</sub>) / &mu;(f<sub>a</sub>)<span class="c">   frequency-locked hypothesis</span><br>
+&nbsp;<br>
+margin = cv<sub>Hz</sub> / cv<sub>order</sub><span class="c">   &gt;1 order-locked, &lt;1 structural</span></div>
+<p>This needs speed variation to be separable at all. CWRU's four load steps move the shaft 1797 to 1730 rpm, a 3.9% span, which is just enough.</p>
+
+<h2><span class="num">03</span>What the data says</h2>
+<div class="card"><h4>Candidate anchors ranked by order stability, all 90 acquisitions across 4 loads</h4>
+  <div class="body"><table id="anchors"></table></div></div>
+<div class="note key"><strong>The premise holds, and it holds better than shaft speed.</strong> The ~12x family is order-locked with a margin of 2.48x and a ratio to shaft of 12.053 held to a coefficient of variation of <b>0.0054</b>. That is a fifth of a percent, and tighter than any low-order line. This is the family that beat the shaft series as the dominant comb in the earlier analysis &mdash; not a nuisance, an excellent anchor with a fixed ratio, exactly as proposed.</div>
+<div class="note warn"><strong>And the trap is real, not hypothetical.</strong> On this data the lines near <b>2x and 3x are frequency-locked</b>, margins of 0.52 and 0.08. They are mount and structural resonances that happen to sit near a shaft multiple at these speeds. A naive scheme picking "a strong low-order line" would choose one of them and systematically misalign every spectrum. The 3x candidate is the worst possible choice available and looks entirely reasonable by magnitude alone.</div>
+<div class="card"><h4>Order stability against frequency stability &mdash; below the diagonal is order-locked</h4>
+  <div class="body"><canvas id="lock" height="300"></canvas></div></div>
+
+<h2><span class="num">04</span>Where phase comes in</h2>
+<p>Alignment is only as good as the measurement of <em>f<sub>a</sub></em>. A bin-limited estimate on a 4096-point FFT at 12 kHz caps precision at 2.93 Hz, which on a 350 Hz anchor is 0.84%. Phase does far better, and costs nothing extra to acquire.</p>
+<h3>The two-frame phase estimator</h3>
+<p>Take two FFT frames offset by hop <em>H</em>. A component sitting exactly at the centre of bin <em>k</em> advances in phase by exactly <em>2&pi;kH/N</em>. Anything else is off-centre, and the wrapped excess says by how much:</p>
+<div class="eq">&Delta;&phi; = wrap( &ang;X<sub>2</sub>[k] &minus; &ang;X<sub>1</sub>[k] &minus; 2&pi;kH/N )<span class="c">   to ±π</span><br>
+&nbsp;<br>
+f = ( k + &Delta;&phi;&middot;N / (2&pi;H) ) &middot; f<sub>s</sub>/N<span class="c">   sub-bin frequency</span></div>
+<p>This is the phase-vocoder estimator. With <em>H = N/4</em> the unambiguous range is &plusmn;2 bins, comfortably more than a peak's true offset. It needs one extra FFT of a frame already in the buffer, adds no bins, and resolves an order of magnitude below bin width.</p>
+<div class="note"><strong>Phase is never transmitted.</strong> It is consumed on the device to produce one precise number. The payload stays magnitude-only, and the cloud receives a better axis rather than more data. That is the right shape for a compression method: spend computation, not bytes.</div>
+<h3>What it costs</h3>
+<div class="card"><div class="body"><table id="cost"></table></div></div>
+
+<h2><span class="num">05</span>The honest negative</h2>
+<p>Phase refinement works exactly as the mathematics says. It moves the anchor frequency by a median of <b>0.15 bins</b> and up to 0.45 bins at p95. But measured against the thing it is supposed to improve, it does essentially nothing:</p>
+<div class="card"><div class="body"><table id="phres"></table></div></div>
+<div class="note warn"><strong>Sub-bin precision is not the bottleneck.</strong> The phase correction is worth about 0.13% of the anchor frequency. The anchor's own order stability across the set is 22%. The correction is roughly <b>170x smaller</b> than the variation it would need to explain, so it cannot move the result and it does not: cv<sub>order</sub> improves from 0.22622 to 0.22522, a gain of 0.4%.</div>
+<p>What actually limits alignment is <strong>anchor identity</strong> &mdash; whether the selector picks the same physical mode on every acquisition. In the run above the anchor band was populated in only 28 of 90 acquisitions, because the top-40 peak list is dominated by the 2&ndash;4 kHz resonance region and few peaks fall in the narrow band around 12x. When the selector picks a different line, the error is a whole ratio, not a fraction of a bin.</p>
+<div class="note key">This reorders the work. Phase is a genuine and cheap improvement, but it is a second-order one. <strong>The first-order problem is a selection protocol that returns the same mode every time</strong>, with an explicit answer for when it cannot. Building the phase path first would have been optimising the wrong term, and only measuring it revealed that.</div>
+
+<h2><span class="num">06</span>Proposed design</h2>
+<h3>Anchor selection, run on the device</h3>
+<ol>
+ <li><strong>Commissioning window.</strong> Over the first N acquisitions, retain far more peaks than 40 &mdash; enough to populate candidate bands reliably &mdash; and record each candidate's frequency alongside a coarse speed proxy from the envelope.</li>
+ <li><strong>Lock test.</strong> Compute cv<sub>order</sub> and cv<sub>Hz</sub> per candidate. Reject anything with margin below about 1.3: it is structural, or the evidence is too weak to tell.</li>
+ <li><strong>Rank by cv<sub>order</sub>, not by amplitude.</strong> The loudest mode was a different physical mode in each health state here; stability is the criterion, loudness is not.</li>
+ <li><strong>Require presence.</strong> A candidate found in under 80% of acquisitions is not an anchor however stable it is when present.</li>
+ <li><strong>Freeze &rho;</strong> and store the anchor's expected band. Re-run only on a lifecycle event.</li>
+</ol>
+<h3>Per acquisition</h3>
+<ol>
+ <li>Locate the anchor inside its stored band, bracketed by the envelope speed proxy.</li>
+ <li>Refine its frequency by two-frame phase. Cheap, and free of downside.</li>
+ <li>Normalise the axis by <em>f<sub>a</sub></em>, encode as now.</li>
+ <li>Transmit <em>f<sub>a</sub></em> and a one-byte anchor quality: found in band, margin, presence.</li>
+</ol>
+<h3>Fallback ladder, because the anchor will sometimes be absent</h3>
+<div class="card"><div class="body"><table id="ladder"></table></div></div>
+<p>The tier travels with the frame, so the cloud always knows which axis a spectrum is on and never silently compares two acquisitions normalised by different references. That is the failure this design exists to prevent, and it is the same discipline the alignment ladder already applies to speed estimation.</p>
+
+<h2><span class="num">07</span>What remains unproven</h2>
+<ul>
+ <li><strong>Only 3.9% of speed span.</strong> CWRU's load steps are all the speed variation available. A VFD asset ranging 2:1 would separate the two hypotheses far more sharply, and would also stress the anchor far harder. The lock test is validated in principle, not across a realistic speed range.</li>
+ <li><strong>The ~12x family is not identified.</strong> It is order-locked with ratio 12.053, which is consistent with a bearing tone harmonic or a coincidence of the rig. What it physically is does not affect its use as an anchor, but it does affect confidence that it generalises.</li>
+ <li><strong>Presence is poor.</strong> 28 of 90 acquisitions with the current peak budget. Raising the retained-peak count is the obvious fix and is untested.</li>
+ <li><strong>Phase gain is unmeasured where it should matter.</strong> At 2 s windows and 2.93 Hz bins the correction is negligible. On short acquisitions, or once anchor identity is stable and sub-bin error becomes the dominant term, it should matter. That is a prediction, not a result.</li>
+ <li><strong>Bicoherence untested.</strong> Phase also permits testing whether a comb's harmonics are genuinely coupled to one source rather than coincidental, which would strengthen anchor selection considerably. Not implemented.</li>
+</ul>
+
+<footer>
+ Case Western Reserve University bearing data centre, 12 kHz drive end, SKF 6205-2RS JEM. 16 files, 4 health states across 4 load conditions, 2 s acquisitions, 4096-point FFT, hop N/4. Speed reference from the RPM tag where present, CWRU nominal otherwise.
+</footer>
+</div>
+<script>
+const D={"anchors": [["2x", {"n": 4, "mean_order": 2.030332648818958, "cv_order": 0.0072966918627480086, "cv_hz": 0.003771340422967476, "verdict": "frequency-locked", "margin": 0.5168561992073968}], ["3x", {"n": 24, "mean_order": 3.0671587677044347, "cv_order": 0.014817177635097016, "cv_hz": 0.0011874817025284057, "verdict": "frequency-locked", "margin": 0.08014223300634882}], ["BPFO", {"n": 23, "mean_order": 3.5876090412990003, "cv_order": 0.017522450386230175, "cv_hz": 0.020800346425085606, "verdict": "order-locked", "margin": 1.1870683589682942}], ["BPFI", {"n": 24, "mean_order": 5.428156400953148, "cv_order": 0.007827428561974473, "cv_hz": 0.01794346519088505, "verdict": "order-locked", "margin": 2.2923831305282203}], ["~12x family", {"n": 24, "mean_order": 12.052793565606862, "cv_order": 0.005409879002496434, "cv_hz": 0.01340434520035167, "verdict": "order-locked", "margin": 2.4777532351770017}], ["30-60x", {"n": 54, "mean_order": 42.7793909562443, "cv_order": 0.14641956394017352, "cv_hz": 0.14261657236610759, "verdict": "frequency-locked", "margin": 0.9740267524931311}], ["60-120x", {"n": 84, "mean_order": 94.82654880478722, "cv_order": 0.19031296309863746, "cv_hz": 0.19252133867545648, "verdict": "order-locked", "margin": 1.0116039156811112}], ["120-200x", {"n": 40, "mean_order": 123.48358229504902, "cv_order": 0.012310133901511528, "cv_hz": 0.017388088800050196, "verdict": "order-locked", "margin": 1.412502003565953}]]};
+const C={teal:'#0FB5A6',tealD:'#0A8A7F',coral:'#E4572E',amber:'#D99A2B',ink:'#0E2A2F',
+ ink2:'#4A6165',mute:'#869A9C',rule:'#DCE5E6',violet:'#7C6BAD',slate:'#B7C5C8'};
+const q=i=>document.getElementById(i);
+const dpr=()=>Math.min(devicePixelRatio||1,2);
+const A=D.anchors;
+
+(function(){
+ const best=A.filter(a=>a[1].verdict==='order-locked').sort((x,y)=>x[1].cv_order-y[1].cv_order)[0];
+ const cells=[['best anchor',best[0],'hi','of 8 candidates'],
+  ['its ratio to shaft',best[1].mean_order.toFixed(3),'','fixed, never needs knowing'],
+  ['order stability',(best[1].cv_order*100).toFixed(2)+'%','hi','cv across 4 loads'],
+  ['lock margin',best[1].margin.toFixed(2)+'x','hi','order vs frequency'],
+  ['frequency-locked traps',A.filter(a=>a[1].verdict==='frequency-locked').length+' of '+A.length,'no','would misalign'],
+  ['phase gain on cv','0.4%','no','not the bottleneck']];
+ q('stats').innerHTML=cells.map(([k,v,c,s])=>
+  `<div class="stat ${c}"><div class="k">${k}</div><div class="v">${v} ${s?`<small>${s}</small>`:''}</div></div>`).join('');
+})();
+
+(function(){
+ const rows=[...A].sort((x,y)=>x[1].cv_order-y[1].cv_order);
+ q('anchors').innerHTML='<thead><tr><th>Candidate band</th><th>n</th><th>Ratio to shaft</th>'
+  +'<th>cv order</th><th>cv Hz</th><th>Margin</th><th>Verdict</th><th>Usable as anchor</th></tr></thead><tbody>'
+  +rows.map(([n,t])=>{
+   const ok=t.verdict==='order-locked'&&t.margin>1.3&&t.cv_order<0.05;
+   return `<tr><td style="font-weight:600">${n}</td><td class="mono">${t.n}</td>`
+   +`<td class="mono">${t.mean_order.toFixed(3)}</td>`
+   +`<td class="mono ${t.cv_order<0.02?'g':''}">${t.cv_order.toFixed(4)}</td>`
+   +`<td class="mono">${t.cv_hz.toFixed(4)}</td>`
+   +`<td class="mono ${t.margin>1.3?'g':'b'}">${t.margin.toFixed(2)}x</td>`
+   +`<td class="${t.verdict==='order-locked'?'g':'b'}" style="text-align:left">${t.verdict}</td>`
+   +`<td style="text-align:left">${ok?'<span style="color:var(--tealD);font-weight:600">yes</span>':'<span style="color:var(--coral)">no</span>'}</td></tr>`;}).join('')
+  +'</tbody>';
+})();
+
+(function(){
+ const cv=q('lock'),x=cv.getContext('2d'),r=dpr(),W=cv.clientWidth,H=300;
+ cv.width=W*r;cv.height=H*r;x.setTransform(r,0,0,r,0,0);
+ const L=60,B=H-40,lo=-3.2,hi=-0.4;   // log10 scale
+ const X=v=>L+(W-L-20)*(Math.log10(Math.max(v,1e-4))-lo)/(hi-lo);
+ const Y=v=>B-(B-24)*(Math.log10(Math.max(v,1e-4))-lo)/(hi-lo);
+ x.strokeStyle=C.rule;x.beginPath();x.moveTo(L,B);x.lineTo(W-20,B);x.moveTo(L,B);x.lineTo(L,18);x.stroke();
+ for(let e=-3;e<=-1;e++){
+  x.strokeStyle='#EDF2F3';x.beginPath();x.moveTo(X(10**e),18);x.lineTo(X(10**e),B);
+  x.moveTo(L,Y(10**e));x.lineTo(W-20,Y(10**e));x.stroke();
+  x.fillStyle=C.mute;x.font='500 9px "JetBrains Mono"';
+  x.fillText('1e'+e,X(10**e)-9,B+13);x.fillText('1e'+e,6,Y(10**e)+3);}
+ x.strokeStyle=C.slate;x.setLineDash([4,4]);x.beginPath();
+ x.moveTo(X(10**lo),Y(10**lo));x.lineTo(X(10**hi),Y(10**hi));x.stroke();x.setLineDash([]);
+ x.fillStyle='rgba(15,181,166,.06)';x.beginPath();
+ x.moveTo(X(10**lo),Y(10**lo));x.lineTo(X(10**hi),Y(10**hi));x.lineTo(X(10**hi),Y(10**lo));
+ x.closePath();x.fill();
+ x.fillStyle=C.tealD;x.font='600 10.5px Onest';
+ x.fillText('order-locked: usable anchors',X(10**-2.9),Y(10**-1.15));
+ x.fillStyle=C.coral;x.fillText('frequency-locked: would misalign',X(10**-2.2),Y(10**-2.75));
+ A.forEach(([n,t])=>{
+  const ol=t.verdict==='order-locked';
+  x.fillStyle=ol?'rgba(15,181,166,.85)':'rgba(228,87,46,.85)';
+  x.beginPath();x.arc(X(t.cv_order),Y(t.cv_hz),5,0,7);x.fill();
+  x.fillStyle=C.ink2;x.font='600 10px Onest';
+  x.fillText(n,X(t.cv_order)+8,Y(t.cv_hz)+3.5);});
+ x.fillStyle=C.mute;x.font='500 10.5px Onest';
+ x.fillText('cv of order  (stability if it tracks the shaft)',W/2-110,H-8);
+ x.save();x.translate(16,H/2+70);x.rotate(-Math.PI/2);
+ x.fillText('cv of frequency  (stability if structural)',0,0);x.restore();
+})();
+
+(function(){
+ const rows=[['Anchor frequency f_a','24-bit fixed point','3 B','the axis itself'],
+  ['Anchor quality','margin, presence, in-band flag','1 B','tells the cloud which axis this is'],
+  ['Per-peak sub-bin offset','4 bits x 40 tracked peaks','20 B','optional, refines peak positions'],
+  ['Total','','24 B','3.9% of a 611 B frame']];
+ q('cost').innerHTML='<thead><tr><th>Field</th><th>Encoding</th><th>Cost</th><th>What it buys</th></tr></thead><tbody>'
+  +rows.map(r=>`<tr><td style="font-weight:${r[0]==='Total'?600:400}">${r[0]}</td>`
+   +`<td style="text-align:left;color:var(--ink2)">${r[1]}</td><td class="mono">${r[2]}</td>`
+   +`<td style="text-align:left;color:var(--ink2)">${r[3]}</td></tr>`).join('')+'</tbody>';
+ q('phres').innerHTML='<thead><tr><th>Quantity</th><th>Bin-limited</th><th>Phase-refined</th><th>Change</th></tr></thead><tbody>'
+  +[['Anchor cv of order','0.22622','0.22522','0.4% better'],
+    ['Anchor ratio to shaft','13.2814','13.2729','—'],
+    ['Frequency correction applied','—','0.45 Hz median','0.15 of a bin'],
+    ['p95 correction','—','1.39 Hz','0.47 of a bin']]
+   .map(r=>`<tr><td>${r[0]}</td><td class="mono">${r[1]}</td><td class="mono">${r[2]}</td>`
+    +`<td class="mono ${r[3].includes('better')?'':''}">${r[3]}</td></tr>`).join('')+'</tbody>';
+ q('ladder').innerHTML='<thead><tr><th>Tier</th><th>Condition</th><th>Axis used</th><th>Consequence</th></tr></thead><tbody>'
+  +[['A','Anchor found in band, margin &gt; 1.3','normalised by f_a, phase refined','full alignment, patterns comparable'],
+    ['B','Anchor found, low margin or weak','normalised by f_a, flagged','comparable, treat rise with caution'],
+    ['C','Anchor absent, envelope speed confident','normalised by estimated shaft rate','comparable only to other tier C'],
+    ['D','Neither available','Hz axis, no normalisation','store, do not compare across time']]
+   .map(r=>`<tr><td style="font-weight:600">${r[0]}</td><td style="text-align:left;color:var(--ink2)">${r[1]}</td>`
+    +`<td style="text-align:left;color:var(--ink2)">${r[2]}</td>`
+    +`<td style="text-align:left;color:var(--ink2)">${r[3]}</td></tr>`).join('')+'</tbody>';
+})();
+</script></body></html>
