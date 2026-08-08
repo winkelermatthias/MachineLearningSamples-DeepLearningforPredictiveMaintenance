@@ -4,3 +4,4 @@ fleet.duckdb*
 schema.duckdb*
 __pycache__/
 *.pyc
+viz_data.json
