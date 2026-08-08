@@ -12,6 +12,37 @@ because several of them changed the design.
 
 ---
 
+## v2: the compression-first deepening
+
+v2 keeps v1's frame format and distortion contract and rebuilds everything
+around it: an entropy-coded codec, three real rigs instead of one, a fleet
+three times the size, and signal processing measured in bytes. Full numbers
+and the studies behind them: `docs/RESULTS_V2.md`; data provenance:
+`docs/DATA_SOURCES.md`; run it all: `make v2-all`.
+
+| | codec v1 | codec v2 | vs raw |
+|---|---|---|---|
+| CWRU, full 12k DE matrix (60 files, 332 frames) | 522 B/frame | **251 B/frame** | **65x** |
+| MFPT (48.8 / 97.7 kHz) | 940 | **391** | **262x** |
+| SEU gearbox (5.12 kHz - v1's fixed band cannot run here) | 435 / 417 | **182 / 176** | **45-47x** |
+| Synthetic fleet, 48 assets x 90 d, 8,640 acqs | 375 | **177** (354 B/day/sensor) | **93x** |
+
+Same dead-zone distortion contract as v1, enforced by a 7,200-frame fuzz
+test; 90.7% pattern-energy recovery on CWRU (v1: 91.1%); named lines at
+0.0-0.5 dB median through the codec; the unmodified v1 gate on v2 extraction
+detects 24/24 seeded fleet faults with 0/22 false alarms.
+
+New in v2, each measured (`src/relspec/`): `codec2` adaptive-Rice entropy
+stage, zero-byte peak tables, chain references; `dsp2` kurtogram band
+selection, Viterbi speed tracking (-56% bytes on a hostile asset),
+angle-domain Welch order spectra, spectral kurtosis, prewhitening (measured,
+rejected); `pipeline2` rig-agnostic extraction with dual-evidence speed;
+`datasets` CWRU/MFPT/SEU loaders; `synth2` nine machine classes, rotor-bar
+and VFD physics, ramps, sensor pathologies - plus a v1 wander-model bug the
+deeper estimator surfaced (RESULTS_V2 section 6).
+
+---
+
 ## Quick start
 
 ```bash
