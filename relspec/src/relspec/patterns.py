@@ -142,6 +142,73 @@ def find_combs(spec, centers=None, f_lo=0.5, f_hi=25.0, nh=10,
         kept.append(c)
     return kept
 
+# ------------------------------------------------------ comb verification
+def verify_combs(spec, centers, combs, nh=10, floor_mult=4.0,
+                 min_frac=0.5, min_energy_frac=0.55, keep_all=False):
+    """Cloud-side second opinion on every comb the scorer proposed.
+
+    find_combs scores a candidate on the MAXIMUM inside a tolerance window
+    around each harmonic, and a window maximum is a low bar: the tail of a
+    neighbouring line, one edge of a haystack, or plain noise all supply one.
+    A parasitic fundamental only needs a handful of such coincidences.
+
+    Verification asks three harder questions of every claimed harmonic:
+
+      REAL PEAK    the window argmax must be a local maximum of the spectrum
+                   itself, not the window edge riding a neighbour's slope;
+      IN PLACE     that peak must sit where the harmonic predicts - within
+                   half the search tolerance (or one bin, whichever is
+                   looser), not merely somewhere inside the window;
+      CARRYING     it must stand above the spectrum floor on its own.
+
+    A comb survives only if at least half its claimed harmonics pass AND the
+    verified harmonics carry most of the claimed energy - so a family cannot
+    limp through on many empty windows, nor on one loud stolen line. The
+    fundamental is then re-fit by least squares through the verified peak
+    positions, which also tightens key stability across frames.
+
+    keep_all=True returns rejected combs too (flagged), for inspection."""
+    smax_pos = spec[spec > 0]
+    floor = max(float(np.median(smax_pos)) if smax_pos.size else 1e-12, 1e-12)
+    kept, rejected = [], []
+    for c in combs:
+        f0 = c['f0']
+        claimed = ver = 0
+        e_claim = e_ver = 0.0
+        fit_num = fit_den = 0.0
+        for h in range(1, nh+1):
+            o = f0*h
+            if o > centers[-1]: break
+            tol = _tol_for(o, centers)
+            L, H = _win(centers, o, tol)
+            if H <= L: continue
+            j = L+int(np.argmax(spec[L:H]))
+            pk = float(spec[j])
+            if pk <= floor_mult*floor: continue          # empty window: no claim
+            claimed += 1; e_claim += pk*pk
+            is_peak = (0 < j < len(spec)-1 and
+                       spec[j] >= spec[j-1] and spec[j] >= spec[j+1])
+            rides = ((j == L and j > 0 and spec[j-1] > spec[j]) or
+                     (j == H-1 and j < len(spec)-1 and spec[j+1] > spec[j]))
+            jl = min(max(j, 1), len(centers)-1)
+            du = float(centers[jl]-centers[jl-1])
+            centered = abs(float(centers[j])-o) <= max(0.5*tol, 1.2*du)
+            if is_peak and not rides and centered:
+                ver += 1; e_ver += pk*pk
+                fit_num += h*float(centers[j]); fit_den += h*h
+        ok = (claimed >= 3 and ver >= max(3, int(np.ceil(min_frac*claimed)))
+              and e_ver >= min_energy_frac*max(e_claim, 1e-30))
+        c = dict(c, ver_harm=ver, ver_claimed=claimed,
+                 ver_frac=round(e_ver/max(e_claim, 1e-30), 3))
+        if ok:
+            if fit_den > 0:
+                f0_fit = fit_num/fit_den
+                if abs(f0_fit-f0) < 0.02*f0: c['f0'] = round(f0_fit, 4)
+            kept.append(c)
+        else:
+            c['rejected'] = True; rejected.append(c)
+    return (kept+rejected) if keep_all else kept
+
 # ------------------------------------------------------- modulation finding
 def find_modulation(spec, carrier, centers=None, dmin=0.15, dmax=2.2,
                     step=0.01, min_pair_frac=0.12, sb_spec=None,
@@ -344,8 +411,10 @@ def account_energy(spec, combs, mods, centers=None, nh=10,
         e = float(e_bin[np.concatenate(claimed)].sum()) if claimed else 0.0
         nb = int(sum(len(x) for x in claimed))
         rows.append(dict(kind='comb', key=c['f0'], f0=c['f0'], spacing=None,
-                         snr=c['snr'], n_pairs=None, energy=e, n_bins=nb,
-                         share=e/e_total if e_total > 0 else 0.0))
+                         snr=c['snr'], n_pairs=None, energy=e, n_bins=nb, pid=pid,
+                         share=e/e_total if e_total > 0 else 0.0,
+                         ver_harm=c.get('ver_harm'), ver_frac=c.get('ver_frac'),
+                         ver_claimed=c.get('ver_claimed')))
 
     base = len(combs)
     for mi, m in enumerate(mods):
@@ -363,7 +432,7 @@ def account_energy(spec, combs, mods, centers=None, nh=10,
         nb = int(sum(len(x) for x in claimed))
         rows.append(dict(kind='mod', key=round(m['carrier'], 2), f0=m['carrier'],
                          spacing=m['spacing'], snr=m['ac_peak'],
-                         n_pairs=m['n_pairs'], energy=e, n_bins=nb,
+                         n_pairs=m['n_pairs'], energy=e, n_bins=nb, pid=pid,
                          share=e/e_total if e_total > 0 else 0.0))
 
     base2 = len(combs)+len(mods)
@@ -376,7 +445,7 @@ def account_energy(spec, combs, mods, centers=None, nh=10,
         e = float(e_bin[idx].sum())
         rows.append(dict(kind='peak', key=round(pk['order'], 3), f0=pk['order'],
                          spacing=None, snr=pk['snr'], n_pairs=None, energy=e,
-                         n_bins=int(idx.size),
+                         n_bins=int(idx.size), pid=base2+pi,
                          share=e/e_total if e_total > 0 else 0.0))
     base3 = base2+len(peaks)
     for si, st in enumerate(stacks):
@@ -387,7 +456,7 @@ def account_energy(spec, combs, mods, centers=None, nh=10,
         rows.append(dict(kind='haystack', key=round(st['centre'], 2),
                          f0=st['centre'], spacing=round(st['hi']-st['lo'], 3),
                          snr=st['rise_db'], n_pairs=st['width'], energy=e,
-                         n_bins=int(idx.size),
+                         n_bins=int(idx.size), pid=base3+si,
                          share=e/e_total if e_total > 0 else 0.0))
 
     e_res = float(e_bin[owner < 0].sum())
@@ -396,11 +465,16 @@ def account_energy(spec, combs, mods, centers=None, nh=10,
                 patterns=rows, owner=owner)
 
 def extract_patterns(spec, centers=None, max_combs=6, max_mods=6,
-                     min_harmonics=5, f_hi=25.0):
-    """One call: combs, modulation around the strongest combs, energy balance."""
+                     min_harmonics=5, f_hi=25.0, verify=True):
+    """One call: combs, modulation around the strongest combs, energy balance.
+    verify=True runs the cloud-side comb verification pass (argmax-coincidence
+    + energy checks); the scorer alone over-reports on busy spectra."""
     centers = CENTERS if centers is None else centers
     combs = find_combs(spec, centers, f_hi=f_hi, max_combs=max_combs,
                        min_harmonics=min_harmonics)
+    if verify:
+        combs = verify_combs(spec, centers, combs,
+                             min_frac=0.5 if min_harmonics >= 5 else 0.45)
 
     # Carrier candidates: harmonics of each comb up to the 6th, plus the
     # spectrum's own strongest lines. Modulation frequently sits on a mid

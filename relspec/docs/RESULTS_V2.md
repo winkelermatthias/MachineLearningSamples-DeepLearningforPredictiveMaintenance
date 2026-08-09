@@ -35,11 +35,12 @@ What did NOT get cheaper: the distortion. The contract is v1's, verbatim -
 transmitted bins exact to the 0.5 dB quantiser, suppressed bins bounded by
 max(k*MAD, floor), and it is enforced by fuzz test (`test_codec2.py`: 7,200
 frames including dropouts and saturation, encoder and decoder in bit lockstep,
-zero divergence). On CWRU the pattern layer reads 90.7% of pattern energy
-through v2 against 91.1% through v1 - a 0.4-point difference on a metric with
-frame-to-frame scatter of several points - and every named line (1x, 2x, 3x,
-BPFO, BPFI, BSF, FTF) decodes at 0.0-0.5 dB median error, p95 within 3 dB,
-on all three rigs.
+zero divergence). On CWRU, verified patterns carry **99.2% of their energy
+through the codec** (v1: 99.2% as well; median error 0.26-0.30 dB, 98.8% of
+patterns within +/-3 dB), measured on the exact bins each pattern owns - see
+section 7 for both the verification pass and why the metric is defined this
+way. Every named line (1x, 2x, 3x, BPFO, BPFI, BSF, FTF) decodes at
+0.0-0.5 dB median error, p95 within 3 dB, on all three rigs.
 
 ## 2. Where the 2.1-2.4x over v1 comes from
 
@@ -194,7 +195,37 @@ unmodified as the baseline). Two lessons: ground truth is only as true as
 its own tests, and a second independent estimate is the cheapest test there
 is.
 
-## 7. Known limits
+## 7. Cloud-side comb verification, and what "recovery" should mean
+
+The comb finder scores a candidate fundamental on the MAXIMUM inside a
+tolerance window around each harmonic, and a window maximum is a low bar: a
+neighbour's tail, a haystack edge, or plain noise all supply one. On busy
+spectra the scorer over-reports - CWRU IR007's envelope returned four combs
+of which one is physical. v2 adds a verification pass (`verify_combs`, on by
+default in `extract_patterns`) that re-examines every claimed harmonic with
+three harder questions: is the window argmax a REAL local peak of the
+spectrum (not the window edge riding a neighbour's slope), is that peak IN
+PLACE (within half the search tolerance of where the harmonic predicts), and
+is it CARRYING energy above the floor on its own. A comb survives only if at
+least half its claimed harmonics pass and those verified harmonics hold most
+of the claimed energy; the fundamental is then re-fit through the verified
+peak positions. Measured behaviour: the synthetic healthy motor keeps exactly
+its true 1.00x shaft comb and loses three parasites; CWRU IR007's envelope
+keeps the physical 0.98x inner-race comb and loses the 1.08x/0.90x/0.69x
+ghosts; CWRU normal - whose low-frequency acceleration genuinely carries no
+harmonic comb, per v1's own mount-line finding - loses all five proposals.
+
+Verification also forced a definition question. Recovery was previously
+measured by re-running discovery on the decoded spectrum and matching keys -
+which quietly measured extractor STABILITY, not codec loss: a sub-multiple
+collapse on the decoded side scored as "pattern lost" while every joule of
+its energy sat intact in the same bins. Recovery is now measured directly:
+decoded energy over the exact bins the verified pattern owns. By that honest
+definition the codec preserves 99.2% of verified-pattern energy on CWRU at
+0.3 dB median error - and the number is nearly identical for v1 and v2,
+which is what "same distortion contract" always claimed.
+
+## 8. Known limits
 
 - The Rice coder is bit-exact and MCU-shaped (shifts, adds, one 16-bit
   escape) but not yet ported into `firmware/`; the C port is mechanical and

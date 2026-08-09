@@ -42,9 +42,12 @@ def fullres(x, fs, fr, band_key):
     ne = int(min(20.5*fr, 0.97*fs/2)/df)
     return to_u8(a[:na]), df, to_u8(ae[:ne])
 
-def frame_patterns(amp, centers, is_env):
+def frame_patterns(amp, centers, is_env, verify=True):
+    """verify=True for the measured spectrum (discovery must prove itself);
+    False for the decoded side, whose job is only to show the energy is
+    still where the verified pattern says it is."""
     kw = dict(min_harmonics=3, f_hi=6.5) if is_env else {}
-    combs, mods, acc = extract_patterns(amp, centers, **kw)
+    combs, mods, acc = extract_patterns(amp, centers, verify=verify, **kw)
     return acc
 
 class TrackRegistry:
@@ -114,24 +117,23 @@ def process_sequence(name, title, gen, fs, fr_nominal, note=''):
         for rail, u_o, u_d, cen in (('acc', e.acc_u8, ra, CENTERS),
                                     ('env', e.env_u8, re_, ENV_CENTERS)):
             acc_o = frame_patterns(to_amp(u_o), cen, rail == 'env')
-            acc_d = frame_patterns(to_amp(u_d), cen, rail == 'env')
             owner = acc_o['owner']
+            dec2 = to_amp(u_d).astype(np.float64)**2
             pats = []
             omap = np.full(len(owner), 255, dtype=np.uint8)
             for pi, p in enumerate(acc_o['patterns']):
                 tid = regs[rail].resolve(p['kind'], p['key'])
-                # decoded-side energy for the same pattern, matched by key
-                e_dec = 0.0
-                for q in acc_d['patterns']:
-                    if q['kind'] == p['kind'] and \
-                       abs(q['key']-p['key']) < 0.05*max(abs(p['key']), 1.0):
-                        e_dec = q['energy']; break
+                # decoded energy over the exact bins this verified pattern
+                # owns - "is the energy still where the pattern says it is"
+                e_dec = float(dec2[owner == p['pid']].sum())
                 pats.append(dict(t=tid, kind=p['kind'], key=round(float(p['key']), 3),
                                  f0=round(float(p['f0']), 3),
                                  sp=(round(float(p['spacing']), 3) if p['spacing'] else None),
                                  e=float(p['energy']), ed=float(e_dec),
-                                 share=round(float(p['share']), 4)))
-                omap[owner == pi] = min(pi, 254)
+                                 share=round(float(p['share']), 4),
+                                 nv=p.get('ver_harm'), vc=p.get('ver_claimed'),
+                                 vf=p.get('ver_frac')))
+                omap[owner == p['pid']] = min(pi, 254)
             fr_rec[rail+'_pat'] = pats
             fr_rec[rail+'_own'] = B64(omap)
             fr_rec[rail+'_res'] = round(float(acc_o['residual_share']), 4)

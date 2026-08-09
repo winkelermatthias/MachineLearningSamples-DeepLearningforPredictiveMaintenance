@@ -28,9 +28,11 @@ and the studies behind them: `docs/RESULTS_V2.md`; data provenance:
 | Synthetic fleet, 48 assets x 90 d, 8,640 acqs | 375 | **177** (354 B/day/sensor) | **93x** |
 
 Same dead-zone distortion contract as v1, enforced by a 7,200-frame fuzz
-test; 90.7% pattern-energy recovery on CWRU (v1: 91.1%); named lines at
-0.0-0.5 dB median through the codec; the unmodified v1 gate on v2 extraction
-detects 24/24 seeded fleet faults with 0/22 false alarms.
+test; verified patterns carry 99.2% of their energy through the codec on
+CWRU (0.3 dB median, measured on the bins each pattern owns - combs are
+cloud-verified against real in-place peaks before they count); named lines
+at 0.0-0.5 dB median; the unmodified v1 gate on v2 extraction detects 24/24
+seeded fleet faults with 0/22 false alarms.
 
 New in v2, each measured (`src/relspec/`): `codec2` adaptive-Rice entropy
 stage, zero-byte peak tables, chain references; `dsp2` kurtogram band

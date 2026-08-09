@@ -211,6 +211,7 @@
       <button data-v="orig" aria-pressed="true">raw</button>
       <button data-v="dec" aria-pressed="false">decoded</button>
       <button data-v="diff" aria-pressed="false">&Delta; decoded−raw</button>
+      <button data-v="z" aria-pressed="false">z vs baseline</button>
     </div></div>
   <div class="grp"><label>axis</label>
     <div class="seg" id="axisSeg">
@@ -479,6 +480,38 @@ function medFr(si){
   return frs.slice().sort((a,b)=>a-b)[frs.length>>1];
 }
 
+/* per-bin robust baseline from the sequence's own quiet early frames -
+   the z view asks "which parts of this spectrum changed relative to
+   THEMSELVES", which is the gate's question rendered as an image */
+const zCache=new Map();
+function zStats(si, rail){
+  const k=si+'|'+rail;
+  if (zCache.has(k)) return zCache.get(k);
+  const sq=seqs[si], m=mats(si,rail), N=m.N, F=m.F;
+  let quiet=[];
+  for(let t=0;t<F && quiet.length<24;t++){
+    const gd=sq.frames[t].gate;
+    if(!gd || gd.dec==='init' || gd.s<2.5) quiet.push(t);
+  }
+  if (quiet.length<5) quiet=Array.from({length:Math.max(5,F>>2)},(_,i)=>i);
+  const med=new Float32Array(N), mad=new Float32Array(N);
+  const buf=new Float64Array(quiet.length);
+  for(let i=0;i<N;i++){
+    quiet.forEach((t,qi)=>buf[qi]=m.o[t*N+i]);
+    const s=Array.from(buf).sort((a,b)=>a-b);
+    med[i]=s[s.length>>1];
+    quiet.forEach((t,qi)=>buf[qi]=Math.abs(m.o[t*N+i]-med[i]));
+    const s2=Array.from(buf).sort((a,b)=>a-b);
+    mad[i]=Math.max(s2[s2.length>>1],0.5);
+  }
+  const v={med,mad,n:quiet.length,last:quiet[quiet.length-1]};
+  zCache.set(k,v); return v;
+}
+function zOf(si, rail, t, i){
+  const zs=zStats(si,rail), m=mats(si,rail), N=m.N;
+  return (m.o[t*N+i]-zs.med[i])/(1.4826*zs.mad[i]);
+}
+
 function fit(cv, hCss){
   const w = cv.parentElement.clientWidth || cv.clientWidth || 600;
   cv.width = Math.round(w*dpr); cv.height = Math.round(hCss*dpr);
@@ -506,9 +539,16 @@ function drawWF(){
   const og = off.getContext('2d');
   const img = og.createImageData(F,N);
   const col = new Float32Array(N), colO = new Float32Array(N);
+  const zs = S.view==='z'? zStats(S.seq, rail) : null;
+  const ztmp = zs? new Float32Array(N) : null;
   for (let t=0;t<F;t++){
     const base=t*N;
-    if (S.axis==='hz'){
+    if (zs){
+      for(let i=0;i<N;i++)
+        ztmp[i]=(m.o[base+i]-zs.med[i])/(1.4826*zs.mad[i]);
+      if (S.axis==='hz'){ hzColumn(ztmp, N, cen, frMed/frs[t], col) }
+      else col.set(ztmp);
+    } else if (S.axis==='hz'){
       const scale = frMed/frs[t];
       const tmp = new Uint8Array(m.o.subarray(base,base+N));
       hzColumn(tmp, N, cen, scale, col);
@@ -519,7 +559,9 @@ function drawWF(){
     for (let i=0;i<N;i++){
       const y = N-1-i, p = (y*F+t)*4;
       let r,gg,b;
-      if (S.view==='diff'){
+      if (zs){
+        [r,gg,b] = divCol(col[i]/6);          // ±6σ full scale
+      } else if (S.view==='diff'){
         const dv = (S.axis==='hz'? colO[i]-col[i] : m.d[base+i]-m.o[base+i])/8;
         [r,gg,b] = divCol(dv);
       } else {
@@ -549,8 +591,11 @@ function drawWF(){
   const step = Math.max(1, Math.ceil(F/8/5)*5);
   for(let t=0;t<F;t+=step) g.fillText(String(t), colX(t+0.5,F,w), WFH-6);
   drawWFOverlay();
+  const vlabel = S.view==='orig'?'raw':S.view==='dec'?'decoded':
+    S.view==='diff'?'Δ decoded−raw':
+    `z vs own baseline (${zStats(S.seq,rail).n} quiet frames · blue below · red above · ±6σ)`;
   document.getElementById('wfLabel').textContent =
-    `waterfall · ${S.view==='orig'?'raw':S.view==='dec'?'decoded':'Δ decoded−raw'} · ${S.axis==='hz'?'stationary hz':'order-locked'} · ${rail==='acc'?'acceleration':'envelope'}`;
+    `waterfall · ${vlabel} · ${S.axis==='hz'?'stationary hz':'order-locked'} · ${rail==='acc'?'acceleration':'envelope'}`;
 }
 
 function drawWFOverlay(){
@@ -861,8 +906,11 @@ function drawTable(){
     const sl = per[p.t]? trackSlope(per[p.t].e) : null;
     const tr = sl==null? '—' : (sl*10>1.5? `<span class="trend up">▲${fmt(sl*10,1)}</span>` :
               (sl*10<-1.5? `<span class="trend dn">▼${fmt(-sl*10,1)}</span>`:'·'));
-    return `<tr data-t="${p.t}" class="${S.track===p.t?'sel':''}">
-      <td><span class="dot" style="background:${trackColor(rail,p.t)}"></span>${KLABEL[p.kind]||p.kind}${p.sp?` Δ${fmt(p.sp,2)}`:''}</td>
+    const vtip = p.nv!=null?
+      ` title="verified: ${p.nv}/${p.vc} harmonics are real in-place peaks carrying ${fmt(100*(p.vf||0),0)}% of claimed energy"`:'';
+    const vbadge = p.nv!=null? ` <span style="color:var(--faint)">${p.nv}✓</span>`:'';
+    return `<tr data-t="${p.t}" class="${S.track===p.t?'sel':''}"${vtip}>
+      <td><span class="dot" style="background:${trackColor(rail,p.t)}"></span>${KLABEL[p.kind]||p.kind}${p.sp?` Δ${fmt(p.sp,2)}`:''}${vbadge}</td>
       <td>${fmt(p.key,2)}</td>
       <td>${p.e>0?fmt(10*Math.log10(p.e),1):'—'}</td>
       <td>${fmt(100*p.share,1)}%</td>
@@ -1245,7 +1293,8 @@ function scrubbable(id, onmove){
     const frq = S.axis==='hz'? cen[bin]*frMed : cen[bin]*frs[t];
     let txt=`frame ${t}   order ${fmt(o,2)}×  (${fmt(frq,1)} Hz)\n`+
       (S.view==='diff'? `Δ ${fmt((m.d[t*N+bin]-m.o[t*N+bin])*Q,1)} dB`
-                      : `${fmt(db(u),1)} dB`);
+       : S.view==='z'? `${fmt(zOf(S.seq,rail,t,bin),1)}σ vs own baseline  (${fmt(db(u),1)} dB)`
+       : `${fmt(db(u),1)} dB`);
     const oi=m.own[t*N+bin];
     if(oi!==255){ const p=seqs[S.seq].frames[t][rail+'_pat'][oi];
       if(p) txt+=`\n${KLABEL[p.kind]||p.kind} ${fmt(p.key,2)}× owns this bin`; }

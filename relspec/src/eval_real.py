@@ -55,20 +55,22 @@ class Rail:
         return len(pa)+len(pe), f'{ka}/{ke}', ra, re_
 
 def pattern_loss(o_amp, r_amp, centers, **kw):
+    """Verification decides which patterns are real (on the MEASURED spectrum
+    only); recovery then measures the decoded energy over the exact bins each
+    verified pattern owns. No re-discovery on the decoded side: re-running the
+    extractor there measures pipeline stability, not codec loss - a sub-
+    multiple collapse or a refitted key on the decoded side scored as "pattern
+    lost" while every joule of the pattern's energy was demonstrably intact."""
     _, _, bo = extract_patterns(o_amp, centers, **kw)
-    _, _, br = extract_patterns(r_amp, centers, **kw)
+    owner = bo['owner']
+    r2 = r_amp.astype(np.float64)**2
     rows = []
     for p in bo['patterns']:
         if p['energy'] <= 0: continue
-        m = None
-        for q in br['patterns']:
-            if q['kind'] == p['kind'] and \
-               abs(q['key']-p['key']) < 0.05*max(abs(p['key']), 1.0):
-                m = q; break
+        ed = float(r2[owner == p['pid']].sum())
+        err = 10*np.log10(max(ed, 1e-30)/p['energy'])
         rows.append(dict(kind=p['kind'], share=p['share'],
-                         recovered=m is not None,
-                         err_db=(10*np.log10(max(m['energy'], 1e-30) /
-                                             max(p['energy'], 1e-30)) if m else None)))
+                         recovered=abs(err) <= 3.0, err_db=err))
     return rows
 
 def run_dataset(recs, win_s, n_win, do_patterns, tag):
