@@ -240,7 +240,45 @@ Asset (desktop)                    ├─ trends (vel/acc/env, ISO zones)
   confidence, reports, health rollup. All scoped by workspace, all
   events, all ETag-cached like existing reads.
 
-## 12. Phasing
+## 12. CMMS expansion (round 2, prototyped)
+
+The mockup now runs as a full app shell — dark left sidebar + topbar
+(Tractian/UpKeep-style SaaS layout) with eight pages and ten added
+features, all functional in `viz/dashboard_mockup.html`:
+
+**Pages**: Overview (exec KPIs, estate heatmap of all 29 assets, health
+distribution, ranked top-risks, upcoming work, activity), Fleet, Asset,
+Work orders (kanban with drag-and-drop + month calendar), Reliability
+(MTBF/MTTR/availability KPIs, fault Pareto with cumulative line,
+downtime-cost bars, availability trend, findings funnel), Sensors
+(device fleet table), Audit log, Mobile preview.
+
+**The ten features**
+1. **Command palette (⌘K)** — fuzzy search over pages, assets,
+   findings, work orders, plus runnable actions; keyboard-first.
+2. **Spectrum compare** — two frames overlaid on the order axis with a
+   Δ dB strip and optional BPFO harmonic cursors; readout on hover.
+3. **Trend annotations** — drag a span on the velocity trend, label it;
+   drawn on the chart, surfaced in tooltips, logged as an event.
+4. **Alarm rule builder** — per-asset rules (metric, operator,
+   threshold, persistence, severity) with a 90-day backtest preview and
+   toggle switches; every change audited.
+5. **Work orders** — created from findings (evidence carried over),
+   kanban drag-and-drop, advance buttons, detail modal, assignees,
+   priorities, due dates.
+6. **Maintenance calendar** — month view of work-order dues and route
+   measurement days, toggled from the same page.
+7. **Reliability analytics** — Pareto, downtime cost, availability vs
+   target, and a detected→acknowledged→WO→verified-quiet funnel.
+8. **Sensor device management** — sortable columns, health filters
+   (battery/signal/calibration/staleness/muted), battery + RSSI bars.
+9. **Bulk operations + CSV export** — multi-select with batch
+   calibration scheduling, alert muting, and real CSV downloads.
+10. **Audit log + notifications** — append-only event stream fed live
+    by every action in the app, kind filters + text search; bell
+    dropdown with @mentions and unread badge.
+
+## 13. Phasing
 
 1. **Health + pattern z** (server): pattern_baseline, health tiers,
    rollup endpoints — the model everything else renders.

@@ -261,6 +261,174 @@
   th:first-child,td:first-child{text-align:left}
   td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
 
+  /* ---------- app shell · dark sidebar (Tractian/UpKeep-style) ---------- */
+  .shell{display:flex;min-height:100vh;align-items:stretch}
+  aside.side{width:216px;flex:none;background:#0C1320;
+    border-right:1px solid #1A2434;display:flex;flex-direction:column;
+    position:sticky;top:0;height:100vh;z-index:30}
+  .side .brand{display:flex;align-items:center;gap:9px;padding:15px 16px 13px;
+    border-bottom:1px solid #1A2434;cursor:pointer;user-select:none}
+  .side .brand .nm{font:700 16.5px var(--disp);letter-spacing:-.02em;color:#F2F5FA}
+  .side .brand .nm i{font-style:normal;font-weight:500;color:#6C7A90}
+  .side .ws{padding:9px 16px;border-bottom:1px solid #1A2434;
+    font:500 9.5px var(--mono);letter-spacing:.07em;color:#6C7A90;
+    display:flex;align-items:center;gap:8px}
+  .side .ws b{color:#AEBACB;font-weight:600}
+  .side nav{padding:8px;display:grid;gap:2px;overflow-y:auto;align-content:start}
+  .side .sec{font:500 8.5px var(--mono);letter-spacing:.18em;text-transform:uppercase;
+    color:#4A566A;padding:13px 10px 4px}
+  .side .it{display:flex;align-items:center;gap:11px;padding:8.5px 10px;
+    border-radius:7px;color:#9AA7B9;font:500 12.8px var(--disp);cursor:pointer;
+    position:relative;border:0;background:none;text-align:left;width:100%;
+    transition:background var(--dur-1) var(--ease),color var(--dur-1) var(--ease)}
+  .side .it:hover{background:#141D2E;color:#DCE4EE}
+  .side .it.on{background:#16202F;color:#FFF;font-weight:600}
+  .side .it.on::before{content:'';position:absolute;left:-8px;top:6px;bottom:6px;
+    width:3px;border-radius:2px;background:var(--flame)}
+  .side .it svg{flex:none;opacity:.85}
+  .side .it .n{margin-left:auto;font:600 9.5px var(--mono);color:#8E9CB0;
+    background:#141D2E;border-radius:99px;padding:1px 7px}
+  .side .it.on .n{color:#D8E0EA}
+  .side .foot{margin-top:auto;padding:12px 16px;border-top:1px solid #1A2434;
+    font:500 9px var(--mono);letter-spacing:.1em;color:#4A566A;line-height:1.8}
+  .maincol{flex:1;min-width:0;display:flex;flex-direction:column}
+  @media(max-width:1000px){aside.side{width:58px}
+    .side .brand .nm,.side .brand .tag,.side .ws,.side .it .lb,.side .it .n,
+    .side .sec,.side .foot{display:none}}
+  .crumb{line-height:1.3}
+  .crumb b{font:600 15px var(--disp);letter-spacing:-.01em;display:block}
+  .crumb .sub{font:500 9.5px var(--mono);color:var(--faint);letter-spacing:.06em}
+  .palbtn{display:flex;align-items:center;gap:9px;background:var(--well);
+    border:1px solid var(--hair);border-radius:7px;color:var(--faint);
+    font:400 12px var(--disp);padding:7px 12px;width:236px;cursor:pointer;
+    transition:border-color var(--dur-1) var(--ease)}
+  .palbtn:hover{border-color:var(--faint)}
+  .palbtn kbd{margin-left:auto;font:500 9.5px var(--mono);border:1px solid var(--hair);
+    border-radius:4px;padding:1px 5px;color:var(--muted);background:var(--panel)}
+  .iconbtn{position:relative;background:var(--well);border:1px solid var(--hair);
+    border-radius:7px;color:var(--muted);width:33px;height:33px;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;font-size:14px;
+    transition:all var(--dur-1) var(--ease)}
+  .iconbtn:hover{color:var(--ink);border-color:var(--faint)}
+  .iconbtn .bdg{position:absolute;top:-5px;right:-5px;background:var(--crit);
+    color:#fff;font:600 9px var(--mono);border-radius:99px;min-width:15px;
+    height:15px;display:flex;align-items:center;justify-content:center;padding:0 3px}
+  .avatar{display:flex;align-items:center;gap:9px;cursor:pointer}
+  .avatar .av{width:30px;height:30px;border-radius:50%;background:var(--flame);
+    color:#fff;font:700 11px var(--disp);display:flex;align-items:center;
+    justify-content:center;letter-spacing:.02em}
+  .avatar .who{line-height:1.25}
+  .avatar .who b{font:600 12px var(--disp);display:block}
+  .avatar .who span{font:500 9.5px var(--mono);color:var(--faint)}
+
+  /* ---------- command palette ---------- */
+  #palOvl{position:fixed;inset:0;background:rgba(8,11,16,.55);z-index:80;
+    display:none;justify-content:center;align-items:flex-start;padding-top:11vh}
+  #palOvl.on{display:flex;animation:fadein var(--dur-1) var(--ease)}
+  .pal{width:min(640px,92vw);background:var(--panel);border:1px solid var(--hair);
+    border-radius:12px;box-shadow:var(--shadow-lift);overflow:hidden;
+    animation:modalin var(--dur-2) var(--ease)}
+  .pal>input{width:100%;border:0;background:transparent;color:var(--ink);
+    font:400 15px var(--disp);padding:15px 18px;outline:none;border-radius:0;
+    border-bottom:1px solid var(--hair)}
+  .pal .res{max-height:46vh;overflow-y:auto;padding:6px}
+  .pal .grp{font:500 8.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;
+    color:var(--faint);padding:9px 12px 3px}
+  .pal .ri{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:7px;
+    cursor:pointer;font:500 13px var(--disp)}
+  .pal .ri .k{font:500 10px var(--mono);color:var(--faint);margin-left:auto}
+  .pal .ri.sel,.pal .ri:hover{background:var(--sel)}
+  .pal .ft{padding:8px 14px;border-top:1px solid var(--hair);
+    font:500 9.5px var(--mono);color:var(--faint);display:flex;gap:14px}
+
+  /* ---------- notifications dropdown ---------- */
+  .drop{position:fixed;z-index:75;background:var(--panel);border:1px solid var(--hair);
+    border-radius:10px;box-shadow:var(--shadow-lift);width:334px;display:none;overflow:hidden}
+  .drop.on{display:block;animation:modalin var(--dur-2) var(--ease)}
+  .drop .dhd{font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);padding:11px 14px;border-bottom:1px solid var(--hair);
+    display:flex;align-items:center}
+  .drop .ni{padding:10px 14px;border-bottom:1px solid var(--grid);
+    font-size:12.3px;line-height:1.45}
+  .drop .ni b.mention{color:var(--accent)}
+  .drop .ni .who{font:500 9.5px var(--mono);color:var(--faint);margin-top:3px}
+  .drop .ni.unread{border-left:2px solid var(--accent)}
+
+  /* ---------- work orders (kanban + calendar) ---------- */
+  .kb{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:start}
+  @media(max-width:1100px){.kb{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .kcol{background:var(--panel2);border:1px solid var(--hair);border-radius:10px;
+    padding:10px;min-height:220px}
+  .kcol .kh{font:500 9.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);padding:2px 6px 9px;display:flex;gap:8px;align-items:center}
+  .kcol .kh .n{margin-left:auto;background:var(--panel);border-radius:99px;
+    padding:0 8px;font-weight:600}
+  .kcol.over{outline:2px dashed var(--accent);outline-offset:-4px}
+  .wo{background:var(--panel);border:1px solid var(--hair);border-radius:9px;
+    padding:11px 13px;margin-bottom:9px;cursor:grab;box-shadow:var(--shadow);
+    transition:transform var(--dur-1) var(--ease),box-shadow var(--dur-1) var(--ease)}
+  .wo:hover{box-shadow:var(--shadow-lift)}
+  .wo.drag{opacity:.4}
+  .wo .ti{font:600 12.8px var(--disp);margin:5px 0 3px;line-height:1.35}
+  .wo .mt{font:500 10px var(--mono);color:var(--faint);display:flex;gap:9px;flex-wrap:wrap}
+  .wo .row{display:flex;align-items:center;gap:7px}
+  .p-low{background:var(--good-soft);color:var(--good)}
+  .p-med{background:var(--accent-soft);color:var(--accent)}
+  .p-high{background:var(--mon-soft);color:var(--mon)}
+  .p-crit{background:var(--crit-soft);color:var(--crit)}
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--hair);
+    border:1px solid var(--hair);border-radius:10px;overflow:hidden}
+  .cal .dh{background:var(--panel2);font:500 9px var(--mono);letter-spacing:.12em;
+    text-transform:uppercase;color:var(--muted);padding:7px;text-align:center}
+  .cal .d{background:var(--panel);min-height:76px;padding:6px 8px;
+    font:500 11px var(--mono);color:var(--muted);cursor:pointer;
+    transition:background var(--dur-1) var(--ease)}
+  .cal .d:hover{background:var(--sel)}
+  .cal .d.dim{opacity:.38}
+  .cal .d.today{background:var(--accent-soft)}
+  .cal .d.today .dn{color:var(--accent);font-weight:700}
+  .cal .d .ev{display:block;font:500 9.5px var(--mono);border-radius:4px;
+    padding:1px 5px;margin-top:4px;white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis}
+
+  /* ---------- sensor table / bulk ops ---------- */
+  .ttools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  th.sort{cursor:pointer;user-select:none}
+  th.sort:hover{color:var(--ink)}
+  th.sort.asc::after{content:' ▲';font-size:8px}
+  th.sort.desc::after{content:' ▼';font-size:8px}
+  tr.selrow td{background:var(--sel)}
+  .bulk{display:none;gap:9px;align-items:center;background:var(--accent-soft);
+    border:1px solid var(--accent);border-radius:9px;padding:8px 14px;
+    margin-bottom:12px;font:500 12px var(--disp);color:var(--accent)}
+  .bulk.on{display:flex;animation:toastin var(--dur-2) var(--ease)}
+  .bar{height:5px;border-radius:3px;background:var(--grid);width:52px;
+    position:relative;display:inline-block;vertical-align:middle;margin-right:7px}
+  .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+
+  /* ---------- overview grid ---------- */
+  .ovgrid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr) 324px;
+    gap:18px;align-items:start}
+  @media(max-width:1240px){.ovgrid{grid-template-columns:minmax(0,1fr)}}
+  .tierbar{display:flex;align-items:center;gap:9px;margin:7px 0;font:500 10.5px var(--mono)}
+  .tierbar .lb{width:64px;color:var(--muted)}
+  .tierbar .tk{flex:1;height:7px;border-radius:4px;background:var(--grid);
+    position:relative;overflow:hidden}
+  .tierbar .tk i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;
+    transition:width var(--dur-3) var(--ease)}
+  .anagrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+  @media(max-width:1100px){.anagrid{grid-template-columns:minmax(0,1fr)}}
+  .rule{display:flex;align-items:center;gap:9px;padding:7px 0;
+    border-bottom:1px solid var(--grid);font-size:12.2px}
+  .rule:last-child{border-bottom:0}
+  .rule .tg{width:30px;height:17px;border-radius:99px;background:var(--grid);
+    position:relative;cursor:pointer;flex:none;transition:background var(--dur-1) var(--ease)}
+  .rule .tg::after{content:'';position:absolute;top:2px;left:2px;width:13px;height:13px;
+    border-radius:50%;background:var(--panel);box-shadow:var(--shadow);
+    transition:transform var(--dur-1) var(--ease)}
+  .rule .tg.on{background:var(--accent)}
+  .rule .tg.on::after{transform:translateX(13px)}
+
   /* modal + toast */
   .overlay{position:fixed;inset:0;background:rgba(10,13,18,.5);z-index:40;
     display:none;align-items:center;justify-content:center;
@@ -295,9 +463,10 @@
   }
 </style>
 
-<header class="top">
-  <div class="wordmark" id="home" role="button" tabindex="0">
-    <svg width="26" height="22" viewBox="0 0 26 22" aria-hidden="true">
+<div class="shell">
+<aside class="side">
+  <div class="brand" id="home" role="button" tabindex="0">
+    <svg width="24" height="20" viewBox="0 0 26 22" aria-hidden="true">
       <defs><linearGradient id="fl" x1="0" x2="1">
         <stop offset="0" stop-color="#E9A23B"/><stop offset=".4" stop-color="#D95F33"/>
         <stop offset=".72" stop-color="#A93460"/><stop offset="1" stop-color="#5F2B82"/>
@@ -311,21 +480,37 @@
       </g>
     </svg>
     <span class="nm">relspec<i>·health</i></span>
-    <span class="tag">machine health, evidenced</span>
   </div>
-  <nav class="tabs" role="tablist">
-    <button role="tab" aria-selected="true"  data-p="fleet">Fleet</button>
-    <button role="tab" aria-selected="false" data-p="asset">Asset</button>
-    <button role="tab" aria-selected="false" data-p="mobile">Mobile</button>
+  <div class="ws"><span style="width:7px;height:7px;border-radius:50%;background:var(--good, #3AA981);display:inline-block"></span>
+    <b>Northline Water Co.</b>&nbsp;· live</div>
+  <nav id="sideNav">
+    <div class="sec">Monitor</div>
+    <button class="it on" data-p="overview"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1"/><rect x="9" y="9" width="5.5" height="5.5" rx="1"/></svg><span class="lb">Overview</span></button>
+    <button class="it" data-p="fleet"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 9l3-3 3 4 3-6 3 4 2-2"/></svg><span class="lb">Fleet</span><span class="n" id="navFleetN"></span></button>
+    <button class="it" data-p="asset"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3"/><path d="M8 1v2.5M8 12.5V15M1 8h2.5M12.5 8H15"/></svg><span class="lb">Asset</span></button>
+    <button class="it" data-p="wo"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.5 2.5a3.7 3.7 0 0 1 3 5.9L8 14l-2.5-2.5 5.6-5.5a3.7 3.7 0 0 1-.6-3.5zM2 14l2.5-2.5"/></svg><span class="lb">Work orders</span><span class="n" id="navWoN"></span></button>
+    <button class="it" data-p="analytics"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14V9M6 14V5M10 14V7M14 14V2"/></svg><span class="lb">Reliability</span></button>
+    <div class="sec">Operate</div>
+    <button class="it" data-p="sensors"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="11" r="2"/><path d="M4.5 7.5a5 5 0 0 1 7 0M2 5a8.5 8.5 0 0 1 12 0"/></svg><span class="lb">Sensors</span><span class="n" id="navSenN"></span></button>
+    <button class="it" data-p="audit"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 1.5h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1z"/><path d="M5.5 5h5M5.5 8h5M5.5 11h3"/></svg><span class="lb">Audit log</span></button>
+    <button class="it" data-p="mobile"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4.5" y="1.5" width="7" height="13" rx="1.5"/><path d="M7 12.5h2"/></svg><span class="lb">Mobile preview</span></button>
   </nav>
+  <div class="foot">machine health, evidenced<br>relspec·health · prototype</div>
+</aside>
+<div class="maincol">
+<header class="top">
+  <div class="crumb"><b id="crumbT">Overview</b><span class="sub" id="crumbS"></span></div>
   <div class="hdr-right">
-    <input class="search" id="q" type="text" placeholder="Search assets…" aria-label="search assets">
+    <button class="palbtn" id="palBtn"><span>⌕</span> Search or run a command…<kbd>⌘K</kbd></button>
+    <button class="iconbtn" id="bellBtn" title="notifications">🔔<span class="bdg" id="bellN">3</span></button>
     <button class="themebtn" id="themeBtn" title="theme">◐ system</button>
+    <div class="avatar" id="userChip"><div class="av">MW</div>
+      <div class="who"><b>M. Winkeler</b><span>reliability lead</span></div></div>
   </div>
 </header>
 
 <!-- ================= FLEET ================= -->
-<div class="page on" data-page="fleet">
+<div class="page" data-page="fleet">
   <div class="cols">
     <div class="rail card"><div class="hd"><span class="combrule"><i></i><i></i><i></i><i></i><i></i></span>estate</div>
       <div class="bd" id="tree" style="padding:10px 8px"></div></div>
@@ -334,7 +519,8 @@
       <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
         <canvas id="donut" width="140" height="140" style="width:70px;height:70px"></canvas>
         <div style="display:flex;gap:8px;flex-wrap:wrap" id="tierFilters"></div>
-        <span class="disclaimer" style="margin-left:auto">sorted by tier · trend · staleness — design prototype, representative data</span>
+        <input class="search" id="q" type="text" placeholder="Filter assets…" aria-label="filter assets" style="margin-left:auto">
+        <span class="disclaimer">sorted by tier · trend · staleness</span>
       </div>
       <div class="grid" id="cards"></div>
     </div>
@@ -363,7 +549,7 @@
         <canvas id="healthTl" height="46"></canvas>
       </div>
       <div class="strip">
-        <div class="cap">overall velocity · mm/s rms <em>· shaded ISO zones · ◆ raw snapshot (hover for truth-point audit)</em></div>
+        <div class="cap">overall velocity · mm/s rms <em>· shaded ISO zones · ◆ raw snapshot (hover to audit) · drag a span to annotate</em></div>
         <canvas id="velTrend" height="128"></canvas>
         <div class="legendrow"><i>◆ baseline snapshot</i><i style="color:var(--alert)">◆ change event</i>
           <i>· codec-only</i><i style="margin-left:auto" id="auditLine"></i></div>
@@ -373,6 +559,17 @@
         <canvas id="pmatrix" height="196"></canvas>
         <div class="legendrow"><i style="color:var(--comb)">−6σ</i><i>0</i><i style="color:var(--crit)">+6σ</i>
           <i style="margin-left:auto" id="baseLine">baseline: 62 quiet frames since ⟲ reset</i></div>
+      </div>
+      <div class="strip">
+        <div class="cap">spectrum compare · envelope rail, order-normalised <em>· two frames overlaid · Δ decoded dB below · hover to read</em></div>
+        <div style="display:flex;gap:9px;margin-bottom:7px;align-items:center;flex-wrap:wrap">
+          <select id="cmpA"><option value="90">frame d −90</option><option value="30" selected>frame d −30</option><option value="7">frame d −7</option></select>
+          <span style="font:500 10px var(--mono);color:var(--faint)">vs</span>
+          <select id="cmpB"><option value="30">frame d −30</option><option value="7">frame d −7</option><option value="0" selected>today</option></select>
+          <label style="display:inline-flex;gap:6px;align-items:center;font:500 10.5px var(--mono);color:var(--muted);cursor:pointer">
+            <input type="checkbox" id="cmpH" checked> harmonic cursors @ BPFO 3.58×</label>
+        </div>
+        <canvas id="cmpChart" height="192"></canvas>
       </div>
       <div class="strip card"><div class="hd">analysis suite</div>
         <div class="bd" style="color:var(--muted);font-size:12.6px">
@@ -409,6 +606,9 @@
           <div style="font:500 10.5px var(--mono);color:var(--muted);
             border-top:1px solid var(--grid);padding-top:9px" id="pEst"></div>
         </div></div>
+      <div class="card" style="margin-top:16px"><div class="hd">alarm rules
+          <button class="btn sm ghost" id="ruleNew" style="margin-left:auto;text-transform:none;letter-spacing:0">＋ rule</button></div>
+        <div class="bd" id="ruleList" style="padding-top:6px"></div></div>
     </div>
   </div>
 </div>
@@ -441,6 +641,104 @@
   <p class="disclaimer" style="text-align:center;margin-top:16px">
     swipe a card right to acknowledge · cards sort by tier · trend · staleness</p>
 </div>
+
+<!-- ================= OVERVIEW ================= -->
+<div class="page on" data-page="overview">
+  <div class="kpis" id="oKpis"></div>
+  <div class="ovgrid">
+    <div class="card"><div class="hd"><span class="combrule"><i></i><i></i><i></i><i></i><i></i></span>estate heatmap · every asset by health</div>
+      <div class="bd"><canvas id="tmap" height="292" style="width:100%"></canvas>
+        <div class="legendrow"><i style="color:var(--good)">■ healthy</i>
+          <i style="color:var(--mon)">■ monitor</i><i style="color:var(--alert)">■ alert</i>
+          <i style="color:var(--crit)">■ critical</i>
+          <i style="margin-left:auto">click a tile to open the asset</i></div></div></div>
+    <div>
+      <div class="card" style="margin-bottom:16px"><div class="hd">health distribution</div>
+        <div class="bd" style="display:flex;gap:20px;align-items:center">
+          <canvas id="donut2" width="140" height="140" style="width:70px;height:70px"></canvas>
+          <div id="tierBars" style="flex:1"></div></div></div>
+      <div class="card"><div class="hd">top risks · ranked</div>
+        <div class="feed" id="risks"></div></div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:16px"><div class="hd">upcoming · next 7 days</div>
+        <div class="feed" id="upcoming"></div></div>
+      <div class="card"><div class="hd">recent activity</div>
+        <div class="feed" id="activity"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= WORK ORDERS ================= -->
+<div class="page" data-page="wo">
+  <div class="ahead">
+    <h2>Work orders</h2><span class="chip c-learn" id="woCount"></span>
+    <div class="actions">
+      <button class="btn" id="woView">▦ Calendar</button>
+      <button class="btn primary" id="woNew">＋ Work order</button></div>
+  </div>
+  <div id="kanban" class="kb"></div>
+  <div id="calWrap" style="display:none">
+    <div class="cap" style="margin:2px 0 8px">august 2026 <em>· colored = work order due · ● route measurement day</em></div>
+    <div class="cal" id="cal"></div>
+  </div>
+</div>
+
+<!-- ================= ANALYTICS ================= -->
+<div class="page" data-page="analytics">
+  <div class="kpis" id="rKpis"></div>
+  <div class="anagrid">
+    <div class="card"><div class="hd">fault pareto · findings by taxonomy, 12 mo</div>
+      <div class="bd"><canvas id="pareto" height="212"></canvas></div></div>
+    <div class="card"><div class="hd">downtime attributed · by plant, 12 mo</div>
+      <div class="bd"><canvas id="downt" height="212"></canvas>
+        <div class="legendrow"><i>bars: hours down</i><i style="margin-left:auto">labels: production cost at standard rate</i></div></div></div>
+    <div class="card"><div class="hd">availability · fleet, 12 months</div>
+      <div class="bd"><canvas id="avail" height="170"></canvas>
+        <div class="legendrow"><i style="color:var(--accent)">— availability %</i><i style="color:var(--faint)">- - target 97%</i></div></div></div>
+    <div class="card"><div class="hd">response · findings funnel, 90 d</div>
+      <div class="bd" id="funnel"></div></div>
+  </div>
+</div>
+
+<!-- ================= SENSORS ================= -->
+<div class="page" data-page="sensors">
+  <div class="ahead">
+    <h2>Sensors</h2><span class="chip c-learn" id="senCount"></span>
+    <div class="actions"><button class="btn" id="csvBtn">⭳ Export CSV</button></div>
+  </div>
+  <div class="ttools" id="sFilters"></div>
+  <div class="bulk" id="bulk"><b id="bulkN">0</b>&nbsp;selected
+    <button class="btn sm" id="bCal">Schedule calibration</button>
+    <button class="btn sm" id="bMute">Mute alerts</button>
+    <button class="btn sm" id="bCsv">Export selection</button>
+    <button class="btn sm ghost" id="bClr" style="margin-left:auto">Clear</button></div>
+  <div class="card"><div class="bd" style="overflow-x:auto;padding:6px 16px 10px">
+    <table id="sTable"></table></div></div>
+</div>
+
+<!-- ================= AUDIT ================= -->
+<div class="page" data-page="audit">
+  <div class="ahead">
+    <h2>Audit log</h2>
+    <span class="disclaimer">append-only · every state change is an event with an author</span>
+    <div class="actions"><input type="text" id="auQ" placeholder="filter text…"></div>
+  </div>
+  <div class="ttools" id="auFilters"></div>
+  <div class="card"><div class="feed" id="auList"></div></div>
+</div>
+
+</div><!-- /maincol -->
+</div><!-- /shell -->
+
+<!-- command palette -->
+<div id="palOvl"><div class="pal">
+  <input id="palIn" placeholder="Search assets, findings, work orders — or run an action…" autocomplete="off">
+  <div class="res" id="palRes"></div>
+  <div class="ft"><span>↑↓ navigate</span><span>↵ open</span><span>esc close</span></div>
+</div></div>
+<!-- notifications -->
+<div class="drop" id="bellDrop"></div>
 
 <!-- modals -->
 <div class="overlay" id="ovl"><div class="modal" id="modal"></div></div>
@@ -502,9 +800,10 @@ let FINDINGS=[
  {id:'F-101',tier:'mon',asset:'CMP-021',ti:'Envelope drift',m:'CUSUM 11.2 on envelope RMS. Possible lubrication; route check scheduled.',who:'J. Ortiz',when:'3 d',state:'open'},
  {id:'E-88',tier:'learn',asset:'GBX-009',ti:'Baseline reset',m:'After oil change; health re-learning (12 of 20 frames).',who:'planner',when:'5 d',state:'event'},
 ];
-const S={page:'fleet',tiers:new Set(['crit','alert','mon','good']),q:'',
+const S={page:'overview',tiers:new Set(['crit','alert','mon','good']),q:'',
   asset:ASSETS[0],theme:localStorage.getItem('rs_theme')||'system',
-  mtab:'fleet',resetMarks:[]};
+  mtab:'fleet',resetMarks:[],woCal:false,ssort:{k:'cal',dir:1},
+  sfilters:new Set(),ssel:new Set(),palSel:0,auKinds:new Set()};
 
 /* ================= theme ================= */
 function applyTheme(){
@@ -533,8 +832,9 @@ function sparky(cv,seed,tier,rise,p=1){
   if(p>=1){g.fillStyle=col;g.beginPath();
     g.arc(w*(m-1)/(n-1),h-5-(h-12)*pts[m-1],2.8,0,7);g.fill()}
 }
-function donut(p=1){
-  const cv=$('#donut'),g=cv.getContext('2d');g.setTransform(2,0,0,2,0,0);
+function donut(p=1,sel='#donut'){
+  const cv=$(sel);if(!cv)return;
+  const g=cv.getContext('2d');g.setTransform(2,0,0,2,0,0);
   g.clearRect(0,0,70,70);
   const data=[[21,'--good'],[5,'--mon'],[2,'--alert'],[1,'--crit']];
   const tot=29;let a0=-Math.PI/2;
@@ -603,14 +903,31 @@ function velTrend(a,p=1){
   for(let i=0;i<m;i++){if(D.snaps.some(s=>s.i===i))continue;
     const x=32+(w-42)*i/(n-1);
     g.fillStyle=css('--faint');g.fillRect(x,h-8,1,2)}
-  cv.onmousemove=e=>{const r=cv.getBoundingClientRect();
-    const i=Math.round((e.clientX-r.left-32)/((w-42)/(n-1)));
+  (ANNOTS[a.id]||[]).forEach(an=>{
+    const x0=32+(w-42)*an.a/(n-1),x1=32+(w-42)*an.b/(n-1);
+    g.fillStyle=css('--hay');g.globalAlpha=0.13;
+    g.fillRect(x0,14,x1-x0,h-32);g.globalAlpha=1;
+    g.strokeStyle=css('--hay');g.setLineDash([3,3]);
+    g.strokeRect(x0,14,x1-x0,h-32);g.setLineDash([]);
+    g.fillStyle=css('--hay');g.font='500 9px "IBM Plex Mono"';g.textAlign='left';
+    g.fillText('✎ '+an.label,x0+3,11)});
+  const toIdx=e=>{const r=cv.getBoundingClientRect();
+    return Math.round((e.clientX-r.left-32)/((w-42)/(n-1)))};
+  let drag=null;
+  cv.onpointerdown=e=>{drag=toIdx(e);cv.setPointerCapture(e.pointerId)};
+  cv.onpointerup=e=>{const i1=toIdx(e);
+    if(drag!=null&&Math.abs(i1-drag)>3)
+      annotModal(a,Math.max(0,Math.min(drag,i1)),Math.min(n-1,Math.max(drag,i1)));
+    drag=null};
+  cv.onmousemove=e=>{if(drag!=null){hideTip();return}
+    const i=toIdx(e);
     if(i<0||i>=n){hideTip();return}
     const s=D.snaps.find(s2=>Math.abs(s2.i-i)<3);
+    const an=(ANNOTS[a.id]||[]).find(x=>i>=x.a&&i<=x.b);
     showTip(e.clientX,e.clientY,
       `day ${i-158}\nvel ${D.vel[Math.max(0,Math.min(n-1,i))].toFixed(2)} mm/s`+
       (s?`\n◆ raw snapshot (${s.ev?'change event':'baseline'})\naudit: 0.${3+(i%5)} dB vs decoded`:
-         '\n· codec frame only'))};
+         '\n· codec frame only')+(an?`\n✎ ${an.label} — ${an.who}`:''))};
   cv.onmouseleave=hideTip;
 }
 function pmatrix(a,p=1){
@@ -754,7 +1071,8 @@ function ackFinding(id){
   if(!f||f.state!=='open')return;
   f.state='ack';
   toast(`${f.id} acknowledged — logged as event`);
-  feed();kpis();renderMobile();
+  logAudit('user',`acknowledged ${f.id} (${f.ti}) on ${f.asset}`);
+  feed();kpis();renderMobile();navBadges();
 }
 
 /* ================= asset render ================= */
@@ -769,9 +1087,11 @@ function renderAsset(){
   animate(p=>velTrend(a,p),800);
   animate(p=>pmatrix(a,p),900);
   animate(p=>confChart(p),700);
+  animate(p=>cmpChart(p),900);
   $('#auditLine').innerHTML=`158 codec frames · 27 snapshots · <b style="color:var(--accent)">audit: med 0.4 dB · p95 1.2 dB</b>`;
   findingCard();
   estimate();
+  rulesList();
 }
 function findingCard(){
   const f=FINDINGS.find(x=>x.asset===S.asset.id&&x.state!=='event');
@@ -791,6 +1111,7 @@ function findingCard(){
       <div style="margin-top:11px;display:flex;gap:8px">
         <input type="text" id="cmt" placeholder="add comment…" style="flex:1">
         <button class="btn sm" id="postCmt">Post</button></div>
+      <div style="margin-top:9px"><button class="btn sm" id="woFromF">⚒ Create work order from this finding</button></div>
     </div>`:`<div class="hd">findings</div>
       <div class="bd" style="color:var(--muted);font-size:12.5px">
       No findings on this asset. ＋ New finding creates one with evidence links.</div>`;
@@ -801,7 +1122,10 @@ function findingCard(){
     const c=document.createElement('div');c.className='comment';
     c.textContent=`${v} — you, just now`;
     bd.insertBefore(c,pc.parentElement);
-    $('#cmt').value='';toast('Comment posted to finding thread')};
+    $('#cmt').value='';toast('Comment posted to finding thread');
+    logAudit('user',`commented on ${f.id}: “${v.slice(0,60)}”`)};
+  const wf=$('#woFromF');
+  if(wf&&f)wf.onclick=()=>woModal(f);
 }
 function estimate(){
   const cad=+$('#pCad').value,bud=+$('#pBud').value,ret=+$('#pRet').value;
@@ -810,7 +1134,8 @@ function estimate(){
     + 0.18 MB/year spectra · retention ${ret} y · change is logged as an event`;
 }
 ['pCad','pBud','pRet'].forEach(id=>$('#'+id).onchange=()=>{
-  estimate();toast('Storage parameters updated — logged as event')});
+  estimate();logAudit('param',`storage parameters changed on ${S.asset.id}`);
+  toast('Storage parameters updated — logged as event')});
 
 /* ---- modals ---- */
 function modal(html){$('#modal').innerHTML=html;$('#ovl').classList.add('on');
@@ -839,7 +1164,9 @@ $('#newFinding').onclick=()=>{
     FINDINGS.unshift({id:'F-'+(105+FINDINGS.length),tier:sev,asset:S.asset.id,
       ti,m:$('#fNote').value.trim()||'(no notes)',who:'you',when:'now',state:'open'});
     closeModal();toast('Finding published to the feed');
-    findingCard();feed();kpis();renderMobile();
+    logAudit('user',`published finding “${ti}” on ${S.asset.id}`);
+    notify(`New finding on ${S.asset.id}: ${ti}`,'you · now');
+    findingCard();feed();kpis();renderMobile();navBadges();
   };
 };
 function confirmModal(title,warn,verb,onGo){
@@ -858,11 +1185,13 @@ $('#resetBtn').onclick=()=>confirmModal('Reset baseline · '+S.asset.id,
   'event — it cannot be undone, only explained.', 'Reset baseline',
   ()=>{S.resetMarks=[[0.985,'⟲']];
     $('#baseLine').textContent='baseline: learning (0 of 20 frames since ⟲ reset today)';
+    logAudit('param',`baseline reset on ${S.asset.id}`);
     renderAsset();toast('Baseline reset — ⟲ event stamped on the timeline')});
 $('#cutoffBtn').onclick=()=>confirmModal('Set data cutoff · '+S.asset.id,
   'History before the cutoff is excluded from baselines, trends and health '+
   '(soft-archived, revealable, never deleted by this action).', 'Set cutoff',
-  ()=>toast('Data cutoff set at −180 d — logged as event'));
+  ()=>{logAudit('param',`data cutoff set on ${S.asset.id} at −180 d`);
+    toast('Data cutoff set at −180 d — logged as event')});
 $('#reportBtn').onclick=()=>{
   modal(`<div class="hd">Generate report · ${S.asset.id}</div>
     <div class="bd">
@@ -933,21 +1262,39 @@ $('#mTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{
   renderMobile()});
 
 /* ================= routing ================= */
+const CRUMBS={
+  overview:['Overview','northline water co. · 2 plants · 29 assets'],
+  fleet:['Fleet','assets by tier · trend · staleness'],
+  asset:['Asset',''],
+  wo:['Work orders','kanban · calendar · linked to findings'],
+  analytics:['Reliability','mtbf · mttr · availability · pareto'],
+  sensors:['Sensors','device fleet · battery · signal · calibration'],
+  audit:['Audit log','append-only · every change has an author'],
+  mobile:['Mobile preview','triage app · swipe to acknowledge']};
 function setPage(p){
   S.page=p;
-  $$('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.p===p)));
+  $$('.side .it').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
   $$('.page').forEach(el=>el.classList.toggle('on',el.dataset.page===p));
+  const[t,s]=CRUMBS[p]||[p,''];
+  $('#crumbT').textContent=p==='asset'?S.asset.id:t;
+  $('#crumbS').textContent=p==='asset'?
+    `${S.asset.plant} / ${S.asset.area} · ${S.asset.ty}`:s;
   redrawPage();
 }
-$$('nav.tabs button').forEach(b=>b.onclick=()=>setPage(b.dataset.p));
-$('#home').onclick=()=>setPage('fleet');
-$('#home').onkeydown=e=>{if(e.key==='Enter')setPage('fleet')};
-$('#q').oninput=e=>{S.q=e.target.value.trim().toLowerCase();
-  if(S.page!=='fleet')setPage('fleet');else cards()};
+$$('.side .it').forEach(b=>b.onclick=()=>setPage(b.dataset.p));
+$('#home').onclick=()=>setPage('overview');
+$('#home').onkeydown=e=>{if(e.key==='Enter')setPage('overview')};
+$('#q').oninput=e=>{S.q=e.target.value.trim().toLowerCase();cards()};
 function redrawPage(){
+  navBadges();
+  if(S.page==='overview')renderOverview();
   if(S.page==='fleet'){kpis();tierFilters();tree();feed();cards();
     animate(p=>donut(p),800)}
   if(S.page==='asset')renderAsset();
+  if(S.page==='wo')renderWO();
+  if(S.page==='analytics')renderAnalytics();
+  if(S.page==='sensors')renderSensors();
+  if(S.page==='audit')renderAudit();
   if(S.page==='mobile'){renderMobile();
     animate(p=>healthBand($('#mHealth'),30,undefined,p),700);
     animate(p=>mTrends(p),750);
@@ -964,6 +1311,690 @@ function redrawPage(){
         <div class="ty">score 6.1 · frame d162 · auto</div></div></div></div>`;
   }
 }
+/* ================= CMMS data ================= */
+let WOSEQ=313;
+let WORKORDERS=[
+ {id:'WO-312',ti:'Anchor-bolt torque check + regrout survey',asset:'FAN-112',pri:'crit',who:'R. Chen',due:'Aug 11',st:'prog',from:'F-104',hrs:6},
+ {id:'WO-311',ti:'Replace DE bearing (SKF 6205)',asset:'PUMP-201',pri:'high',who:'J. Ortiz',due:'Aug 14',st:'open',from:'F-102',hrs:4},
+ {id:'WO-308',ti:'Grease route — process line',asset:'CMP-021',pri:'med',who:'S. Idris',due:'Aug 18',st:'open',from:'F-101',hrs:2},
+ {id:'WO-301',ti:'Quarterly route measurement · South',asset:'GBX-009',pri:'low',who:'planner',due:'Aug 21',st:'backlog',hrs:3},
+ {id:'WO-299',ti:'Balance fan rotor after blade repair',asset:'FAN-112',pri:'med',who:'R. Chen',due:'Aug 27',st:'backlog',hrs:5},
+ {id:'WO-297',ti:'Impeller replacement + laser alignment',asset:'PUMP-201',pri:'high',who:'J. Ortiz',due:'Jul 30',st:'done',hrs:8},
+ {id:'WO-295',ti:'Sensor S-17 remount (loose stud)',asset:'MOT-054',pri:'med',who:'R. Chen',due:'Jul 28',st:'done',hrs:1},
+];
+const WO_COLS=[['backlog','Backlog'],['open','Open'],['prog','In progress'],['done','Done']];
+const WO_NEXT={backlog:'open',open:'prog',prog:'done'};
+let SENSORS=[
+ {code:'S-201-DE',asset:'PUMP-201',pos:'DE',batt:81,rssi:-61,seen:2,fs:12.0,fw:'2.4.1',cal:44,mut:false},
+ {code:'S-201-NDE',asset:'PUMP-201',pos:'NDE',batt:78,rssi:-64,seen:2,fs:12.0,fw:'2.4.1',cal:44,mut:false},
+ {code:'S-112-DE',asset:'FAN-112',pos:'DE',batt:64,rssi:-71,seen:1,fs:25.6,fw:'2.4.1',cal:12,mut:false},
+ {code:'S-112-BRG',asset:'FAN-112',pos:'brg 2',batt:17,rssi:-83,seen:1,fs:25.6,fw:'2.3.9',cal:12,mut:false},
+ {code:'S-021-A',asset:'CMP-021',pos:'axial',batt:91,rssi:-58,seen:3,fs:12.0,fw:'2.4.1',cal:190,mut:false},
+ {code:'S-021-R',asset:'CMP-021',pos:'radial',batt:88,rssi:-60,seen:3,fs:12.0,fw:'2.4.1',cal:190,mut:false},
+ {code:'S-186-DE',asset:'PUMP-186',pos:'DE',batt:72,rssi:-66,seen:2,fs:12.0,fw:'2.4.1',cal:-6,mut:false},
+ {code:'S-054-DE',asset:'MOT-054',pos:'DE',batt:83,rssi:-62,seen:5,fs:12.0,fw:'2.4.0',cal:98,mut:false},
+ {code:'S-054-NDE',asset:'MOT-054',pos:'NDE',batt:23,rssi:-88,seen:41,fs:12.0,fw:'2.4.0',cal:98,mut:true},
+ {code:'S-009-IN',asset:'GBX-009',pos:'input',batt:69,rssi:-69,seen:2,fs:25.6,fw:'2.4.1',cal:61,mut:false},
+ {code:'S-009-OUT',asset:'GBX-009',pos:'output',batt:70,rssi:-74,seen:2,fs:25.6,fw:'2.4.1',cal:61,mut:false},
+ {code:'S-009-AX',asset:'GBX-009',pos:'axial',batt:55,rssi:-79,seen:26,fs:25.6,fw:'2.3.9',cal:-2,mut:false},
+];
+let RULES=[
+ {id:'R-1',on:true,txt:'vel RMS > 7.1 mm/s (ISO zone D) · 3 frames',sev:'crit'},
+ {id:'R-2',on:true,txt:'pattern z (any verified track) > 4σ · 2 frames',sev:'alert'},
+ {id:'R-3',on:false,txt:'measurement staleness > 48 h',sev:'mon'},
+];
+let AUDIT=[
+ {t:'09:12',who:'auto-rule',what:'F-104 raised on FAN-112 — looseness harmonics z 8.4',kind:'rule'},
+ {t:'08:55',who:'ingest',what:'raw snapshot stored on S-112-DE (change event) · audit 0.4 dB',kind:'ingest'},
+ {t:'08:31',who:'R. Chen',what:'moved WO-312 to In progress',kind:'wo'},
+ {t:'yesterday',who:'J. Ortiz',what:'commented on F-102: “confirmed on portable route measurement”',kind:'user'},
+ {t:'yesterday',who:'planner',what:'storage cadence on S-201-DE set to every 3 days',kind:'param'},
+ {t:'2 d ago',who:'M. Winkeler',what:'acknowledged F-102 (outer-race wear)',kind:'user'},
+ {t:'5 d ago',who:'planner',what:'baseline reset on GBX-009 after oil change',kind:'param'},
+];
+let NOTIFS=[
+ {m:'<b class="mention">@you</b> R. Chen mentioned you on F-104 · “can you sign off the stop?”',who:'R. Chen · 1 h',unread:true},
+ {m:'WO-312 moved to In progress',who:'R. Chen · 3 h',unread:true},
+ {m:'S-054-NDE battery 23% · last seen 41 h — check mount',who:'device watch · 6 h',unread:true},
+ {m:'Weekly report for North plant is ready',who:'reports · 1 d',unread:false},
+];
+let ANNOTS={};
+const AU_KINDS=[['user','people'],['rule','rules'],['wo','work orders'],['ingest','ingest'],['param','parameters']];
+function logAudit(kind,what,who='you'){
+  AUDIT.unshift({t:'now',who,what,kind});
+  if(S.page==='audit')renderAudit();
+  if(S.page==='overview')activityFeed();
+}
+function notify(m,who){NOTIFS.unshift({m,who:who||'system · now',unread:true});bellBadge()}
+function bellBadge(){
+  const n=NOTIFS.filter(x=>x.unread).length;
+  $('#bellN').textContent=n;$('#bellN').style.display=n?'flex':'none';
+}
+function navBadges(){
+  $('#navFleetN').textContent=FINDINGS.filter(f=>f.state==='open').length||'';
+  $('#navWoN').textContent=WORKORDERS.filter(w=>w.st!=='done').length||'';
+  const attn=SENSORS.filter(s=>s.batt<25||s.cal<0||s.seen>24).length;
+  $('#navSenN').textContent=attn||'';
+  const wc=$('#woCount');if(wc)wc.textContent=
+    `${WORKORDERS.filter(w=>w.st!=='done').length} open · ${WORKORDERS.filter(w=>w.st==='done').length} done (30 d)`;
+  const sc=$('#senCount');if(sc)sc.textContent=
+    `${SENSORS.length} devices · ${attn} need attention`;
+  bellBadge();
+}
+
+/* ================= notifications dropdown ================= */
+function renderBell(){
+  $('#bellDrop').innerHTML=`<div class="dhd">notifications
+      <button class="btn sm ghost" id="bellClr" style="margin-left:auto;text-transform:none;letter-spacing:0">mark all read</button></div>`+
+    NOTIFS.map(n=>`<div class="ni ${n.unread?'unread':''}">${n.m}
+      <div class="who">${n.who}</div></div>`).join('');
+  $('#bellClr').onclick=()=>{NOTIFS.forEach(n=>n.unread=false);
+    bellBadge();renderBell()};
+}
+$('#bellBtn').onclick=e=>{
+  e.stopPropagation();
+  const d=$('#bellDrop'),r=$('#bellBtn').getBoundingClientRect();
+  renderBell();
+  d.style.top=(r.bottom+8)+'px';
+  d.style.left=Math.max(8,r.right-334)+'px';
+  d.classList.toggle('on');
+};
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#bellDrop,#bellBtn'))$('#bellDrop').classList.remove('on')});
+
+/* ================= overview ================= */
+function kpisInto(sel,items){
+  const el=$(sel);if(!el)return;
+  el.innerHTML=items.map(([k,v,suf,pre])=>
+    `<div class="kpi"><div class="k">${k}</div>
+     <div class="v">${pre||''}<span class="cnt" data-v="${v}">0</span><small>${suf||''}</small></div></div>`).join('');
+  el.querySelectorAll('.cnt').forEach(c=>{
+    const target=+c.dataset.v;const dec=String(target).includes('.')?1:0;
+    animate(p=>{c.textContent=(target*p).toFixed(dec)},700)});
+}
+const GHOSTS=(()=>{const r=rnd(41);const out=[];
+  for(let i=0;i<23;i++){const t=r()<0.86?'good':'mon';
+    out.push({id:(i<12?'N':'S')+'-'+String(101+i),tier:t,
+      plant:i<12?'North plant':'South plant'})}
+  return out})();
+function tmap(p=1){
+  const cv=$('#tmap');if(!cv)return;
+  const[g,w,h]=fit(cv,292);
+  const all=[...ASSETS.map(a=>({...a,real:true})),...GHOSTS]
+    .sort((a,b)=>(a.plant>b.plant?1:a.plant<b.plant?-1:0));
+  const north=all.filter(a=>a.plant==='North plant'),
+        south=all.filter(a=>a.plant!=='North plant');
+  const cols=7,tw=(w-6)/cols,rects=[];
+  let y=16;
+  [['NORTH PLANT',north],['SOUTH PLANT',south]].forEach(([lab,list])=>{
+    g.font='500 8.5px "IBM Plex Mono"';g.fillStyle=css('--faint');
+    g.textAlign='left';g.fillText(lab,2,y-5);
+    list.forEach((a,i)=>{
+      const c=i%cols,rw=Math.floor(i/cols);
+      const x=c*tw+2,yy=y+rw*40;
+      if(i/list.length>p)return;
+      g.fillStyle=css('--'+(a.tier==='good'?'good':a.tier)+'-soft');
+      g.strokeStyle=css('--'+(a.tier==='good'?'good':a.tier));
+      g.beginPath();g.roundRect(x,yy,tw-5,34,5);g.fill();
+      g.globalAlpha=a.real?0.9:0.35;g.stroke();g.globalAlpha=1;
+      g.fillStyle=css('--'+(a.tier==='good'?'good':a.tier));
+      g.font=(a.real?'600 10px':'500 9px')+' "IBM Plex Mono"';
+      g.fillText(a.id,x+6,yy+14);
+      if(a.real){g.fillStyle=css('--muted');g.font='500 8px "IBM Plex Mono"';
+        g.fillText(TIERS[a.tier][1],x+6,yy+26)}
+      rects.push({x,y:yy,w:tw-5,h:34,a})});
+    y+=Math.ceil(list.length/cols)*40+26;
+  });
+  cv.onmousemove=e=>{const r=cv.getBoundingClientRect();
+    const mx=e.clientX-r.left,my=e.clientY-r.top;
+    const hit=rects.find(t=>mx>=t.x&&mx<=t.x+t.w&&my>=t.y&&my<=t.y+t.h);
+    if(hit)showTip(e.clientX,e.clientY,hit.a.real?
+      `${hit.a.id} · ${hit.a.ty}\n${TIERS[hit.a.tier][1]} — ${hit.a.why}`:
+      `${hit.a.id} · ${TIERS[hit.a.tier][1]}`);
+    else hideTip()};
+  cv.onmouseleave=hideTip;
+  cv.onclick=e=>{const r=cv.getBoundingClientRect();
+    const mx=e.clientX-r.left,my=e.clientY-r.top;
+    const hit=rects.find(t=>mx>=t.x&&mx<=t.x+t.w&&my>=t.y&&my<=t.y+t.h);
+    if(hit&&hit.a.real)openAsset(ASSETS.find(x=>x.id===hit.a.id));
+    else if(hit)toast(hit.a.id+' — healthy, no open findings')};
+}
+function tierBars(){
+  const counts=[['good',21],['mon',5],['alert',2],['crit',1]];
+  $('#tierBars').innerHTML=counts.map(([t,n])=>
+    `<div class="tierbar"><span class="lb">${TIERS[t][1]}</span>
+      <span class="tk"><i style="background:var(--${t});width:0" data-w="${n/29*100}"></i></span>
+      <b>${n}</b></div>`).join('');
+  requestAnimationFrame(()=>$$('#tierBars .tk i').forEach(i=>
+    i.style.width=i.dataset.w+'%'));
+}
+function activityFeed(){
+  const el=$('#activity');if(!el)return;
+  el.innerHTML=AUDIT.slice(0,6).map(a=>
+    `<div class="item"><div class="m">${a.what}</div>
+      <div class="who">${a.who} · ${a.t}</div></div>`).join('');
+}
+function renderOverview(){
+  kpisInto('#oKpis',[
+    ['availability · 12 mo',97.2,' %'],['assets',29,''],['mtbf',214,' days'],
+    ['open findings',FINDINGS.filter(f=>f.state==='open').length,
+      ' · '+FINDINGS.filter(f=>f.tier==='crit'&&f.state==='open').length+' crit'],
+    ['open work orders',WORKORDERS.filter(w=>w.st!=='done').length,''],
+    ['data · 30 d',1.9,' MB · 318×']]);
+  animate(p=>tmap(p),900);
+  animate(p=>donut(p,'#donut2'),800);
+  tierBars();
+  const score={crit:40,alert:24,mon:10,good:0};
+  $('#risks').innerHTML=ASSETS.map(a=>({a,s:score[a.tier]+a.hot*12+a.open*4}))
+    .sort((x,y)=>y.s-x.s).slice(0,5).map(({a,s},i)=>
+    `<div class="item" data-id="${a.id}"><div class="t">
+      <span class="chip c-${a.tier}">${TIERS[a.tier][0]}</span>
+      <span class="ti">${i+1}. ${a.id}</span>
+      <span style="margin-left:auto;font:600 11px var(--mono);color:var(--muted)">risk ${Math.round(s)}</span></div>
+      <div class="m">${a.why}</div></div>`).join('');
+  $$('#risks .item').forEach(it=>it.onclick=()=>
+    openAsset(ASSETS.find(a=>a.id===it.dataset.id)));
+  $('#upcoming').innerHTML=WORKORDERS
+    .filter(w=>w.st!=='done'&&/Aug (9|1[0-6])$/.test(w.due)).map(w=>
+    `<div class="item" data-wo="1"><div class="t"><span class="chip p-${w.pri}">${w.id}</span>
+      <span class="ti">${w.ti}</span></div>
+      <div class="who">${w.asset} · ${w.who} · due ${w.due}</div></div>`).join('')
+    ||'<div class="item"><div class="m">nothing due in the next 7 days</div></div>';
+  $$('#upcoming .item[data-wo]').forEach(it=>it.onclick=()=>setPage('wo'));
+  activityFeed();
+}
+
+/* ================= work orders ================= */
+function woChip(w){return `<span class="chip p-${w.pri}">${w.pri}</span>`}
+function renderWO(){
+  navBadges();
+  $('#kanban').style.display=S.woCal?'none':'grid';
+  $('#calWrap').style.display=S.woCal?'block':'none';
+  $('#woView').textContent=S.woCal?'☰ Board':'▦ Calendar';
+  if(S.woCal){renderCal();return}
+  $('#kanban').innerHTML=WO_COLS.map(([k,lab])=>{
+    const list=WORKORDERS.filter(w=>w.st===k);
+    return `<div class="kcol" data-col="${k}">
+      <div class="kh">${lab}<span class="n">${list.length}</span></div>
+      ${list.map(w=>`<div class="wo" draggable="true" data-id="${w.id}">
+        <div class="row">${woChip(w)}
+          <span style="font:500 10px var(--mono);color:var(--faint)">${w.id}</span>
+          ${w.from?`<span class="evd" style="margin:0">${w.from}</span>`:''}
+          ${k!=='done'?`<button class="btn sm ghost adv" data-id="${w.id}" title="advance" style="margin-left:auto">→</button>`:''}</div>
+        <div class="ti">${w.ti}</div>
+        <div class="mt"><span>${w.asset}</span><span>${w.who}</span>
+          <span>due ${w.due}</span><span>${w.hrs} h</span></div></div>`).join('')}
+    </div>`}).join('');
+  $$('#kanban .wo').forEach(el=>{
+    el.addEventListener('dragstart',e=>{el.classList.add('drag');
+      e.dataTransfer.setData('text/plain',el.dataset.id)});
+    el.addEventListener('dragend',()=>el.classList.remove('drag'));
+    el.onclick=e=>{if(e.target.closest('.adv'))return;
+      woDetail(WORKORDERS.find(w=>w.id===el.dataset.id))};
+  });
+  $$('#kanban .adv').forEach(b=>b.onclick=e=>{e.stopPropagation();
+    moveWO(b.dataset.id,WO_NEXT[WORKORDERS.find(w=>w.id===b.dataset.id).st])});
+  $$('#kanban .kcol').forEach(col=>{
+    col.addEventListener('dragover',e=>{e.preventDefault();col.classList.add('over')});
+    col.addEventListener('dragleave',()=>col.classList.remove('over'));
+    col.addEventListener('drop',e=>{e.preventDefault();col.classList.remove('over');
+      moveWO(e.dataTransfer.getData('text/plain'),col.dataset.col)});
+  });
+}
+function moveWO(id,st){
+  const w=WORKORDERS.find(x=>x.id===id);
+  if(!w||!st||w.st===st)return;
+  w.st=st;
+  logAudit('wo',`moved ${id} to ${WO_COLS.find(c=>c[0]===st)[1]}`);
+  toast(`${id} → ${WO_COLS.find(c=>c[0]===st)[1]}`);
+  renderWO();
+}
+function woDetail(w){
+  modal(`<div class="hd">${w.id} · ${w.ti}</div>
+    <div class="bd">
+      <div style="display:flex;gap:8px;align-items:center">${woChip(w)}
+        <span class="chip c-learn">${WO_COLS.find(c=>c[0]===w.st)[1]}</span>
+        ${w.from?`<span class="evd" style="margin:0">from finding ${w.from}</span>`:''}</div>
+      <div style="font-size:12.6px;color:var(--muted)">
+        ${w.asset} · assigned ${w.who} · due ${w.due} · est ${w.hrs} h</div>
+      <label>status<select id="wdSt">${WO_COLS.map(([k,l])=>
+        `<option value="${k}" ${k===w.st?'selected':''}>${l}</option>`).join('')}</select></label>
+    </div>
+    <div class="ft"><button class="btn ghost" onclick="closeModal()">Close</button>
+      <button class="btn" id="wdAsset">Open asset</button>
+      <button class="btn primary" id="wdSave">Save</button></div>`);
+  $('#wdAsset').onclick=()=>{closeModal();
+    const a=ASSETS.find(x=>x.id===w.asset);if(a)openAsset(a)};
+  $('#wdSave').onclick=()=>{closeModal();moveWO(w.id,$('#wdSt').value)};
+}
+function woModal(fromFinding){
+  const f=fromFinding;
+  modal(`<div class="hd">New work order${f?' · from '+f.id:''}</div>
+    <div class="bd">
+      <label>title<input type="text" id="wTi" value="${f?f.ti.replace(/"/g,'&quot;'):''}"
+        placeholder="e.g. Replace DE bearing"></label>
+      <label>asset<select id="wAs">${ASSETS.map(a=>
+        `<option ${f&&f.asset===a.id?'selected':''}>${a.id}</option>`).join('')}</select></label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <label>priority<select id="wPri"><option>low</option><option>med</option>
+          <option selected>high</option><option>crit</option></select></label>
+        <label>assignee<select id="wWho"><option>J. Ortiz</option><option>R. Chen</option>
+          <option>S. Idris</option><option>planner</option></select></label>
+        <label>due<input type="text" id="wDue" value="Aug 15"></label>
+        <label>est hours<input type="text" id="wHrs" value="4"></label></div>
+      ${f?`<div style="font:500 10.5px var(--mono);color:var(--muted)">evidence carried over:
+        <span class="evd">frame d162</span><span class="evd">track BPFO 3.58×</span></div>`:''}
+    </div>
+    <div class="ft"><button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" id="wGo">Create</button></div>`);
+  $('#wGo').onclick=()=>{
+    const w={id:'WO-'+(WOSEQ++),ti:$('#wTi').value.trim()||'Untitled work order',
+      asset:$('#wAs').value,pri:$('#wPri').value,who:$('#wWho').value,
+      due:$('#wDue').value,st:'open',hrs:+$('#wHrs').value||2,
+      from:f?f.id:undefined};
+    WORKORDERS.unshift(w);closeModal();
+    logAudit('wo',`created ${w.id} “${w.ti}” on ${w.asset}${f?' from '+f.id:''}`);
+    notify(`${w.id} assigned to ${w.who} · due ${w.due}`,'work orders · now');
+    toast(`${w.id} created — assigned ${w.who}`);
+    navBadges();if(S.page==='wo')renderWO();
+  };
+}
+function renderCal(){
+  const woByDay={};
+  WORKORDERS.filter(w=>w.st!=='done').forEach(w=>{
+    const m=w.due.match(/Aug (\d+)/);if(m)(woByDay[+m[1]]=woByDay[+m[1]]||[]).push(w)});
+  let html=['MON','TUE','WED','THU','FRI','SAT','SUN'].map(d=>
+    `<div class="dh">${d}</div>`).join('');
+  for(let i=0;i<5;i++)html+=`<div class="d dim"><span class="dn">${27+i}</span></div>`;
+  for(let d=1;d<=31;d++){
+    const wos=woByDay[d]||[],route=d%3===1;
+    html+=`<div class="d ${d===9?'today':''}" data-d="${d}">
+      <span class="dn">${d}</span>${route?' <span style="color:var(--accent)">●</span>':''}
+      ${wos.map(w=>`<span class="ev p-${w.pri}">${w.id} ${w.asset}</span>`).join('')}</div>`;
+  }
+  for(let i=1;i<=6;i++)html+=`<div class="d dim"><span class="dn">${i}</span></div>`;
+  $('#cal').innerHTML=html;
+  $$('#cal .d[data-d]').forEach(el=>el.onclick=()=>{
+    const d=+el.dataset.d,wos=woByDay[d]||[];
+    if(wos.length)woDetail(wos[0]);
+    else toast(`Aug ${d} — ${d%3===1?'route measurement day':'no work scheduled'}`)});
+}
+$('#woNew').onclick=()=>woModal();
+$('#woView').onclick=()=>{S.woCal=!S.woCal;renderWO()};
+
+/* ================= analytics ================= */
+function pareto(p=1){
+  const cv=$('#pareto');if(!cv)return;
+  const[g,w,h]=fit(cv,212);
+  const cats=[['bearing',9],['imbal',5],['loose',4],['misal',3],
+    ['lube',3],['elec',2],['other',1]];
+  const tot=cats.reduce((s,c)=>s+c[1],0),max=9;
+  const bw=(w-30)/cats.length;let cum=0;
+  const cumPts=[];
+  cats.forEach(([lab,n],i)=>{
+    const bh=(h-46)*n/max*p,x=8+i*bw;
+    g.fillStyle=css('--accent');g.globalAlpha=0.8;
+    g.fillRect(x,h-28-bh,bw-10,bh);g.globalAlpha=1;
+    g.fillStyle=css('--ink');g.font='600 10px "IBM Plex Mono"';g.textAlign='center';
+    g.fillText(n,x+(bw-10)/2,h-32-bh);
+    g.fillStyle=css('--muted');g.font='500 8.5px "IBM Plex Mono"';
+    g.fillText(lab,x+(bw-10)/2,h-14);
+    cum+=n;cumPts.push([x+(bw-10)/2,18+(h-64)*(1-cum/tot)]);
+  });
+  g.strokeStyle=css('--mon');g.lineWidth=1.6;g.beginPath();
+  const m=Math.max(1,Math.ceil(cumPts.length*p));
+  cumPts.slice(0,m).forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));
+  g.stroke();
+  cumPts.slice(0,m).forEach(([x,y])=>{g.fillStyle=css('--mon');
+    g.beginPath();g.arc(x,y,2.5,0,7);g.fill()});
+  g.fillStyle=css('--mon');g.font='500 8.5px "IBM Plex Mono"';g.textAlign='right';
+  g.fillText('cumulative %',w-8,12);
+}
+function downt(p=1){
+  const cv=$('#downt');if(!cv)return;
+  const[g,w,h]=fit(cv,212);
+  const rows=[['FAN-112',8.5,'$148k'],['PUMP-201',5.7,'$96k'],
+    ['North · other',2.1,'$31k'],['South plant',4.0,'$62k']];
+  const max=8.5,rh=(h-16)/rows.length;
+  rows.forEach(([lab,v,cost],i)=>{
+    const y=8+i*rh,bw2=(w-150)*v/max*p;
+    g.fillStyle=css(i<2?'--alert':'--muted');g.globalAlpha=i<2?0.85:0.4;
+    g.beginPath();g.roundRect(120,y+rh*0.22,bw2,rh*0.42,4);g.fill();g.globalAlpha=1;
+    g.fillStyle=css('--ink');g.font='500 10px "IBM Plex Mono"';g.textAlign='left';
+    g.fillText(lab,2,y+rh*0.55);
+    g.fillStyle=css('--muted');
+    g.fillText(`${v.toFixed(1)} h · ${cost}`,126+bw2,y+rh*0.55)});
+}
+function avail(p=1){
+  const cv=$('#avail');if(!cv)return;
+  const[g,w,h]=fit(cv,170);
+  const r=rnd(77);const pts=[];
+  for(let i=0;i<12;i++)pts.push(96.4+r()*2.2+(i>8?0.4:0));
+  const Y=v=>h-20-(h-44)*(v-95)/4.5;
+  g.strokeStyle=css('--faint');g.setLineDash([4,4]);g.beginPath();
+  g.moveTo(30,Y(97));g.lineTo(w-6,Y(97));g.stroke();g.setLineDash([]);
+  g.font='500 9px "IBM Plex Mono"';g.fillStyle=css('--muted');g.textAlign='right';
+  [95,97,99].forEach(v=>g.fillText(v,26,Y(v)+3));
+  const m=Math.max(2,Math.floor(12*p));
+  g.strokeStyle=css('--accent');g.lineWidth=1.8;g.beginPath();
+  for(let i=0;i<m;i++){const x=30+(w-40)*i/11;
+    i?g.lineTo(x,Y(pts[i])):g.moveTo(x,Y(pts[i]))}
+  g.stroke();
+  g.textAlign='center';g.fillStyle=css('--faint');
+  ['S','O','N','D','J','F','M','A','M','J','J','A'].forEach((mm,i)=>
+    g.fillText(mm,30+(w-40)*i/11,h-6));
+}
+function renderAnalytics(){
+  kpisInto('#rKpis',[
+    ['availability',97.2,' %'],['mtbf',214,' days'],['mttr',6.1,' h'],
+    ['downtime cost',337,' k$'],
+    ['cost avoided early',412,' k$'],['time to ack',4.1,' h']]);
+  animate(p=>pareto(p),800);
+  animate(p=>downt(p),800);
+  animate(p=>avail(p),800);
+  const steps=[['detected by relspec',41,'--accent'],['acknowledged',38,'--accent'],
+    ['work order raised',22,'--mon'],['closed & verified quiet',19,'--good']];
+  $('#funnel').innerHTML=steps.map(([lab,n,c],i)=>
+    `<div class="tierbar" style="margin:10px 0"><span class="lb" style="width:150px">${lab}</span>
+      <span class="tk" style="height:9px"><i style="background:var(${c});width:0" data-w="${n/41*100}"></i></span>
+      <b style="font:600 12px var(--mono)">${n}</b></div>`).join('')+
+    `<div class="disclaimer" style="margin-top:8px">every stage links to the finding & evidence behind it</div>`;
+  requestAnimationFrame(()=>$$('#funnel .tk i').forEach(i=>
+    i.style.width=i.dataset.w+'%'));
+}
+
+/* ================= sensors ================= */
+const SEN_FILTERS=[['batt','battery < 25%',s=>s.batt<25],
+  ['sig','weak signal',s=>s.rssi<-80],['cal','calibration due',s=>s.cal<30],
+  ['stale','stale > 24 h',s=>s.seen>24],['mut','muted',s=>s.mut]];
+function senRows(){
+  let rows=SENSORS.filter(s=>[...S.sfilters].every(k=>
+    SEN_FILTERS.find(f=>f[0]===k)[2](s)));
+  const{k,dir}=S.ssort;
+  rows=rows.slice().sort((a,b)=>{
+    const va=a[k],vb=b[k];
+    return(typeof va==='string'?va.localeCompare(vb):va-vb)*dir});
+  return rows;
+}
+function renderSensors(){
+  navBadges();
+  $('#sFilters').innerHTML=SEN_FILTERS.map(([k,lab,fn])=>
+    `<button class="chip click ${S.sfilters.has(k)?'c-alert':'c-learn off'}" data-k="${k}">
+      ${lab} <b>${SENSORS.filter(fn).length}</b></button>`).join('');
+  $$('#sFilters .chip').forEach(b=>b.onclick=()=>{
+    const k=b.dataset.k;
+    S.sfilters.has(k)?S.sfilters.delete(k):S.sfilters.add(k);
+    renderSensors()});
+  const rows=senRows();
+  const cols=[['code','sensor'],['asset','asset'],['pos','position'],
+    ['batt','battery'],['rssi','signal'],['seen','last seen'],
+    ['fs','fs kHz'],['fw','firmware'],['cal','cal due']];
+  $('#sTable').innerHTML=`<thead><tr>
+    <th style="width:26px"><input type="checkbox" id="selAll"></th>
+    ${cols.map(([k,lab])=>`<th class="sort ${S.ssort.k===k?(S.ssort.dir>0?'asc':'desc'):''}"
+      data-k="${k}">${lab}</th>`).join('')}<th>state</th></tr></thead><tbody>
+    ${rows.map(s=>{
+      const bcol=s.batt<25?'--crit':s.batt<50?'--mon':'--good';
+      const rcol=s.rssi<-80?'--crit':s.rssi<-70?'--mon':'--good';
+      return `<tr class="${S.ssel.has(s.code)?'selrow':''}" data-c="${s.code}">
+      <td><input type="checkbox" class="rowsel" data-c="${s.code}"
+        ${S.ssel.has(s.code)?'checked':''}></td>
+      <td style="font-weight:600">${s.code}</td><td>${s.asset}</td><td>${s.pos}</td>
+      <td><span class="bar"><i style="width:${s.batt}%;background:var(${bcol})"></i></span>${s.batt}%</td>
+      <td><span class="bar"><i style="width:${Math.max(6,100+s.rssi)}%;background:var(${rcol})"></i></span>${s.rssi} dBm</td>
+      <td${s.seen>24?' style="color:var(--crit);font-weight:600"':''}>${s.seen} h</td>
+      <td>${s.fs.toFixed(1)}</td><td>${s.fw}</td>
+      <td${s.cal<0?' style="color:var(--crit);font-weight:600"':s.cal<30?' style="color:var(--mon)"':''}>
+        ${s.cal<0?Math.abs(s.cal)+' d overdue':s.cal+' d'}</td>
+      <td>${s.mut?'<span class="chip c-learn">muted</span>':'<span class="chip c-good">live</span>'}</td>
+    </tr>`}).join('')}</tbody>`;
+  $$('#sTable th.sort').forEach(th=>th.onclick=()=>{
+    const k=th.dataset.k;
+    S.ssort=S.ssort.k===k?{k,dir:-S.ssort.dir}:{k,dir:1};
+    renderSensors()});
+  const syncBulk=()=>{
+    $('#bulk').classList.toggle('on',S.ssel.size>0);
+    $('#bulkN').textContent=S.ssel.size};
+  $$('#sTable .rowsel').forEach(cb=>cb.onchange=()=>{
+    cb.checked?S.ssel.add(cb.dataset.c):S.ssel.delete(cb.dataset.c);
+    cb.closest('tr').classList.toggle('selrow',cb.checked);syncBulk()});
+  $('#selAll').onchange=e=>{
+    S.ssel=e.target.checked?new Set(rows.map(s=>s.code)):new Set();
+    renderSensors();syncBulk()};
+  syncBulk();
+}
+function csvOf(list){
+  const head='code,asset,position,battery_pct,rssi_dbm,last_seen_h,fs_khz,firmware,cal_due_d,muted';
+  return head+'\n'+list.map(s=>
+    [s.code,s.asset,s.pos,s.batt,s.rssi,s.seen,s.fs,s.fw,s.cal,s.mut].join(',')).join('\n');
+}
+function downloadCSV(list,name){
+  const blob=new Blob([csvOf(list)],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  logAudit('user',`exported ${list.length} sensors to CSV`);
+  toast(`${list.length} sensors exported — ${name}`);
+}
+$('#csvBtn').onclick=()=>downloadCSV(senRows(),'relspec-sensors.csv');
+$('#bCsv').onclick=()=>downloadCSV(SENSORS.filter(s=>S.ssel.has(s.code)),'relspec-selection.csv');
+$('#bCal').onclick=()=>{
+  SENSORS.filter(s=>S.ssel.has(s.code)).forEach(s=>s.cal=180);
+  logAudit('param',`scheduled calibration for ${S.ssel.size} sensors`);
+  toast(`Calibration scheduled for ${S.ssel.size} sensors — logged`);
+  S.ssel.clear();renderSensors()};
+$('#bMute').onclick=()=>{
+  SENSORS.filter(s=>S.ssel.has(s.code)).forEach(s=>s.mut=true);
+  logAudit('param',`muted alerts on ${S.ssel.size} sensors`);
+  toast(`${S.ssel.size} sensors muted — logged as event`);
+  S.ssel.clear();renderSensors()};
+$('#bClr').onclick=()=>{S.ssel.clear();renderSensors()};
+
+/* ================= audit log ================= */
+function renderAudit(){
+  $('#auFilters').innerHTML=AU_KINDS.map(([k,lab])=>
+    `<button class="chip click ${!S.auKinds.size||S.auKinds.has(k)?'c-learn':'c-learn off'}"
+      data-k="${k}">${lab} <b>${AUDIT.filter(a=>a.kind===k).length}</b></button>`).join('');
+  $$('#auFilters .chip').forEach(b=>b.onclick=()=>{
+    const k=b.dataset.k;
+    S.auKinds.has(k)?S.auKinds.delete(k):S.auKinds.add(k);
+    renderAudit()});
+  const q=($('#auQ').value||'').toLowerCase();
+  $('#auList').innerHTML=AUDIT
+    .filter(a=>!S.auKinds.size||S.auKinds.has(a.kind))
+    .filter(a=>!q||a.what.toLowerCase().includes(q)||a.who.toLowerCase().includes(q))
+    .map(a=>`<div class="item"><div class="t">
+      <span class="chip c-learn">${a.kind}</span><span class="ti">${a.what}</span></div>
+      <div class="who">${a.who} · ${a.t}</div></div>`).join('')
+    ||'<div class="item"><div class="m">no events match</div></div>';
+}
+$('#auQ').oninput=()=>renderAudit();
+
+/* ================= command palette ================= */
+function palOpen(){$('#palOvl').classList.add('on');$('#palIn').value='';
+  S.palSel=0;palRender('');$('#palIn').focus()}
+function palClose(){$('#palOvl').classList.remove('on')}
+function palItems(q){
+  q=q.toLowerCase();
+  const hit=s=>!q||s.toLowerCase().includes(q);
+  const out=[];
+  Object.entries(CRUMBS).forEach(([p,[t]])=>{
+    if(hit(t))out.push({g:'Pages',t,k:'go',fn:()=>setPage(p)})});
+  ASSETS.forEach(a=>{if(hit(a.id)||hit(a.ty))
+    out.push({g:'Assets',t:`${a.id} · ${a.ty}`,k:TIERS[a.tier][1],fn:()=>openAsset(a)})});
+  FINDINGS.filter(f=>f.state!=='event').forEach(f=>{if(hit(f.ti)||hit(f.id)||hit(f.asset))
+    out.push({g:'Findings',t:`${f.id} · ${f.asset} · ${f.ti}`,k:f.state,
+      fn:()=>openAsset(ASSETS.find(a=>a.id===f.asset))})});
+  WORKORDERS.forEach(w=>{if(hit(w.ti)||hit(w.id)||hit(w.asset))
+    out.push({g:'Work orders',t:`${w.id} · ${w.ti}`,k:w.st,fn:()=>{setPage('wo');woDetail(w)}})});
+  [['New finding on current asset',()=>{setPage('asset');$('#newFinding').click()}],
+   ['New work order',()=>woModal()],
+   ['Export sensors CSV',()=>downloadCSV(SENSORS,'relspec-sensors.csv')],
+   ['Cycle theme',()=>$('#themeBtn').click()],
+   ['Generate report',()=>{setPage('asset');$('#reportBtn').click()}]]
+   .forEach(([t,fn])=>{if(hit(t))out.push({g:'Actions',t,k:'run',fn})});
+  return out.slice(0,14);
+}
+function palRender(q){
+  const items=palItems(q);
+  let lastG='';
+  $('#palRes').innerHTML=items.map((it,i)=>{
+    const gh=it.g!==lastG?`<div class="grp">${it.g}</div>`:'';lastG=it.g;
+    return gh+`<div class="ri ${i===S.palSel?'sel':''}" data-i="${i}">
+      ${it.t}<span class="k">${it.k}</span></div>`}).join('')
+    ||'<div class="grp">no matches</div>';
+  $$('#palRes .ri').forEach(el=>el.onclick=()=>{
+    palClose();items[+el.dataset.i].fn()});
+}
+$('#palBtn').onclick=palOpen;
+$('#palOvl').onclick=e=>{if(e.target.id==='palOvl')palClose()};
+$('#palIn').oninput=e=>{S.palSel=0;palRender(e.target.value)};
+$('#palIn').onkeydown=e=>{
+  const items=palItems($('#palIn').value);
+  if(e.key==='ArrowDown'){S.palSel=Math.min(items.length-1,S.palSel+1);
+    palRender($('#palIn').value);e.preventDefault()}
+  else if(e.key==='ArrowUp'){S.palSel=Math.max(0,S.palSel-1);
+    palRender($('#palIn').value);e.preventDefault()}
+  else if(e.key==='Enter'&&items[S.palSel]){palClose();items[S.palSel].fn()}
+};
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){
+    e.preventDefault();
+    $('#palOvl').classList.contains('on')?palClose():palOpen()}
+  if(e.key==='Escape'){palClose();$('#bellDrop').classList.remove('on')}
+});
+
+/* ================= spectrum compare ================= */
+function specOf(a,dOff){
+  const r=rnd(a.seed*997+dOff*13);
+  const n=240,xs=[],ys=[];
+  for(let i=0;i<n;i++){
+    const o=i/n*10;
+    let y=-20-o*1.8+(r()-0.5)*2.2;
+    const peak=(at,amp,q)=>{const d=Math.abs(o-at);
+      if(d<0.22)y=Math.max(y,amp-d*d*q)};
+    peak(1.0,-6,240);
+    const grow=a.hot*(90-dOff)/90;
+    for(let k2=1;k2<=3;k2++)peak(3.58*k2,-15+grow*(11-2*k2),300);
+    peak(5.42,-24+(a.seed%3),300);peak(7.0,-14,300);
+    xs.push(o);ys.push(y)}
+  return{xs,ys,n};
+}
+function cmpChart(p=1){
+  const cv=$('#cmpChart');if(!cv||!cv.clientWidth)return;
+  const a=S.asset;
+  const[g,w,h]=fit(cv,192);
+  const dA=+($('#cmpA').value),dB=+($('#cmpB').value);
+  const A=specOf(a,dA),B=specOf(a,dB);
+  const ph=h-46,Y=v=>14+ph*(1-(v+42)/40);
+  g.font='500 9px "IBM Plex Mono"';g.fillStyle=css('--muted');g.textAlign='right';
+  [-40,-20,0].forEach(v=>g.fillText(v+' dB',30,Y(v)+3));
+  if($('#cmpH').checked){
+    g.strokeStyle=css('--hay');g.setLineDash([3,4]);
+    for(let k2=1;k2<=2;k2++){const x=34+(w-42)*(3.58*k2)/10;
+      g.beginPath();g.moveTo(x,10);g.lineTo(x,14+ph);g.stroke();
+      g.fillStyle=css('--hay');g.textAlign='center';
+      g.fillText('BPFO×'+k2,x,8)}
+    g.setLineDash([])}
+  const m=Math.max(2,Math.floor(A.n*p));
+  g.strokeStyle=css('--faint');g.lineWidth=1.3;g.beginPath();
+  for(let i=0;i<m;i++){const x=34+(w-42)*A.xs[i]/10;
+    i?g.lineTo(x,Y(A.ys[i])):g.moveTo(x,Y(A.ys[i]))}
+  g.stroke();
+  g.strokeStyle=css('--accent');g.lineWidth=1.7;g.beginPath();
+  for(let i=0;i<m;i++){const x=34+(w-42)*B.xs[i]/10;
+    i?g.lineTo(x,Y(B.ys[i])):g.moveTo(x,Y(B.ys[i]))}
+  g.stroke();
+  const y0=h-24;
+  g.fillStyle=css('--muted');g.textAlign='left';
+  g.fillText('Δ',22,y0+9);
+  for(let i=0;i<m;i++){
+    const d=B.ys[i]-A.ys[i];
+    if(Math.abs(d)<1.2)continue;
+    const x=34+(w-42)*A.xs[i]/10;
+    g.fillStyle=d>0?css('--crit'):css('--comb');
+    g.globalAlpha=Math.min(1,Math.abs(d)/8);
+    g.fillRect(x,d>0?y0+8-Math.min(8,Math.abs(d)):y0+8,1.6,Math.min(8,Math.abs(d)));
+    g.globalAlpha=1}
+  g.fillStyle=css('--faint');g.textAlign='left';g.fillText('0×',34,h-2);
+  g.textAlign='right';g.fillText('10× shaft order',w-8,h-2);
+  g.textAlign='left';g.fillStyle=css('--faint');
+  g.fillText(`— d−${dA}`,w-150,12);
+  g.fillStyle=css('--accent');g.fillText(`— ${dB?('d−'+dB):'today'}`,w-90,12);
+  cv.onmousemove=e=>{const r=cv.getBoundingClientRect();
+    const o=((e.clientX-r.left)-34)/(w-42)*10;
+    if(o<0||o>10){hideTip();return}
+    const i=Math.max(0,Math.min(A.n-1,Math.round(o/10*A.n)));
+    showTip(e.clientX,e.clientY,
+      `order ${o.toFixed(2)}×\nd−${dA}: ${A.ys[i].toFixed(1)} dB\n`+
+      `${dB?'d−'+dB:'today'}: ${B.ys[i].toFixed(1)} dB\nΔ ${(B.ys[i]-A.ys[i]).toFixed(1)} dB`)};
+  cv.onmouseleave=hideTip;
+}
+['cmpA','cmpB','cmpH'].forEach(id=>$('#'+id).onchange=()=>animate(p=>cmpChart(p),500));
+
+/* ================= alarm rules ================= */
+function rulesList(){
+  const el=$('#ruleList');if(!el)return;
+  el.innerHTML=RULES.map(r=>
+    `<div class="rule"><span class="tg ${r.on?'on':''}" data-id="${r.id}" role="switch"
+        aria-checked="${r.on}" tabindex="0"></span>
+      <span style="flex:1;color:${r.on?'var(--ink)':'var(--faint)'}">${r.txt}</span>
+      <span class="chip c-${r.sev}">${r.sev}</span></div>`).join('');
+  el.querySelectorAll('.tg').forEach(tg=>tg.onclick=()=>{
+    const r=RULES.find(x=>x.id===tg.dataset.id);r.on=!r.on;
+    logAudit('rule',`${r.on?'enabled':'disabled'} rule “${r.txt}” on ${S.asset.id}`);
+    toast(`Rule ${r.on?'enabled':'disabled'} — logged as event`);
+    rulesList()});
+}
+$('#ruleNew').onclick=()=>{
+  modal(`<div class="hd">New alarm rule · ${S.asset.id}</div>
+    <div class="bd">
+      <label>metric<select id="ruM"><option>vel RMS (mm/s)</option>
+        <option selected>pattern z · BPFO 3.58×</option><option>envelope RMS (g)</option>
+        <option>measurement staleness (h)</option></select></label>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <label>operator<select id="ruO"><option>></option><option>≥</option></select></label>
+        <label>threshold<input type="text" id="ruT" value="4"></label>
+        <label>persistence<select id="ruP"><option>1 frame</option>
+          <option selected>2 frames</option><option>3 frames</option></select></label></div>
+      <label>severity<select id="ruS"><option>mon</option><option selected>alert</option>
+        <option>crit</option></select></label>
+      <div style="font:500 10.5px var(--mono);color:var(--muted)" id="ruPrev"></div>
+    </div>
+    <div class="ft"><button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" id="ruGo">Save rule</button></div>`);
+  const prev=()=>{const t=parseFloat($('#ruT').value)||0;
+    const n=Math.max(0,Math.round(Math.max(0,(6.5-t))*1.4));
+    $('#ruPrev').textContent=
+      `backtest: would have fired ${n}× in the last 90 d on this sensor`};
+  prev();$('#ruT').oninput=prev;$('#ruM').onchange=prev;
+  $('#ruGo').onclick=()=>{
+    const txt=`${$('#ruM').value} ${$('#ruO').value} ${$('#ruT').value} · ${$('#ruP').value}`;
+    RULES.push({id:'R-'+(RULES.length+1),on:true,txt,sev:$('#ruS').value});
+    closeModal();rulesList();
+    logAudit('rule',`created rule “${txt}” on ${S.asset.id}`);
+    toast('Rule saved & armed — logged as event')};
+};
+
+/* ================= annotations ================= */
+function annotModal(a,i0,i1){
+  modal(`<div class="hd">Annotate · ${a.id} · day ${i0-158} → ${i1-158}</div>
+    <div class="bd">
+      <label>label<input type="text" id="anT" placeholder="e.g. process change — new duty point"></label>
+      <div style="font-size:12px;color:var(--muted)">Annotations render on every trend for
+        this asset and are logged as events. Attach to a finding from the finding thread.</div>
+    </div>
+    <div class="ft"><button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" id="anGo">Save annotation</button></div>`);
+  $('#anGo').onclick=()=>{
+    const label=$('#anT').value.trim()||'annotation';
+    (ANNOTS[a.id]=ANNOTS[a.id]||[]).push({a:i0,b:i1,label,who:'you'});
+    closeModal();
+    logAudit('user',`annotated ${a.id} trend: “${label}” (day ${i0-158}→${i1-158})`);
+    toast('Annotation saved — visible on all trends for this asset');
+    animate(p=>velTrend(S.asset,p),400)};
+}
+
 let rsz;addEventListener('resize',()=>{clearTimeout(rsz);rsz=setTimeout(redrawPage,160)});
 applyTheme();
 </script>
