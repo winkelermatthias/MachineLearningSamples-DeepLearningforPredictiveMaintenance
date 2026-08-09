@@ -2,22 +2,45 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>relspec explorer — spectra vs their 250-byte selves</title>
 <style>
-  /* Committed dark instrument. Single visual world, every surface painted. */
+  /* Token-driven, both themes first-class. Light is the base palette; dark
+     redefines tokens under the media query (guarded so an explicit light
+     choice wins) and again under [data-theme=dark] so the toggle wins. */
   :root{
-    --bg:#0B0F14; --panel:#121924; --panel2:#0F151E; --well:#0A0E13;
-    --ink:#DCE6F2; --muted:#7E8CA0; --faint:#4A5568; --hair:#223041;
-    --accent:#62B6CB; --anchor:#E4C879;
-    --comb:#4E8BC7; --mod:#B98A33; --peak:#2F9E85; --hay:#AC6BBE;
-    --resid:#8B98A5;
-    --ev-change:#E0566B; --ev-drift:#E4A03C; --ev-hb:#5A6B7E;
+    --bg:#F4F3EF; --panel:#FFFFFF; --panel2:#ECEBE6; --well:#FBFAF7;
+    --strip:#F1F0EB; --ink:#1E2833; --muted:#5F6E80; --faint:#9AA5B1;
+    --hair:#D8DCE2; --grid:#E5E3DD; --accent:#1F7A93; --accent-soft:#D9EAEF;
+    --anchor:#A9770E; --bar:#89A9C4; --fullres:#35648F; --resid:#75818E;
+    --ev-change:#C13A52; --ev-drift:#B57F16; --ev-hb:#8B97A5;
+    --comb:#3572B0; --mod:#9A6F1F; --peak:#0E8A57; --hay:#8A4FA0;
+    --sil:251,250,247; --seg-on:#DCEAF0; --sel-row:#E8F0F4;
     --mono:"SF Mono","Cascadia Code","JetBrains Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;
     --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0B0F14; --panel:#121924; --panel2:#0F151E; --well:#0A0E13;
+      --strip:#0F151E; --ink:#DCE6F2; --muted:#7E8CA0; --faint:#4A5568;
+      --hair:#223041; --grid:#1A2330; --accent:#62B6CB; --accent-soft:#1B2A3A;
+      --anchor:#E4C879; --bar:#3E6B8C; --fullres:#8FB6D9; --resid:#8B98A5;
+      --ev-change:#E0566B; --ev-drift:#E4A03C; --ev-hb:#5A6B7E;
+      --comb:#4E8BC7; --mod:#B98A33; --peak:#2F9E85; --hay:#AC6BBE;
+      --sil:10,14,19; --seg-on:#25405A; --sel-row:#1B2A3A;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0B0F14; --panel:#121924; --panel2:#0F151E; --well:#0A0E13;
+    --strip:#0F151E; --ink:#DCE6F2; --muted:#7E8CA0; --faint:#4A5568;
+    --hair:#223041; --grid:#1A2330; --accent:#62B6CB; --accent-soft:#1B2A3A;
+    --anchor:#E4C879; --bar:#3E6B8C; --fullres:#8FB6D9; --resid:#8B98A5;
+    --ev-change:#E0566B; --ev-drift:#E4A03C; --ev-hb:#5A6B7E;
+    --comb:#4E8BC7; --mod:#B98A33; --peak:#2F9E85; --hay:#AC6BBE;
+    --sil:10,14,19; --seg-on:#25405A; --sel-row:#1B2A3A;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{background:var(--bg)}
   body{background:var(--bg);color:var(--ink);font-family:var(--sans);
        font-size:13px;line-height:1.45;min-height:100vh}
-  ::selection{background:#2C4A66;color:var(--ink)}
+  ::selection{background:var(--accent-soft);color:var(--ink)}
 
   header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
          padding:14px 18px 8px;border-bottom:1px solid var(--hair)}
@@ -38,14 +61,14 @@
              text-transform:uppercase;color:var(--muted);margin-right:2px}
   select{background:var(--panel);color:var(--ink);border:1px solid var(--hair);
          border-radius:4px;padding:4px 8px;font-family:var(--mono);font-size:12px;
-         max-width:340px}
+         max-width:360px}
   select:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
   .seg{display:flex;border:1px solid var(--hair);border-radius:4px;overflow:hidden}
   .seg button{background:var(--panel);color:var(--muted);border:0;cursor:pointer;
               font-family:var(--mono);font-size:11px;letter-spacing:.08em;
               padding:5px 11px;border-right:1px solid var(--hair)}
   .seg button:last-child{border-right:0}
-  .seg button[aria-pressed="true"]{background:#25405A;color:var(--ink)}
+  .seg button[aria-pressed="true"]{background:var(--seg-on);color:var(--ink)}
   .chk{display:flex;align-items:center;gap:6px;font-family:var(--mono);
        font-size:11px;color:var(--muted);cursor:pointer;user-select:none}
   .chk input{accent-color:var(--accent)}
@@ -71,7 +94,7 @@
      border:1px solid var(--hair);border-radius:3px;color:var(--muted);
      font-family:var(--mono);font-size:10.5px;padding:3px 8px;cursor:pointer}
   .legend button .sw{width:14px;height:3px;border-radius:1px}
-  .legend button[aria-pressed="true"]{border-color:var(--accent);color:var(--ink);background:#1B2A3A}
+  .legend button[aria-pressed="true"]{border-color:var(--accent);color:var(--ink);background:var(--sel-row)}
   .legend button .up{color:var(--ev-drift);font-weight:700}
 
   .panelhead{font-family:var(--mono);font-size:10px;letter-spacing:.14em;
@@ -85,7 +108,7 @@
   .stat .v{font-family:var(--mono);font-size:16px;margin-top:2px;
            font-variant-numeric:tabular-nums}
   .stat .v small{font-size:10px;color:var(--muted)}
-  .stat.hero{background:#182A3C}
+  .stat.hero{background:var(--accent-soft)}
   .stat.hero .v{color:var(--accent)}
 
   #specWrap{position:relative;border:1px solid var(--hair);border-radius:6px;
@@ -99,8 +122,8 @@
   th{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
      text-align:right;padding:4px 6px;border-bottom:1px solid var(--hair);font-weight:500}
   th:first-child,td:first-child{text-align:left}
-  td{padding:4px 6px;text-align:right;border-bottom:1px solid #1A2330;color:var(--ink)}
-  tr.sel td{background:#1B2A3A}
+  td{padding:4px 6px;text-align:right;border-bottom:1px solid var(--grid);color:var(--ink)}
+  tr.sel td{background:var(--sel-row)}
   tr[data-t],tr[data-f]{cursor:pointer}
   td .dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
   td .trend{font-size:10px}
@@ -109,18 +132,17 @@
   .hint{color:var(--faint);font-family:var(--mono);font-size:10px;margin-top:10px;
         letter-spacing:.04em}
 
-  #tip{position:fixed;z-index:10;pointer-events:none;background:#0D1420EE;
+  #tip{position:fixed;z-index:10;pointer-events:none;background:var(--panel);
        border:1px solid var(--hair);border-radius:4px;padding:6px 9px;
        font-family:var(--mono);font-size:11px;color:var(--ink);display:none;
        font-variant-numeric:tabular-nums;white-space:pre;line-height:1.5;
-       box-shadow:0 4px 18px #00000088}
+       box-shadow:0 4px 18px rgba(0,0,0,.25)}
 
   .page{display:none;padding:16px 18px 40px}
   .page.on{display:block}
   main.page{display:none;padding:0}
   main.page.on{display:grid}
 
-  /* 3D tab */
   .g3wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}
   @media(max-width:1100px){.g3wrap{grid-template-columns:1fr}}
   .g3{border:1px solid var(--hair);border-radius:6px;background:var(--well);
@@ -132,26 +154,23 @@
                  text-transform:uppercase;color:var(--muted);display:flex;
                  align-items:center;gap:8px}
 
-  /* events */
   .evfilter{display:flex;gap:6px;margin:12px 0}
   .evchip{background:var(--panel);border:1px solid var(--hair);border-radius:12px;
           color:var(--muted);font-family:var(--mono);font-size:10.5px;
           padding:3px 12px;cursor:pointer}
-  .evchip[aria-pressed="true"]{border-color:var(--accent);color:var(--ink);background:#1B2A3A}
+  .evchip[aria-pressed="true"]{border-color:var(--accent);color:var(--ink);background:var(--sel-row)}
   .evglyph{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px}
 
-  /* compare */
   .cmpbars{margin:16px 0}
-  .cmprow{display:grid;grid-template-columns:230px 1fr 110px;gap:10px;
+  .cmprow{display:grid;grid-template-columns:250px 1fr 110px;gap:10px;
           align-items:center;margin-bottom:7px;font-family:var(--mono);font-size:11px}
   .cmprow .nm{color:var(--muted);text-align:right;overflow:hidden;
               text-overflow:ellipsis;white-space:nowrap}
   .cmprow .tr{position:relative;height:16px;background:var(--panel2);
               border-radius:3px;overflow:hidden}
-  .cmprow .fl{position:absolute;inset:0 auto 0 0;border-radius:3px}
+  .cmprow .fl{position:absolute;inset:0 auto 0 0;border-radius:3px;background:var(--bar)}
   .cmprow .vl{font-variant-numeric:tabular-nums}
 
-  /* help */
   .help{max-width:860px}
   .help h2{font-family:var(--mono);font-size:13px;letter-spacing:.12em;
            text-transform:uppercase;color:var(--accent);margin:34px 0 10px}
@@ -162,8 +181,8 @@
       border-radius:6px;padding:12px 16px;margin:10px 0;font-size:12.5px;
       overflow-x:auto;white-space:pre;line-height:1.7;color:var(--ink)}
   .eq b{color:var(--accent);font-weight:600}
-  .live{border:1px solid #2A4A5E;border-left:3px solid var(--accent);
-        border-radius:6px;background:#101B26;padding:12px 16px;margin:12px 0}
+  .live{border:1px solid var(--hair);border-left:3px solid var(--accent);
+        border-radius:6px;background:var(--panel);padding:12px 16px;margin:12px 0}
   .live .lh{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;
             text-transform:uppercase;color:var(--accent);margin-bottom:8px}
   .live table{font-size:11px}
@@ -175,12 +194,12 @@
   .widget input[type=number]{background:var(--panel);border:1px solid var(--hair);
       color:var(--ink);font-family:var(--mono);border-radius:4px;padding:3px 8px;width:90px}
   .bits{font-family:var(--mono);font-size:13px;letter-spacing:.08em;margin-top:8px;
-        word-break:break-all}
-  .bits .q{color:#E0566B}.bits .s{color:var(--muted)}.bits .r{color:var(--accent)}
+        word-break:break-all;color:var(--ink)}
+  .bits .q{color:var(--ev-change)}.bits .s{color:var(--muted)}.bits .r{color:var(--accent)}
   .stack{display:flex;height:22px;border-radius:4px;overflow:hidden;margin:8px 0;
          border:1px solid var(--hair)}
   .stack div{display:flex;align-items:center;justify-content:center;
-             font-family:var(--mono);font-size:9.5px;color:var(--bg);min-width:2px}
+             font-family:var(--mono);font-size:9.5px;color:var(--panel);min-width:2px}
   @media (prefers-reduced-motion:no-preference){
     .seg button,.legend button,.evchip,nav.tabs button{transition:background .12s,color .12s,border-color .12s}
   }
@@ -227,10 +246,12 @@
 <main class="page on" data-page="explore">
   <section class="left">
     <div class="strip">
-      <div class="cap" id="wfLabel">waterfall · raw · order axis</div>
+      <div class="cap" id="wfLabel">waterfall</div>
       <div class="wfstack"><canvas id="wf"></canvas><canvas id="wfOv"></canvas></div>
     </div>
     <div class="strip"><div class="cap">edge gate · <em style="color:var(--ev-change)">● change</em> · <em style="color:var(--ev-drift)">● drift</em> · <em>● heartbeat</em></div><canvas id="evt" height="18"></canvas></div>
+    <div class="strip"><div class="cap">overall velocity · mm/s rms <em>(dashed: ISO zone guides 2.8 / 7.1)</em></div><canvas id="trV"></canvas></div>
+    <div class="strip"><div class="cap">overall levels · g rms · <em style="color:var(--accent)">acceleration</em> · <em style="color:var(--hay)">envelope</em></div><canvas id="trA"></canvas></div>
     <div class="strip"><div class="cap">shaft speed · hz <em id="spdEm"></em></div><canvas id="spd"></canvas></div>
     <div class="strip"><div class="cap">payload bytes / frame · <em style="color:var(--anchor)">▲ anchor</em></div><canvas id="byt"></canvas></div>
     <div class="strip">
@@ -238,7 +259,7 @@
       <canvas id="en"></canvas></div>
     <div class="strip"><div class="cap">unexplained (residual) share · %</div><canvas id="res"></canvas></div>
     <div class="legend" id="legend" role="group" aria-label="pattern tracks"></div>
-    <p class="hint">click or drag any strip to scrub frames · ← → step · click a track chip or table row to spotlight its bins · ▲ marks a growing pattern</p>
+    <p class="hint">click or drag any strip to scrub · ← → step · click a track chip or table row to spotlight its bins · ▲ marks a growing pattern</p>
   </section>
 
   <aside class="right">
@@ -250,7 +271,7 @@
         <button data-v="db" aria-pressed="true">dB</button>
         <button data-v="lin" aria-pressed="false">linear</button>
       </div>
-      <label class="chk"><input type="checkbox" id="frChk" checked>full-res FFT</label>
+      <label class="chk" id="frLbl"><input type="checkbox" id="frChk" checked>full-res FFT</label>
       <span class="specnote" id="reconNote"></span>
     </div>
     <p class="panelhead">patterns in this frame — the energy ledger</p>
@@ -262,7 +283,7 @@
 </main>
 
 <div class="page" data-page="three">
-  <p class="dim" style="color:var(--muted);max-width:75ch">Classic ridge waterfall, raw beside decoded — if compression were losing the plot, the two surfaces would disagree. Drag horizontally to skew, use the sliders for depth and height. Ridge colour can follow amplitude or the pattern ledger's bin ownership.</p>
+  <p style="color:var(--muted);max-width:75ch">Classic ridge waterfall, raw beside decoded — if compression were losing the plot, the two surfaces would disagree. Drag horizontally to skew; sliders set depth and height. Ridge colour can follow amplitude or the pattern ledger's bin ownership. Sequences longer than ~160 frames are thinned for drawing; scrubbing still addresses every frame.</p>
   <div class="sliders">
     <div class="seg" id="zSeg"><button data-v="lin" aria-pressed="true">linear</button><button data-v="db" aria-pressed="false">dB</button></div>
     <div class="seg" id="cSeg"><button data-v="heat" aria-pressed="true">heat</button><button data-v="pat" aria-pressed="false">patterns</button></div>
@@ -299,7 +320,7 @@
       <th>anchors</th><th>recon med</th><th>recon p95</th><th>energy &Delta;</th>
       <th>pattern energy kept</th><th>gate changes</th></tr></thead>
     <tbody></tbody></table></div>
-  <p class="note">“recon med / p95”: per-bin |decoded − raw| in dB. “energy Δ”: Σ decoded amplitude² vs Σ raw amplitude² — it can land slightly positive because suppressed bins hold the reference level rather than tracking noise dips; the dead-zone bound applies either way. “pattern energy kept”: energy-weighted recovery through the ledger — patterns re-found on the decoded spectrum at the same key.</p>
+  <p class="note">“recon med / p95”: per-bin |decoded − raw| in dB. “energy Δ”: Σ decoded amplitude² vs Σ raw amplitude² — it can land slightly positive because suppressed bins hold the reference level rather than tracking noise dips; the dead-zone bound applies either way. “pattern energy kept”: decoded energy over the exact bins each verified pattern owns.</p>
 </div>
 
 <div class="page" data-page="help">
@@ -314,7 +335,7 @@
   <div class="widget">
     <div class="wrow">candidate f<sub>r</sub> <input type="range" id="hpsSl" min="0" max="1000" value="500" style="flex:1;min-width:160px"> <span id="hpsRead" style="color:var(--ink)"></span></div>
     <canvas id="hpsCv" height="200"></canvas>
-    <p class="dim" style="margin-top:8px;font-size:11px">Top: the selected frame's envelope spectrum with harmonic probes at 1·f, 2·f, 3·f. Bottom: the HPS score over the whole candidate range — drag the slider and watch the probes click into the comb at the true speed.</p>
+    <p class="dim" style="margin-top:8px;font-size:11px" id="hpsNote">Top: the selected frame's envelope spectrum with harmonic probes at 1·f, 2·f, 3·f. Bottom: the HPS score over the whole candidate range — drag the slider and watch the probes click into the comb at the true speed.</p>
   </div>
 
   <h2>2 · the frame: two rails, hybrid-resolution, ½ dB</h2>
@@ -330,7 +351,7 @@ r[b] transmitted only where |r[b]| &gt; max( k·MAD[b], floor )   — the dead z
   <div class="widget">
     <div class="wrow">Rice-code an integer:&nbsp;<input type="number" id="riceV" value="-7"> k <input type="range" id="riceK" min="0" max="6" value="2" style="width:120px"> <span id="riceRead" style="color:var(--ink)"></span></div>
     <div class="bits" id="riceBits"></div>
-    <p class="dim" style="margin-top:8px;font-size:11px">Zigzag folds the sign (<span class="q" style="color:var(--ev-change)">quotient, unary</span> · <span class="s">stop bit</span> · <span class="r" style="color:var(--accent)">k remainder bits</span>). The coder keeps a running mean A/N per context and uses k = ⌈log₂(A/N)⌉ — small k for quiet contexts, large for loud ones, no table ever sent.</p>
+    <p class="dim" style="margin-top:8px;font-size:11px">Zigzag folds the sign (<span class="q">quotient, unary</span> · <span class="s">stop bit</span> · <span class="r">k remainder bits</span>). The coder keeps a running mean A/N per context and uses k = ⌈log₂(A/N)⌉ — small k for quiet contexts, large for loud ones, no table ever sent.</p>
   </div>
 
   <h2>4 · the distortion contract</h2>
@@ -338,8 +359,8 @@ r[b] transmitted only where |r[b]| &gt; max( k·MAD[b], floor )   — the dead z
   <div class="eq">|decoded − raw|  ≤  max( 2.5·MAD[b], 3 dB )   on suppressed bins, 0 on transmitted ones</div>
   <div class="live"><div class="lh">this frame, verified</div><div id="lvErr"></div></div>
 
-  <h2>5 · patterns — the energy ledger</h2>
-  <p>Combs are scored by the geometric mean of harmonic amplitudes over the local floor — the whole family must exist, one loud line buys nothing. Each bin's energy is then assigned to at most one owner (strongest pattern first), so pattern energies plus the residual sum exactly to the spectrum's total: a closed ledger, which is what makes “loss” a measurable number instead of a vibe.</p>
+  <h2>5 · patterns — found, then made to prove it</h2>
+  <p>Combs are scored by the geometric mean of harmonic amplitudes over the local floor — the whole family must exist, one loud line buys nothing. Every surviving comb then faces a verification pass: each claimed harmonic must be a REAL local peak, IN the place the harmonic predicts, CARRYING energy of its own — and the family dies unless half its harmonics pass while holding most of the claimed energy. Each bin's energy is then assigned to at most one owner, so pattern energies plus the residual sum exactly to the spectrum's total: a closed ledger.</p>
   <div class="eq">score(f₀) = ( ∏<sub>h</sub> A(h·f₀) )<sup>1/H</sup> / floor        E<sub>total</sub> = Σ<sub>patterns</sub> E<sub>p</sub> + E<sub>residual</sub></div>
   <div class="live"><div class="lh">this frame's ledger, closed</div><div id="lvLedger"></div></div>
 
@@ -362,7 +383,6 @@ r[b] transmitted only where |r[b]| &gt; max( k·MAD[b], floor )   — the dead z
 const DATA = JSON.parse(document.getElementById('d').textContent);
 const Q = DATA.meta.q_db, OFF = DATA.meta.db_off;
 const CEN = {acc: DATA.meta.centers, env: DATA.meta.env_centers};
-const KIND = {comb:'#4E8BC7', mod:'#B98A33', peak:'#2F9E85', haystack:'#AC6BBE', other:'#8B98A5'};
 const KLABEL = {comb:'comb', mod:'sidebands', peak:'line', haystack:'haystack', other:'other'};
 const GUT = 52, RPAD = 10;
 const dpr = Math.min(2, window.devicePixelRatio||1);
@@ -373,8 +393,46 @@ const amp = u => Math.pow(10,(u*Q+OFF)/20);
 const fmt = (x,d=1) => x.toFixed(d);
 const MONO = 'px "SF Mono","Cascadia Code",Menlo,Consolas,monospace';
 
+/* ------------------------------------------------ theme (both, live) */
+let T = {}, LUT = null, DIV = null, KIND = {};
+function hexRGB(h){ const n=parseInt(h.trim().slice(1),16);
+  return [n>>16,(n>>8)&255,n&255] }
+function buildTheme(){
+  const cs = getComputedStyle(document.documentElement);
+  const g = k => cs.getPropertyValue('--'+k).trim();
+  T = {bg:g('bg'), panel:g('panel'), strip:g('strip'), well:g('well'),
+       ink:g('ink'), muted:g('muted'), faint:g('faint'), hair:g('hair'),
+       grid:g('grid'), accent:g('accent'), anchor:g('anchor'), bar:g('bar'),
+       fullres:g('fullres'), resid:g('resid'), evChange:g('ev-change'),
+       evDrift:g('ev-drift'), evHb:g('ev-hb'), sil:g('sil')};
+  KIND = {comb:g('comb'), mod:g('mod'), peak:g('peak'), haystack:g('hay'),
+          other:g('resid')};
+  const bgL = hexRGB(T.bg).reduce((a,b)=>a+b,0)/3;
+  T.light = bgL > 128;
+  const cp = T.light
+    ? [[0,[247,245,241]],[.22,[240,216,166]],[.45,[228,148,90]],
+       [.68,[186,77,74]],[.86,[113,42,92]],[1,[36,16,52]]]
+    : [[0,[6,6,14]],[.18,[43,18,74]],[.39,[118,31,92]],[.61,[196,66,63]],
+       [.81,[243,138,26]],[1,[250,230,150]]];
+  LUT = new Uint8Array(256*3);
+  for (let i=0;i<256;i++){
+    const x=i/255; let j=0; while(j<cp.length-2 && x>cp[j+1][0]) j++;
+    const [x0,c0]=cp[j],[x1,c1]=cp[j+1], u=(x-x0)/(x1-x0);
+    for(let c=0;c<3;c++) LUT[i*3+c] = Math.round(c0[c]+(c1[c]-c0[c])*u);
+  }
+  DIV = T.light
+    ? {n:[236,234,229], b:[46,111,178], r:[181,73,52]}
+    : {n:[24,32,44], b:[78,139,199], r:[196,105,79]};
+  _tcol = new Map();
+}
+function divCol(x){
+  const t = Math.max(-1, Math.min(1, x));
+  const c = t<0? DIV.b : DIV.r, a = Math.abs(t);
+  return [DIV.n[0]+(c[0]-DIV.n[0])*a, DIV.n[1]+(c[1]-DIV.n[1])*a,
+          DIV.n[2]+(c[2]-DIV.n[2])*a];
+}
 function shadeRGB(hex, f){
-  const n=parseInt(hex.slice(1),16); let r=n>>16,g=(n>>8)&255,b=n&255;
+  const [r,g,b]=hexRGB(hex);
   const t=f>0?255:0, a=Math.abs(f), m=x=>Math.round(x+(t-x)*a);
   return [m(r),m(g),m(b)];
 }
@@ -387,7 +445,9 @@ function trackRGB(rail, ti){
     const tracks=seqs[S.seq].tracks[rail];
     const tk=tracks[ti]||{kind:'other'};
     let idx=0; for(let i=0;i<ti;i++) if(tracks[i].kind===tk.kind) idx++;
-    c=shadeRGB(KIND[tk.kind]||KIND.other, [0,0.26,-0.2,0.45,-0.35][idx%5]);
+    const dir = T.light? -1 : 1;      // step darker on light, lighter on dark
+    c=shadeRGB(KIND[tk.kind]||KIND.other,
+               dir*[0,0.26,-0.2,0.45,-0.35][idx%5]);
     _tcol.set(key,c);
   }
   return c;
@@ -398,11 +458,13 @@ function rawBytes(fs){
   return 2*(nps/2+1)*4;
 }
 
-/* ---------------- state ---------------- */
+/* ---------------- state & data ---------------- */
 let S = { seq:0, rail:'acc', view:'orig', axis:'order', frame:0, track:-1,
           codec:true, pat:true, scale:'db', fullres:true, page:'explore',
           z:'lin', c3:'heat', evf:'all' };
 const seqs = DATA.sequences;
+const isDaily = si => (seqs[si].cad||'').includes('day');
+const tUnit = si => isDaily(si)? 'd' : '';
 
 const cache = new Map();
 function mats(si, rail){
@@ -421,29 +483,12 @@ function mats(si, rail){
 }
 const frCache = new Map();
 function fullresOf(si,t){
+  const f=seqs[si].frames[t];
+  if (!f.af) return null;
   const k=si+'|'+t;
   if(frCache.has(k)) return frCache.get(k);
-  const f=seqs[si].frames[t];
   const v={af:b64u8(f.af), adf:f.adf, ef:b64u8(f.ef)};
   frCache.set(k,v); return v;
-}
-
-const LUT = (()=>{
-  const cp = [[0,[6,6,14]],[.18,[43,18,74]],[.39,[118,31,92]],[.61,[196,66,63]],
-              [.81,[243,138,26]],[1,[250,230,150]]];
-  const out = new Uint8Array(256*3);
-  for (let i=0;i<256;i++){
-    const x=i/255; let j=0; while(j<cp.length-2 && x>cp[j+1][0]) j++;
-    const [x0,c0]=cp[j],[x1,c1]=cp[j+1], u=(x-x0)/(x1-x0);
-    for(let c=0;c<3;c++) out[i*3+c] = Math.round(c0[c]+(c1[c]-c0[c])*u);
-  }
-  return out;
-})();
-function divCol(x){
-  const t = Math.max(-1, Math.min(1, x));
-  const n=[24,32,44], b=[78,139,199], r=[196,105,79];
-  const c = t<0? b : r, a = Math.abs(t);
-  return [n[0]+(c[0]-n[0])*a, n[1]+(c[1]-n[1])*a, n[2]+(c[2]-n[2])*a];
 }
 function rangeFor(si, rail){
   const m = mats(si, rail);
@@ -470,7 +515,7 @@ function binOf(cen, o){
   while(lo<hi){ const m=(lo+hi+1)>>1; if(cen[m]<=o) lo=m; else hi=m-1 }
   return lo;
 }
-function idxOf(cen, o){ // fractional index on the hybrid axis
+function idxOf(cen, o){
   const j=binOf(cen,o), j2=Math.min(j+1,cen.length-1);
   const c0=cen[j], c1=cen[j2];
   return j + (c1>c0? (o-c0)/(c1-c0):0);
@@ -479,10 +524,6 @@ function medFr(si){
   const frs=seqs[si].frames.map(f=>f.fr);
   return frs.slice().sort((a,b)=>a-b)[frs.length>>1];
 }
-
-/* per-bin robust baseline from the sequence's own quiet early frames -
-   the z view asks "which parts of this spectrum changed relative to
-   THEMSELVES", which is the gate's question rendered as an image */
 const zCache=new Map();
 function zStats(si, rail){
   const k=si+'|'+rail;
@@ -504,7 +545,7 @@ function zStats(si, rail){
     const s2=Array.from(buf).sort((a,b)=>a-b);
     mad[i]=Math.max(s2[s2.length>>1],0.5);
   }
-  const v={med,mad,n:quiet.length,last:quiet[quiet.length-1]};
+  const v={med,mad,n:quiet.length};
   zCache.set(k,v); return v;
 }
 function zOf(si, rail, t, i){
@@ -525,13 +566,13 @@ function frameAt(x, F, w){ return Math.max(0, Math.min(F-1, Math.floor((x-GUT)/(
 
 const ORDER_TICKS = {acc:[1,2,3,5,10,20,50,100,200], env:[1,2,3,5,10,15,20]};
 
-/* ---------------- waterfall (2-D) ---------------- */
+/* ---------------- waterfall ---------------- */
 const WFH = 440;
 function drawWF(){
   const rail=S.rail, m = mats(S.seq, rail), sq=seqs[S.seq];
   const cen = CEN[rail], N=m.N, F=m.F;
   const [g,w] = fit(document.getElementById('wf'), WFH);
-  g.fillStyle='#0A0E13'; g.fillRect(0,0,w,WFH);
+  g.fillStyle=T.well; g.fillRect(0,0,w,WFH);
   const [lo,hi] = rangeFor(S.seq, rail);
   const frs = sq.frames.map(f=>f.fr);
   const frMed = medFr(S.seq);
@@ -560,7 +601,7 @@ function drawWF(){
       const y = N-1-i, p = (y*F+t)*4;
       let r,gg,b;
       if (zs){
-        [r,gg,b] = divCol(col[i]/6);          // ±6σ full scale
+        [r,gg,b] = divCol(col[i]/6);
       } else if (S.view==='diff'){
         const dv = (S.axis==='hz'? colO[i]-col[i] : m.d[base+i]-m.o[base+i])/8;
         [r,gg,b] = divCol(dv);
@@ -577,7 +618,7 @@ function drawWF(){
   g.imageSmoothingEnabled = false;
   g.drawImage(off, GUT, 4, w-GUT-RPAD, WFH-22);
   g.font='9.5'+MONO;
-  g.fillStyle='#7E8CA0'; g.strokeStyle='#223041'; g.textAlign='right';
+  g.fillStyle=T.muted; g.strokeStyle=T.hair; g.textAlign='right';
   const plotH = WFH-22;
   for (const o of ORDER_TICKS[rail]){
     if (o>cen[N-1]) continue;
@@ -588,14 +629,15 @@ function drawWF(){
   g.textAlign='left';
   g.fillText(S.axis==='hz'?'freq':'order', 4, 12);
   g.textAlign='center';
+  const u=tUnit(S.seq);
   const step = Math.max(1, Math.ceil(F/8/5)*5);
-  for(let t=0;t<F;t+=step) g.fillText(String(t), colX(t+0.5,F,w), WFH-6);
+  for(let t=0;t<F;t+=step) g.fillText(u+t, colX(t+0.5,F,w), WFH-6);
   drawWFOverlay();
   const vlabel = S.view==='orig'?'raw':S.view==='dec'?'decoded':
     S.view==='diff'?'Δ decoded−raw':
     `z vs own baseline (${zStats(S.seq,rail).n} quiet frames · blue below · red above · ±6σ)`;
   document.getElementById('wfLabel').textContent =
-    `waterfall · ${vlabel} · ${S.axis==='hz'?'stationary hz':'order-locked'} · ${rail==='acc'?'acceleration':'envelope'}`;
+    `waterfall · ${vlabel} · ${S.axis==='hz'?'stationary hz':'order-locked'} · ${rail==='acc'?'acceleration':'envelope'} · ${sq.cad||''}`;
 }
 
 function drawWFOverlay(){
@@ -633,44 +675,50 @@ function drawWFOverlay(){
     }
   }
   const x0=colX(S.frame,F,w), cw=Math.max(colW(F,w),2);
-  g.strokeStyle='#DCE6F2'; g.lineWidth=1;
+  g.strokeStyle=T.ink; g.lineWidth=1;
   g.strokeRect(x0+0.5, 3.5, cw-1, plotH+1);
 }
 
 /* ---------------- event lane ---------------- */
-function drawEvents(){
+function drawEventsLane(){
   const sq=seqs[S.seq], F=sq.frames.length;
   const [g,w]=fit(document.getElementById('evt'), 18);
-  g.fillStyle='#0F151E'; g.fillRect(0,0,w,18);
+  g.fillStyle=T.strip; g.fillRect(0,0,w,18);
   for(let t=0;t<F;t++){
     const gd=sq.frames[t].gate; if(!gd) continue;
     const x=colX(t+0.5,F,w);
     if (gd.dec==='up_change'){
-      g.fillStyle = gd.k===1? '#E0566B':'#E4A03C';
+      g.fillStyle = gd.k===1? T.evChange : T.evDrift;
       g.beginPath(); g.arc(x,9,3.4,0,7); g.fill();
     } else if (gd.dec==='up_heartbeat'){
-      g.fillStyle='#5A6B7E';
+      g.fillStyle=T.evHb;
       g.beginPath(); g.arc(x,9,1.6,0,7); g.fill();
     }
   }
   const x0=colX(S.frame+0.5,F,w);
-  g.strokeStyle='#DCE6F266'; g.beginPath(); g.moveTo(x0,1); g.lineTo(x0,17); g.stroke();
+  g.strokeStyle=T.ink+'66'; g.beginPath(); g.moveTo(x0,1); g.lineTo(x0,17); g.stroke();
 }
 
-/* ---------------- small strips ---------------- */
+/* ---------------- generic strip ---------------- */
 function lineStrip(id, h, series, opts={}){
   const [g,w] = fit(document.getElementById(id), h);
-  g.fillStyle = opts.bg||'#0F151E'; g.fillRect(0,0,w,h);
+  g.fillStyle = T.strip; g.fillRect(0,0,w,h);
   const F = series[0].y.length;
   let mn=Infinity,mx=-Infinity;
   for(const s of series) for(const v of s.y){ if(v==null||!isFinite(v))continue; if(v<mn)mn=v; if(v>mx)mx=v }
   if (opts.min!=null) mn=opts.min; if (opts.max!=null) mx=opts.max;
+  if (opts.hlines) for(const hv of opts.hlines){ if(hv>mx)mx=hv*1.05 }
   if (mx-mn<1e-9){mx=mn+1}
   const pad=6, Y = v => h-pad-(h-2*pad)*(v-mn)/(mx-mn);
-  g.strokeStyle='#1A2330'; g.beginPath();
+  g.strokeStyle=T.grid; g.beginPath();
   g.moveTo(GUT,Y(mn)); g.lineTo(w-RPAD,Y(mn)); g.stroke();
+  for (const hv of (opts.hlines||[])){
+    if (hv<=mn||hv>=mx) continue;
+    g.strokeStyle=(opts.hlineColor||T.faint); g.setLineDash([4,4]); g.beginPath();
+    g.moveTo(GUT,Y(hv)); g.lineTo(w-RPAD,Y(hv)); g.stroke(); g.setLineDash([]);
+  }
   if (opts.hline!=null && opts.hline>mn && opts.hline<mx){
-    g.strokeStyle='#E0566B66'; g.setLineDash([4,4]); g.beginPath();
+    g.strokeStyle=T.evChange+'88'; g.setLineDash([4,4]); g.beginPath();
     g.moveTo(GUT,Y(opts.hline)); g.lineTo(w-RPAD,Y(opts.hline)); g.stroke(); g.setLineDash([]);
   }
   for (const s of series){
@@ -685,19 +733,27 @@ function lineStrip(id, h, series, opts={}){
     g.stroke(); g.setLineDash([]);
   }
   g.font='9.5'+MONO;
-  g.fillStyle='#7E8CA0'; g.textAlign='right';
+  g.fillStyle=T.muted; g.textAlign='right';
   g.fillText(fmt(mx,opts.dec??1), GUT-5, 12);
   g.fillText(fmt(mn,opts.dec??1), GUT-5, h-4);
   const F0=seqs[S.seq].frames.length;
   const x0=colX(S.frame+0.5,F0,w);
-  g.strokeStyle='#DCE6F266'; g.beginPath(); g.moveTo(x0,2); g.lineTo(x0,h-2); g.stroke();
+  g.strokeStyle=T.ink+'66'; g.beginPath(); g.moveTo(x0,2); g.lineTo(x0,h-2); g.stroke();
 }
 
+function drawTrends(){
+  const sq=seqs[S.seq];
+  lineStrip('trV', 52, [{y:sq.frames.map(f=>f.vr), c:T.accent, wd:1.7}],
+            {dec:1, hlines:[2.8,7.1]});
+  lineStrip('trA', 52, [{y:sq.frames.map(f=>f.ar), c:T.accent, wd:1.6},
+                        {y:sq.frames.map(f=>f.er), c:KIND.haystack, wd:1.3}],
+            {dec:2});
+}
 function drawSpeed(){
   const sq=seqs[S.seq];
   const est=sq.frames.map(f=>f.fr), tru=sq.frames.map(f=>f.fr_true);
-  const series=[{y:est,c:'#62B6CB',wd:1.7}];
-  if (tru.some(v=>v!=null)) series.push({y:tru,c:'#7E8CA0',wd:1,dash:[3,3]});
+  const series=[{y:est,c:T.accent,wd:1.7}];
+  if (tru.some(v=>v!=null)) series.push({y:tru,c:T.muted,wd:1,dash:[3,3]});
   lineStrip('spd', 44, series, {dec:1});
   document.getElementById('spdEm').textContent =
     tru.some(v=>v!=null)? '(solid estimated · dotted true)':'(estimated)';
@@ -705,23 +761,23 @@ function drawSpeed(){
 function drawBytes(){
   const sq=seqs[S.seq], F=sq.frames.length;
   const [g,w]=fit(document.getElementById('byt'), 54);
-  g.fillStyle='#0F151E'; g.fillRect(0,0,w,54);
+  g.fillStyle=T.strip; g.fillRect(0,0,w,54);
   const by=sq.frames.map(f=>f.bytes);
   const mx=Math.max(...by);
   const cw=Math.max(1,colW(F,w)-Math.min(2,colW(F,w)*0.25));
   for(let t=0;t<F;t++){
     const hgt=Math.max(2,42*by[t]/mx);
     const x=colX(t,F,w);
-    g.fillStyle = t===S.frame? '#DCE6F2' : (sq.frames[t].kind==='A'?'#E4C879':'#3E6B8C');
+    g.fillStyle = t===S.frame? T.ink : (sq.frames[t].kind==='A'? T.anchor : T.bar);
     g.fillRect(x, 48-hgt, cw, hgt);
-    if (sq.frames[t].kind==='A'){
-      g.fillStyle='#E4C879';
+    if (sq.frames[t].kind==='A' && cw>1.5){
+      g.fillStyle=T.anchor;
       g.beginPath(); g.moveTo(x+cw/2,48-hgt-6); g.lineTo(x+cw/2-2.6,48-hgt-1.5);
       g.lineTo(x+cw/2+2.6,48-hgt-1.5); g.fill();
     }
   }
   g.font='9.5'+MONO;
-  g.fillStyle='#7E8CA0'; g.textAlign='right';
+  g.fillStyle=T.muted; g.textAlign='right';
   g.fillText(mx+'B', GUT-5, 12); g.fillText('0', GUT-5, 50);
 }
 
@@ -740,8 +796,8 @@ function trackStats(si, rail){
   const order = per.map((r,i)=>[i,r.tot]).sort((a,b)=>b[1]-a[1]).map(a=>a[0]);
   return {per, top: order.slice(0,8), order};
 }
-function trackSlope(y){ /* OLS slope in dB/frame over trailing window */
-  const F=y.length, W=Math.min(20,F);
+function trackSlope(y){
+  const F=y.length, W=Math.min(Math.max(20,F>>4),F);
   let xs=0,ys=0,xy=0,xx=0,n=0;
   for(let t=F-W;t<F;t++){ const v=y[t]; if(v==null)continue;
     xs+=t; ys+=v; xy+=t*v; xx+=t*t; n++ }
@@ -749,7 +805,6 @@ function trackSlope(y){ /* OLS slope in dB/frame over trailing window */
   const den=n*xx-xs*xs;
   return den? (n*xy-xs*ys)/den : null;
 }
-
 function drawEnergy(){
   const rail=S.rail, sq=seqs[S.seq];
   const {per, top} = trackStats(S.seq, rail);
@@ -760,12 +815,11 @@ function drawEnergy(){
     series.push({y:per[ti].e, c, wd:hl?2.6:1.6, ti});
     if (S.codec) series.push({y:per[ti].ed, c, wd:hl?1.6:1, dash:[4,3], ti});
   }
-  lineStrip('en', 150, series.length?series:[{y:sq.frames.map(()=>0),c:'#1A2330'}], {dec:0});
+  lineStrip('en', 150, series.length?series:[{y:sq.frames.map(()=>0),c:T.grid}], {dec:0});
   drawLegend(top, per);
   const rs=sq.frames.map(f=>100*f[rail+'_res']);
-  lineStrip('res', 38, [{y:rs,c:'#8B98A5',wd:1.4}], {min:0,max:100,dec:0});
+  lineStrip('res', 38, [{y:rs,c:T.resid,wd:1.4}], {min:0,max:100,dec:0});
 }
-
 function drawLegend(top, per){
   const rail=S.rail, sq=seqs[S.seq];
   const el=document.getElementById('legend');
@@ -801,15 +855,15 @@ function drawSpec(){
   const rail=S.rail, m=mats(S.seq,rail), sq=seqs[S.seq];
   const cen=CEN[rail], N=m.N, t=S.frame, base=t*N;
   const [g,w]=fit(document.getElementById('spec'), SPECH);
-  g.fillStyle='#0A0E13'; g.fillRect(0,0,w,SPECH);
+  g.fillStyle=T.well; g.fillRect(0,0,w,SPECH);
   const [lo,hi]=rangeFor(S.seq,rail);
-  const L=36, R=6, T=8, B=18;
+  const L=36, R=6, Tp=8, B=18;
   const X=i=>L+(w-L-R)*i/(N-1);
   const lin = S.scale==='lin';
-  const aHi = amp(hi), aLo=0;
+  const aHi = amp(hi);
   const Y = u => lin
-    ? T+(SPECH-T-B)*(1-Math.min(1,amp(u)/aHi))
-    : T+(SPECH-T-B)*(1-(Math.max(lo,Math.min(hi,u))-lo)/(hi-lo));
+    ? Tp+(SPECH-Tp-B)*(1-Math.min(1,amp(u)/aHi))
+    : Tp+(SPECH-Tp-B)*(1-(Math.max(lo,Math.min(hi,u))-lo)/(hi-lo));
   if (S.pat){
     const pats=sq.frames[t][rail+'_pat'];
     for(let i=0;i<N;i++){
@@ -817,27 +871,25 @@ function drawSpec(){
       const p=pats[oi]; if(!p) continue;
       const hl = S.track===p.t;
       g.fillStyle=trackColor(rail, p.t, hl?0.5:0.20);
-      g.fillRect(X(i)-0.5, T, Math.max(1,(w-L-R)/N+1), SPECH-T-B);
+      g.fillRect(X(i)-0.5, Tp, Math.max(1,(w-L-R)/N+1), SPECH-Tp-B);
     }
   }
-  g.strokeStyle='#1A2330'; g.fillStyle='#7E8CA0';
+  g.strokeStyle=T.grid; g.fillStyle=T.muted;
   g.font='9'+MONO; g.textAlign='center';
   for(const o of ORDER_TICKS[rail]){
     if(o>cen[N-1])continue;
     const x=X(binOf(cen,o));
-    g.beginPath(); g.moveTo(x,T); g.lineTo(x,SPECH-B); g.stroke();
+    g.beginPath(); g.moveTo(x,Tp); g.lineTo(x,SPECH-B); g.stroke();
     g.fillText(o+'×', x, SPECH-6);
   }
   g.textAlign='right';
-  if (lin){ for(const fr2 of [0.5,1]) g.fillText(fmt(aHi*fr2*1000,2), L-4, Y_lin(fr2)+3) }
+  if (lin){ g.fillText(fmt(aHi*1000,2), L-4, Tp+8); g.fillText('0', L-4, SPECH-B) }
   else for(const u of [lo,(lo+hi)/2,hi]) g.fillText(fmt(db(u),0), L-4, Y(u)+3);
-  function Y_lin(frac){ return T+(SPECH-T-B)*(1-frac) }
-  /* full-resolution original FFT under everything else */
-  if (S.fullres){
-    const fr_=fullresOf(S.seq,t);
+  const fr_=S.fullres? fullresOf(S.seq,t) : null;
+  if (fr_){
     const arr = rail==='acc'? fr_.af : fr_.ef;
     const dfOrd = fr_.adf/sq.frames[t].fr;
-    g.strokeStyle='#8FB6D9'; g.lineWidth=0.8; g.globalAlpha=0.9;
+    g.strokeStyle=T.fullres; g.lineWidth=0.8; g.globalAlpha=0.9;
     g.beginPath(); let st=false;
     for(let i=1;i<arr.length;i++){
       const o=i*dfOrd; if(o>cen[N-1]) break;
@@ -849,16 +901,15 @@ function drawSpec(){
   const line=(arr,c,wd)=>{ g.strokeStyle=c; g.lineWidth=wd; g.beginPath();
     for(let i=0;i<N;i++){ const x=X(i),y=Y(arr[base+i]);
       i?g.lineTo(x,y):g.moveTo(x,y) } g.stroke() };
-  line(m.o, '#DCE6F2', 1.2);
-  line(m.d, '#E4C879', 1.1);
-  g.fillStyle='#7E8CA0'; g.textAlign='left';
+  line(m.o, T.ink, 1.2);
+  line(m.d, T.anchor, 1.1);
+  g.fillStyle=T.muted; g.textAlign='left';
   g.fillText(lin?'mg':'dB', 4, 14);
   let lx=w-206;
   const key=(c,label)=>{ g.fillStyle=c; g.fillRect(lx,10,12,2);
-    g.fillStyle='#7E8CA0'; g.fillText(label, lx+16, 14); lx+=16+g.measureText(label).width+12 };
-  if (S.fullres) key('#8FB6D9','full-res fft');
-  key('#DCE6F2','binned'); key('#E4C879','decoded');
-  /* reconstruction error readout */
+    g.fillStyle=T.muted; g.fillText(label, lx+16, 14); lx+=16+g.measureText(label).width+12 };
+  if (fr_) key(T.fullres,'full-res fft');
+  key(T.ink,'binned'); key(T.anchor,'decoded');
   let s=0, mx=0, n=0;
   const errs=[];
   for(let i=0;i<N;i++){ const e2=Math.abs(m.d[base+i]-m.o[base+i])*Q; errs.push(e2);
@@ -866,36 +917,37 @@ function drawSpec(){
   errs.sort((a,b)=>a-b);
   document.getElementById('reconNote').textContent =
     `recon |Δ|: med ${fmt(errs[n>>1],2)} dB · p95 ${fmt(errs[Math.floor(n*0.95)],2)} · max ${fmt(mx,1)}`;
+  const has = !!seqs[S.seq].frames[0].af;
+  document.getElementById('frChk').disabled = !has;
+  document.getElementById('frLbl').style.opacity = has? 1 : 0.45;
 }
 
-function drawStats(){
-  const sq=seqs[S.seq], f=sq.frames[S.frame];
-  const raw=rawBytes(sq.fs);
-  const kindTxt = f.kind==='A'?'anchor':(f.kind==='P'?'resid·chain':'resid·anchor');
-  document.getElementById('frameHead').textContent =
-    `frame ${S.frame} / ${sq.frames.length-1} · ${kindTxt}`;
-  /* spectral energy captured, both rails */
-  const kept = railEnergyKept(S.seq, S.frame, S.rail);
-  const cells=[
-    ['payload', f.bytes+'<small> B</small>', 1],
-    ['vs raw welch', fmt(raw/f.bytes,0)+'<small>×</small>', 0],
-    ['shaft', fmt(f.fr,2)+'<small> Hz</small>', 0],
-    ['gate score', (f.gate? fmt(f.gate.s,1):'—'), 0],
-    ['acc rail', f.ba+'<small> B</small>', 0],
-    ['env rail', f.be+'<small> B</small>', 0],
-    ['energy kept', fmt(kept*100,2)+'<small> %</small>', 0],
-    ['unexplained', fmt(100*f[S.rail+'_res'],1)+'<small> %</small>', 0],
-  ];
-  document.getElementById('stats').innerHTML = cells.map(([k,v,hero])=>
-    `<div class="stat${hero?' hero':''}"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
-}
 function railEnergyKept(si, t, rail){
   const m=mats(si,rail), N=m.N, base=t*N;
   let eo=0, ed=0;
   for(let i=0;i<N;i++){ const a=amp(m.o[base+i]), b=amp(m.d[base+i]); eo+=a*a; ed+=b*b }
   return eo>0? ed/eo : 1;
 }
-
+function drawStats(){
+  const sq=seqs[S.seq], f=sq.frames[S.frame];
+  const raw=rawBytes(sq.fs);
+  const kindTxt = f.kind==='A'?'anchor':(f.kind==='P'?'resid·chain':'resid·anchor');
+  const u=tUnit(S.seq)||'frame ';
+  document.getElementById('frameHead').textContent =
+    `${u==='d'?'day':'frame'} ${S.frame} of ${sq.frames.length-1} · ${kindTxt}`;
+  const cells=[
+    ['payload', f.bytes+'<small> B</small>', 1],
+    ['vs raw welch', fmt(raw/f.bytes,0)+'<small>×</small>', 0],
+    ['velocity', fmt(f.vr??0,2)+'<small> mm/s</small>', 0],
+    ['shaft', fmt(f.fr,2)+'<small> Hz</small>', 0],
+    ['acc rail', f.ba+'<small> B</small>', 0],
+    ['env rail', f.be+'<small> B</small>', 0],
+    ['gate score', (f.gate? fmt(f.gate.s,1):'—'), 0],
+    ['unexplained', fmt(100*f[S.rail+'_res'],1)+'<small> %</small>', 0],
+  ];
+  document.getElementById('stats').innerHTML = cells.map(([k,v,hero])=>
+    `<div class="stat${hero?' hero':''}"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+}
 function drawTable(){
   const rail=S.rail, sq=seqs[S.seq], f=sq.frames[S.frame];
   const {per}=trackStats(S.seq, rail);
@@ -915,8 +967,8 @@ function drawTable(){
       <td>${p.e>0?fmt(10*Math.log10(p.e),1):'—'}</td>
       <td>${fmt(100*p.share,1)}%</td>
       <td>${tr}</td>
-      <td>${dd==null?'lost':fmt(dd,2)+' dB'}</td></tr>`;
-  }).join('') || '<tr><td colspan="6" style="color:#7E8CA0">no patterns above the floor in this frame</td></tr>';
+      <td>${dd==null?'—':fmt(dd,2)+' dB'}</td></tr>`;
+  }).join('') || '<tr><td colspan="6" style="color:var(--muted)">no patterns above the floor in this frame</td></tr>';
   tb.querySelectorAll('tr[data-t]').forEach(tr=>{
     tr.onclick=()=>{ const ti=+tr.dataset.t;
       S.track = S.track===ti? -1: ti; refresh(['wfov','energy','spec','table']) };
@@ -943,7 +995,7 @@ function pool(si, rail, which, M){
 function draw3Done(cvId, which){
   const cv=document.getElementById(cvId);
   const [g,w]=fit(cv, G3H);
-  g.fillStyle='#0A0E13'; g.fillRect(0,0,w,G3H);
+  g.fillStyle=T.well; g.fillRect(0,0,w,G3H);
   const rail=S.rail, sq=seqs[S.seq];
   const M=Math.min(240, CEN[rail].length);
   const P=pool(S.seq, rail, which, M);
@@ -953,31 +1005,33 @@ function draw3Done(cvId, which){
   const zh=+document.getElementById('zh').value/100;
   const F=P.F;
   const mL=26, mR=14;
-  const zScale=(G3H-140)*zh;                  // tallest ridge, in pixels
+  const zScale=(G3H-140)*zh;
   const depthPix=Math.max(50,(G3H-64-zScale)*depth);
   const skewPix=skew/60*w*0.35;
   const baseW=w-mL-mR-Math.abs(skewPix);
   const x00=mL+(skewPix<0? -skewPix:0);
   const aHi=amp(hi);
   const pats=t=>sq.frames[t][rail+'_pat'];
-  for(let k=0;k<F;k++){
-    const tt=F-1-k;                 // draw far (t=F-1, top) first, front (t=0, bottom) last
+  const dstep=Math.max(1, Math.ceil(F/160));   // thin long sequences
+  const rows=[];
+  for(let t=0;t<F;t+=dstep) rows.push(t);
+  if (!rows.includes(S.frame)) { rows.push(S.frame); rows.sort((a,b)=>a-b) }
+  for(let k=rows.length-1;k>=0;k--){
+    const tt=rows[k];
     const u=tt/Math.max(F-1,1);
     const fx=x00+skewPix*u;
-    const fy=26+zScale+depthPix*(1-u);        // far base leaves room for its peaks
+    const fy=26+zScale+depthPix*(1-u);
     const sel=tt===S.frame;
-    /* silhouette fill to occlude */
     g.beginPath();
     g.moveTo(fx, fy);
     const zAt=j=>{
-      const u=P.z[tt*M+j];
-      return S.z==='lin'? Math.min(1,amp(u)/aHi) : Math.max(0,(u-lo)/(hi-lo));
+      const v=P.z[tt*M+j];
+      return S.z==='lin'? Math.min(1,amp(v)/aHi) : Math.max(0,(v-lo)/(hi-lo));
     };
     for(let j=0;j<M;j++) g.lineTo(fx+baseW*j/(M-1), fy-zAt(j)*zScale);
     g.lineTo(fx+baseW, fy);
     g.closePath();
-    g.fillStyle='rgba(10,14,19,0.92)'; g.fill();
-    /* ridge, segment-coloured */
+    g.fillStyle=`rgba(${T.sil},0.92)`; g.fill();
     g.lineWidth = sel? 1.8 : 1;
     let px=fx, py=fy-zAt(0)*zScale;
     for(let j=1;j<M;j++){
@@ -985,21 +1039,22 @@ function draw3Done(cvId, which){
       let col;
       if (S.c3==='pat'){
         const oi=P.own[tt*M+j];
-        if(oi!==255){ const p=pats(tt)[oi]; col=p?trackColor(rail,p.t):'#3A4656' }
-        else col = sel? '#8FA3BA':'#3A4656';
+        if(oi!==255){ const p=pats(tt)[oi]; col=p?trackColor(rail,p.t):T.faint }
+        else col = sel? T.muted : T.faint;
       } else {
-        const zz=Math.max(0,Math.min(255,Math.round(255*(S.z==='lin'? zAt(j) : zAt(j)))));
+        const zz=Math.max(0,Math.min(255,Math.round(255*zAt(j))));
         col=`rgb(${LUT[zz*3]},${LUT[zz*3+1]},${LUT[zz*3+2]})`;
       }
-      if (sel && S.c3!=='pat') col='#DCE6F2';
+      if (sel && S.c3!=='pat') col=T.ink;
       g.strokeStyle=col;
       g.beginPath(); g.moveTo(px,py); g.lineTo(x,y); g.stroke();
       px=x; py=y;
     }
   }
-  /* frame-0 axis note */
-  g.font='9.5'+MONO; g.fillStyle='#7E8CA0'; g.textAlign='left';
-  g.fillText('t=0 (front) → t='+(F-1), mL, G3H-8);
+  g.font='9.5'+MONO; g.fillStyle=T.muted; g.textAlign='left';
+  const u2=tUnit(S.seq)? 'day':'t=';
+  g.fillText(`${u2}0 (front) → ${u2==='day'?'day ':''}${F-1}`+
+             (dstep>1?` · every ${dstep}th drawn`:''), mL, G3H-8);
   g.textAlign='right';
   g.fillText((S.z==='lin'?'linear amplitude':'dB'), w-10, G3H-8);
 }
@@ -1050,17 +1105,18 @@ function drawEventsTab(){
   if (S.page!=='events') return;
   const sq=seqs[S.seq];
   lineStrip('evScore', 90,
-    [{y:sq.frames.map(f=>f.gate?f.gate.s:null), c:'#62B6CB', wd:1.6}],
+    [{y:sq.frames.map(f=>f.gate?f.gate.s:null), c:T.accent, wd:1.6}],
     {dec:1, hline:4.0});
   const rows=eventRows(S.seq).filter(r=> S.evf==='all' ||
     (S.evf==='change'? (r.cls==='change'||r.cls==='drift') : r.cls===S.evf));
   const colFor={change:'var(--ev-change)',drift:'var(--ev-drift)',
                 hb:'var(--ev-hb)',anchor:'var(--anchor)'};
+  const u=tUnit(S.seq)? 'day ':'frame ';
   document.querySelector('#evT tbody').innerHTML = rows.map(r=>
-    `<tr data-f="${r.t}"><td><span class="evglyph" style="background:${colFor[r.cls]}"></span>frame ${r.t}</td>
+    `<tr data-f="${r.t}"><td><span class="evglyph" style="background:${colFor[r.cls]}"></span>${u}${r.t}</td>
      <td>${r.type}</td><td>${fmt(r.s,1)}</td><td>${fmt(r.dr,1)}</td>
      <td>${r.mb}</td><td>${r.b} B</td></tr>`).join('')
-    || '<tr><td colspan="6" style="color:#7E8CA0">no events of this type in the sequence — a quiet asset is supposed to look like this</td></tr>';
+    || '<tr><td colspan="6" style="color:var(--muted)">no events of this type in the sequence — a quiet asset is supposed to look like this</td></tr>';
   document.querySelectorAll('#evT tr[data-f]').forEach(tr=>{
     tr.onclick=()=>{ S.frame=+tr.dataset.f; setPage('explore');
       refresh(['cursor','spec','stats','table']) };
@@ -1110,7 +1166,7 @@ function drawCompare(){
   const mxB=Math.max(...rows.map(r=>r.bpf));
   document.getElementById('cmpBars').innerHTML = rows.map((r,i)=>
     `<div class="cmprow"><div class="nm">${r.title}</div>
-      <div class="tr"><div class="fl" style="width:${100*r.bpf/mxB}%;background:#3E6B8C"></div></div>
+      <div class="tr"><div class="fl" style="width:${100*r.bpf/mxB}%"></div></div>
       <div class="vl">${fmt(r.bpf,0)} B · ${fmt(r.ratio,0)}×</div></div>`).join('');
   document.querySelector('#cmpT tbody').innerHTML = rows.map(r=>
     `<tr><td>${r.title}</td><td>${r.F}</td><td>${fmt(r.bpf,0)}</td>
@@ -1119,7 +1175,7 @@ function drawCompare(){
      <td>${r.kept>=100?'+':''}${fmt(r.kept-100,2)}%</td><td>${fmt(r.pkept,1)}%</td><td>${r.chg}</td></tr>`).join('');
 }
 
-/* ---------------- help tab: live examples + widgets ---------------- */
+/* ---------------- help tab ---------------- */
 function drawHelp(){
   if (S.page!=='help') return;
   const sq=seqs[S.seq], f=sq.frames[S.frame], rail=S.rail;
@@ -1128,6 +1184,7 @@ function drawHelp(){
     `<table><tr><td>sequence</td><td>${sq.title}</td></tr>
      <tr><td>frame / rail</td><td>${S.frame} · ${rail}</td></tr>
      <tr><td>estimated shaft speed</td><td>${fmt(f.fr,3)} Hz (tier ${f.tier})</td></tr>
+     <tr><td>overall levels</td><td>${fmt(f.vr??0,2)} mm/s · ${fmt(f.ar??0,3)} g acc · ${fmt(f.er??0,3)} g env</td></tr>
      <tr><td>fine-bin width at this speed</td><td>0.0391 orders = ${fmt(0.0391*f.fr,2)} Hz</td></tr>
      <tr><td>rails stored</td><td>768 + 384 bins · uint8 · ½ dB</td></tr></table>`;
   const bd=f.bd&&f.bd[rail==='acc'?'a':'e'];
@@ -1136,16 +1193,15 @@ function drawHelp(){
   if (bd){
     const tot=bd[0]+bd[1]+bd[2];
     const hdr=Math.max(railB-tot,1);
-    const parts=[['hdr',hdr,'#4A5568'],['gains',bd[0],'#62B6CB'],
-                 ['peaks',bd[1],'#B98A33'],['actives',bd[2],'#4E8BC7']];
+    const parts=[['hdr',hdr,T.faint],['gains',bd[0],T.accent],
+                 ['peaks',bd[1],KIND.mod],['actives',bd[2],KIND.comb]];
     stack=`<div class="stack">`+parts.map(([n,v,c])=>
       `<div style="flex:${Math.max(v,0.5)};background:${c}" title="${n}: ${v} B">${v>18?n+' '+v+'B':''}</div>`).join('')+`</div>
       <p class="dim" style="font-size:11px">residual frame: header ${hdr} · gains ${bd[0]} · peak deltas ${bd[1]} · active bins ${bd[2]} B → ${railB} B on the ${rail} rail (whole frame ${f.bytes} B)</p>`;
   } else {
-    stack=`<p class="dim" style="font-size:11px">this frame is an <b>anchor</b>: the full ${N}-bin spectrum, losslessly entropy-coded, ${railB} B on the ${rail} rail. Raw dump would be ${N} B + a 120 B peak table; first-difference + Rice does better and the peak table costs nothing at all.</p>`;
+    stack=`<p class="dim" style="font-size:11px">this frame is an <b>anchor</b>: the full ${N}-bin spectrum, losslessly entropy-coded, ${railB} B on the ${rail} rail. A raw dump would be ${N} B + a 120 B peak table; first-difference + Rice does better and the peak table costs nothing at all.</p>`;
   }
   document.getElementById('lvBytes').innerHTML=stack;
-  /* verified contract */
   let mx=0; const errs=[];
   for(let i=0;i<N;i++){ const e2=Math.abs(m.d[base+i]-m.o[base+i])*Q; errs.push(e2); if(e2>mx)mx=e2 }
   errs.sort((a,b)=>a-b);
@@ -1155,15 +1211,13 @@ function drawHelp(){
      <tr><td>median |Δ|</td><td>${fmt(errs[N>>1],2)} dB</td></tr>
      <tr><td>p95 |Δ|</td><td>${fmt(errs[Math.floor(N*0.95)],2)} dB</td></tr>
      <tr><td>max |Δ|</td><td>${fmt(mx,1)} dB — inside the dead zone by construction</td></tr></table>`;
-  /* ledger closure */
   const pats=f[rail+'_pat'];
   let eTot=0; for(let i=0;i<N;i++){ const a=amp(m.o[base+i]); eTot+=a*a }
   let eP=0; for(const p of pats) eP+=p.e;
-  const eR=f[rail+'_res']*eTot/(1);   // residual share × total
   const top=pats.slice().sort((a,b)=>b.e-a.e)[0];
   document.getElementById('lvLedger').innerHTML =
-    `<table><tr><td>patterns found</td><td>${pats.length}</td></tr>
-     ${top?`<tr><td>strongest</td><td>${KLABEL[top.kind]} at ${fmt(top.key,3)}× — ${fmt(100*top.share,1)}% of spectrum energy</td></tr>`:''}
+    `<table><tr><td>patterns found &amp; verified</td><td>${pats.length}</td></tr>
+     ${top?`<tr><td>strongest</td><td>${KLABEL[top.kind]} at ${fmt(top.key,3)}× — ${fmt(100*top.share,1)}% of spectrum energy${top.nv!=null?` (${top.nv}/${top.vc} harmonics verified)`:''}</td></tr>`:''}
      <tr><td>Σ pattern energy</td><td>${fmt(100*eP/eTot,2)}% of total</td></tr>
      <tr><td>residual</td><td>${fmt(100*f[rail+'_res'],2)}%</td></tr>
      <tr><td>closure</td><td>${fmt(100*(eP/eTot+f[rail+'_res']),2)}% — the ledger sums to the spectrum</td></tr></table>`;
@@ -1180,17 +1234,27 @@ function drawHelp(){
     `<table><tr><td>mean payload</td><td>${fmt(bpf,0)} B/frame</td></tr>
      <tr><td>raw two-rail Welch</td><td>${rawBytes(sq.fs).toLocaleString()} B/frame</td></tr>
      <tr><td>ratio</td><td>${fmt(rawBytes(sq.fs)/bpf,0)}×</td></tr>
-     <tr><td>at 2 acquisitions/day</td><td>${fmt(bpf*2/1024,1)} KiB/day/sensor</td></tr></table>`;
+     <tr><td>${isDaily(S.seq)?'at 1 spectrum/day':'at 2 acquisitions/day'}</td>
+     <td>${fmt(bpf*(isDaily(S.seq)?1:2)/1024,2)} KiB/day/sensor</td></tr></table>`;
   drawHPS(); drawRice();
 }
-/* HPS widget */
 function drawHPS(){
   const sq=seqs[S.seq], f=sq.frames[S.frame];
-  const fr_=fullresOf(S.seq,S.frame);
-  const ef=fr_.ef, df=fr_.adf;
   const cv=document.getElementById('hpsCv');
+  const fr_=fullresOf(S.seq,S.frame);
+  const note=document.getElementById('hpsNote');
+  if (!fr_){
+    const [g,w]=fit(cv, 60);
+    g.fillStyle=T.well; g.fillRect(0,0,w,60);
+    g.fillStyle=T.muted; g.font='11'+MONO; g.textAlign='center';
+    g.fillText('full-resolution spectra are not exported for this sequence —', w/2, 26);
+    g.fillText('pick any short sequence in the selector to drive this demo', w/2, 42);
+    document.getElementById('hpsRead').textContent='';
+    return;
+  }
+  const ef=fr_.ef, df=fr_.adf;
   const [g,w]=fit(cv, 200);
-  g.fillStyle='#0A0E13'; g.fillRect(0,0,w,200);
+  g.fillStyle=T.well; g.fillRect(0,0,w,200);
   const f0=sq.fr_nominal||f.fr;
   const lo=0.75*f0, hi=1.35*f0;
   const sl=document.getElementById('hpsSl');
@@ -1199,40 +1263,37 @@ function drawHPS(){
   const hps=fq=>{ let pr=1;
     for(let h=1;h<=3;h++){ const i=Math.round(fq*h/df);
       pr*=Math.max(EA(i),1e-12) } return Math.pow(pr,1/3) };
-  /* top: envelope spectrum 0..4.2*f0 */
   const fmax=4.2*f0, iMax=Math.min(ef.length-1, Math.round(fmax/df));
   let aMax=1e-12; for(let i=1;i<=iMax;i++) aMax=Math.max(aMax,EA(i));
   const topH=110, X=fq=>10+(w-20)*fq/fmax;
-  g.strokeStyle='#8FB6D9'; g.lineWidth=0.9; g.beginPath();
+  g.strokeStyle=T.fullres; g.lineWidth=0.9; g.beginPath();
   for(let i=1;i<=iMax;i++){ const x=X(i*df), y=14+(topH-18)*(1-EA(i)/aMax);
     i===1?g.moveTo(x,y):g.lineTo(x,y) }
   g.stroke();
   for(let h=1;h<=3;h++){
     const x=X(fc*h);
-    g.strokeStyle='#E4C879'; g.lineWidth=1.4;
+    g.strokeStyle=T.anchor; g.lineWidth=1.4;
     g.beginPath(); g.moveTo(x,12); g.lineTo(x,topH); g.stroke();
-    g.fillStyle='#E4C879'; g.font='9'+MONO; g.textAlign='center';
+    g.fillStyle=T.anchor; g.font='9'+MONO; g.textAlign='center';
     g.fillText(h+'·f', x, 10);
   }
-  /* bottom: score curve */
   const sy0=topH+16, sh=200-sy0-16;
   let sMax=1e-12; const curve=[];
   for(let k2=0;k2<=240;k2++){ const fq=lo+(hi-lo)*k2/240; const v=hps(fq);
     curve.push(v); if(v>sMax)sMax=v }
-  g.strokeStyle='#62B6CB'; g.lineWidth=1.4; g.beginPath();
+  g.strokeStyle=T.accent; g.lineWidth=1.4; g.beginPath();
   curve.forEach((v,k2)=>{ const x=10+(w-20)*k2/240, y=sy0+sh*(1-v/sMax);
     k2?g.lineTo(x,y):g.moveTo(x,y) });
   g.stroke();
   const xc=10+(w-20)*((fc-lo)/(hi-lo));
-  g.strokeStyle='#E4C879'; g.beginPath(); g.moveTo(xc,sy0); g.lineTo(xc,sy0+sh); g.stroke();
-  g.fillStyle='#7E8CA0'; g.font='9.5'+MONO; g.textAlign='left';
+  g.strokeStyle=T.anchor; g.beginPath(); g.moveTo(xc,sy0); g.lineTo(xc,sy0+sh); g.stroke();
+  g.fillStyle=T.muted; g.font='9.5'+MONO; g.textAlign='left';
   g.fillText('envelope spectrum', 10, 200-4);
   g.textAlign='right'; g.fillText('HPS score over candidates', w-10, 200-4);
   document.getElementById('hpsRead').textContent =
     `f=${fmt(fc,2)} Hz · score ${(hps(fc)/sMax*100).toFixed(0)}% of best · estimator said ${fmt(f.fr,2)} Hz`;
 }
 document.getElementById('hpsSl').addEventListener('input', drawHPS);
-/* Rice widget */
 function drawRice(){
   const v=parseInt(document.getElementById('riceV').value||0,10);
   const k=+document.getElementById('riceK').value;
@@ -1254,7 +1315,6 @@ function showTip(x,y,txt){ tip.style.display='block'; tip.textContent=txt;
   tip.style.left=Math.min(x+14, innerWidth-r.width-8)+'px';
   tip.style.top=Math.min(y+14, innerHeight-r.height-8)+'px'; }
 function hideTip(){ tip.style.display='none' }
-
 function scrubbable(id, onmove){
   const cv=document.getElementById(id);
   let down=false;
@@ -1291,7 +1351,8 @@ function scrubbable(id, onmove){
     const frMed=medFr(S.seq);
     const o = S.axis==='hz'? cen[bin]*frMed/frs[t] : cen[bin];
     const frq = S.axis==='hz'? cen[bin]*frMed : cen[bin]*frs[t];
-    let txt=`frame ${t}   order ${fmt(o,2)}×  (${fmt(frq,1)} Hz)\n`+
+    const tu=tUnit(S.seq)? 'day ':'frame ';
+    let txt=`${tu}${t}   order ${fmt(o,2)}×  (${fmt(frq,1)} Hz)\n`+
       (S.view==='diff'? `Δ ${fmt((m.d[t*N+bin]-m.o[t*N+bin])*Q,1)} dB`
        : S.view==='z'? `${fmt(zOf(S.seq,rail,t,bin),1)}σ vs own baseline  (${fmt(db(u),1)} dB)`
        : `${fmt(db(u),1)} dB`);
@@ -1302,12 +1363,15 @@ function scrubbable(id, onmove){
     if(dopick && t!==S.frame){ S.frame=t; refresh(['cursor','spec','stats','table']) }
   }
 })();
-for (const id of ['evt','spd','byt','en','res']) scrubbable(id, (x,y,e)=>{
+for (const id of ['evt','trV','trA','spd','byt','en','res']) scrubbable(id, (x,y,e)=>{
   const sq=seqs[S.seq], F=sq.frames.length;
   const cv=document.getElementById(id), t=frameAt(x,F,cv.clientWidth);
   const f=sq.frames[t];
-  let txt=`frame ${t}`;
+  const tu=tUnit(S.seq)? 'day ':'frame ';
+  let txt=`${tu}${t}`;
   if(id==='spd') txt+=`\nest ${fmt(f.fr,2)} Hz`+(f.fr_true?`  true ${fmt(f.fr_true,2)}`:'');
+  if(id==='trV') txt+=`\nvelocity ${fmt(f.vr??0,2)} mm/s rms`;
+  if(id==='trA') txt+=`\nacc ${fmt(f.ar??0,3)} g rms · env ${fmt(f.er??0,3)} g rms`;
   if(id==='byt') txt+=`\n${f.bytes} B  (acc ${f.ba} + env ${f.be})  ${f.kind==='A'?'anchor':'residual'}`;
   if(id==='evt'&&f.gate) txt+=`\ngate: ${f.gate.dec}  score ${fmt(f.gate.s,1)}  drift ${fmt(f.gate.dr,1)}`;
   if(id==='en'){ const ps=f[S.rail+'_pat'].slice().sort((a,b)=>b.e-a.e).slice(0,4);
@@ -1316,7 +1380,6 @@ for (const id of ['evt','spd','byt','en','res']) scrubbable(id, (x,y,e)=>{
   if(id==='res') txt+=`\nunexplained ${fmt(100*f[S.rail+'_res'],1)}%`;
   showTip(e.clientX,e.clientY,txt);
 });
-
 document.addEventListener('keydown',e=>{
   if(e.key==='ArrowRight'||e.key==='ArrowLeft'){
     const F=seqs[S.seq].frames.length;
@@ -1324,7 +1387,6 @@ document.addEventListener('keydown',e=>{
     refresh(['cursor','spec','stats','table']); e.preventDefault();
   }
 });
-
 function seg(id, key, after){
   document.getElementById(id).querySelectorAll('button').forEach(b=>{
     b.onclick=()=>{ S[key]=b.dataset.v;
@@ -1341,11 +1403,20 @@ document.getElementById('codecChk').onchange=e=>{S.codec=e.target.checked;refres
 document.getElementById('patChk').onchange=e=>{S.pat=e.target.checked;refresh(['wfov','spec'])};
 document.getElementById('frChk').onchange=e=>{S.fullres=e.target.checked;refresh(['spec'])};
 const sel=document.getElementById('seqSel');
-seqs.forEach((s,i)=>{ const o=document.createElement('option');
-  o.value=i; o.textContent=s.title; sel.appendChild(o) });
+(function(){
+  const groups={};
+  seqs.forEach((s,i)=>{ (groups[s.cat||'Other'] ??= []).push([i,s.title]) });
+  for (const [cat, items] of Object.entries(groups)){
+    const og=document.createElement('optgroup'); og.label=cat;
+    for (const [i,t] of items){
+      const o=document.createElement('option'); o.value=i; o.textContent=t;
+      og.appendChild(o);
+    }
+    sel.appendChild(og);
+  }
+})();
 sel.onchange=()=>{ S.seq=+sel.value; S.frame=0; S.track=-1; _tcol=new Map(); refresh(['all']) };
 
-/* tabs */
 function setPage(p){
   S.page=p;
   document.querySelectorAll('nav.tabs button').forEach(b=>
@@ -1361,7 +1432,6 @@ function setPage(p){
 document.querySelectorAll('nav.tabs button').forEach(b=>
   b.onclick=()=>setPage(b.dataset.p));
 
-/* spectrum hover */
 (function(){
   const cv=document.getElementById('spec');
   cv.addEventListener('pointermove',e=>{
@@ -1380,14 +1450,15 @@ document.querySelectorAll('nav.tabs button').forEach(b=>
   cv.addEventListener('pointerleave',hideTip);
 })();
 
-/* ---------------- refresh ---------------- */
+/* ---------------- refresh & theme wiring ---------------- */
 function refresh(parts){
   const p=new Set(parts);
   const all=p.has('all');
   if (S.page==='explore'){
     if(all||p.has('wf')) drawWF();
     if(all||p.has('wfov')||p.has('cursor')) drawWFOverlay();
-    if(all||p.has('cursor')||p.has('energy')){ drawEvents(); drawSpeed(); drawBytes(); drawEnergy() }
+    if(all||p.has('cursor')||p.has('energy')){
+      drawEventsLane(); drawTrends(); drawSpeed(); drawBytes(); drawEnergy() }
     if(all||p.has('spec')||p.has('cursor')) drawSpec();
     if(all||p.has('stats')||p.has('cursor')) drawStats();
     if(all||p.has('table')||p.has('cursor')) drawTable();
@@ -1397,8 +1468,21 @@ function refresh(parts){
   if (S.page==='help') drawHelp();
   if (p.has('three')) draw3D();
 }
+function onThemeChange(){
+  buildTheme();
+  if (S.page==='explore') refresh(['all']);
+  else if (S.page==='three') draw3D();
+  else if (S.page==='events') drawEventsTab();
+  else if (S.page==='help') drawHelp();
+  if (S.page==='compare'){ cmpDone=false; drawCompare() }
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', onThemeChange);
+new MutationObserver(muts=>{
+  if (muts.some(m=>m.attributeName==='data-theme')) onThemeChange();
+}).observe(document.documentElement, {attributes:true});
 let rsz; addEventListener('resize',()=>{clearTimeout(rsz);rsz=setTimeout(()=>{
   if(S.page==='explore')refresh(['all']); else if(S.page==='three')draw3D();
   else if(S.page==='events')drawEventsTab(); else if(S.page==='help')drawHelp();},150)});
+buildTheme();
 refresh(['all']); drawRice();
 </script>

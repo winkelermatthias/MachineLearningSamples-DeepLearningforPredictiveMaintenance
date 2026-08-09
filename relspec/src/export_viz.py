@@ -67,8 +67,12 @@ class TrackRegistry:
         self.tracks[best]['key'] = 0.9*self.tracks[best]['key']+0.1*float(key)
         return best
 
-def process_sequence(name, title, gen, fs, fr_nominal, note=''):
-    """gen yields (x, fr_true_or_None) acquisitions in time order."""
+def process_sequence(name, title, gen, fs, fr_nominal, note='', cat='Synthetic',
+                     cad='consecutive 2 s windows', fullres_out=True):
+    """gen yields (x, fr_true_or_None) acquisitions in time order.
+    fullres_out=False drops the full-resolution spectra (the year-scale
+    sequence would otherwise triple the page weight for an overlay whose
+    story the short sequences already tell)."""
     ca = Codec2(nbins=NBINS, n_bands=16, refs='best')
     ce = Codec2(nbins=ENV_BINS, n_peaks=32, n_bands=12, refs='best')
     da = Decoder2(nbins=NBINS, n_bands=16)
@@ -104,16 +108,20 @@ def process_sequence(name, title, gen, fs, fr_nominal, note=''):
                       mb=int(s['mask_bands']), k=int(s['kind']),
                       df=int(s['dfeat']))
         ti_ += 1
-        af, adf, ef = fullres(x, fs, e.fr, name)
         fr_rec = dict(fr=round(e.fr, 4), tier=e.tier,
                       fr_true=round(fr_true, 4) if fr_true else None,
                       bytes=len(pa)+len(pe), ba=len(pa), be=len(pe),
                       kind='A' if 'anchor' in (ka+ke) else
                            ('P' if 'residual_p' in (ka, ke) else 'R'),
+                      vr=round(float(e.vel_rms), 3),
+                      ar=round(float(e.acc_rms), 4),
+                      er=round(float(e.env_rms), 4),
                       a_o=B64(e.acc_u8), a_d=B64(ra),
                       e_o=B64(e.env_u8), e_d=B64(re_),
-                      af=B64(af), adf=round(adf, 4), ef=B64(ef),
                       bd=dict(a=bd_a, e=bd_e), gate=gd)
+        if fullres_out:
+            af, adf, ef = fullres(x, fs, e.fr, name)
+            fr_rec.update(af=B64(af), adf=round(adf, 4), ef=B64(ef))
         for rail, u_o, u_d, cen in (('acc', e.acc_u8, ra, CENTERS),
                                     ('env', e.env_u8, re_, ENV_CENTERS)):
             acc_o = frame_patterns(to_amp(u_o), cen, rail == 'env')
@@ -139,11 +147,38 @@ def process_sequence(name, title, gen, fs, fr_nominal, note=''):
             fr_rec[rail+'_res'] = round(float(acc_o['residual_share']), 4)
         frames.append(fr_rec)
     print(f'  {name}: {len(frames)} frames  {time.time()-t0:.0f}s', flush=True)
-    return dict(name=name, title=title, note=note, fs=fs,
+    return dict(name=name, title=title, note=note, fs=fs, cat=cat, cad=cad,
                 fr_nominal=fr_nominal, frames=frames,
                 tracks={r: regs[r].tracks for r in ('acc', 'env')})
 
 # ------------------------------------------------------------- generators
+def gen_longterm(days=1095, seed=77):
+    """Three years of a centrifugal pump at one spectrum a day. The story a
+    long-lived asset actually tells: seasonal load and speed, a lubrication
+    episode caught and re-greased, an outer-race defect initiating in year
+    two and growing until the bearing is replaced, and the small imbalance a
+    hurried reassembly leaves behind. Per-day RNG seeding keeps every day
+    reproducible independently."""
+    cat = machine_catalog2()
+    spec = cat['centrifugal_pump']
+    fr0 = 29.5
+    for d in range(days):
+        rng = np.random.default_rng(seed*1000003+d)
+        season = np.sin(2*np.pi*(d % 365)/365)
+        load = 0.55+0.25*season**2+0.12*np.sin(2*np.pi*d/7)+rng.uniform(-0.04, 0.04)
+        fr = fr0*(1+0.010*season+rng.uniform(-0.006, 0.006))
+        f = FaultState2()
+        if 380 <= d < 455:                       # lubrication distress -> relube
+            f.lubrication = 0.55*progression('exponential', (d-380)/75)
+        if 620 <= d < 852:                       # outer race grows until replaced
+            f.outer_race = 0.9*progression('exponential', (d-620)/232)
+            f.resonance_shift = 0.5*progression('linear', (d-620)/232)
+        if d >= 852:                             # sloppy reassembly after repair
+            f.imbalance = 0.15
+        x = generate2(spec, f, 2.0, fr, load=float(np.clip(load, 0.3, 1.0)),
+                      speed_wander_pct=0.5, rng=rng)
+        yield x.astype(np.float64), fr
+
 def gen_synth(mtype, fault_field, prog_kind, onset_frac, n_frames, fr0,
               wander=0.8, sev_max=0.9, seed=42, vfd_jumps=False):
     cat = machine_catalog2()
@@ -189,6 +224,16 @@ def gen_seu(names, channel_recs, win_s=2.0, nw=8):
 if __name__ == '__main__':
     out = []
     out.append(process_sequence(
+        'longterm', 'Pump P-201 - three years, one spectrum a day',
+        gen_longterm(), 12000.0, 29.5,
+        'Day 380: lubrication distress, re-greased day 455. Day 620: outer '
+        'race initiates, grows until the bearing is replaced on day 852 - '
+        'and the hurried reassembly leaves a small imbalance behind. '
+        'Seasonal load and speed all three years. Full-resolution FFT '
+        'overlay is not exported for this sequence.',
+        cat='Long-term', cad='1 spectrum / day · 1,095 days',
+        fullres_out=False))
+    out.append(process_sequence(
         'synth_or', 'Synthetic gearbox - outer race, exponential onset',
         gen_synth('gearbox', 'outer_race', 'exponential', 0.33, 90, 16.2),
         12000.0, 16.2,
@@ -208,27 +253,29 @@ if __name__ == '__main__':
         gen_cwru([('IR007', 0), ('IR007', 1), ('IR007', 2), ('IR007', 3)]),
         12000.0, 29.95,
         'Four motor loads, 1797 down to 1730 rpm. Order view aligns the '
-        'BPFI comb across the speed steps.'))
+        'BPFI comb across the speed steps.', cat='Real - CWRU'))
     out.append(process_sequence(
         'cwru_or014', 'CWRU outer race 0.014" @6:00, loads 0-3 HP',
         gen_cwru([('OR014', 0), ('OR014', 1), ('OR014', 2), ('OR014', 3)]),
-        12000.0, 29.95, ''))
+        12000.0, 29.95, '', cat='Real - CWRU'))
     out.append(process_sequence(
         'cwru_normal', 'CWRU healthy baseline, loads 0-3 HP',
         gen_cwru([('normal', 0), ('normal', 1), ('normal', 2), ('normal', 3)]),
         12000.0, 29.95,
         'What the codec spends when nothing happens: the bytes strip is the '
-        'point of this one.'))
+        'point of this one.', cat='Real - CWRU'))
     out.append(process_sequence(
         'mfpt_or', 'MFPT outer race, variable load 25-300 lbs',
         gen_mfpt('OuterRaceFault_vload'), 48828.0, 25.0,
-        'Same defect under seven loads at 48.8 kHz; BPFO at order 3.245.'))
+        'Same defect under seven loads at 48.8 kHz; BPFO at order 3.245.',
+        cat='Real - MFPT'))
     seu = DS.seu_records('bearingset')
     out.append(process_sequence(
         'seu_ball', 'SEU gearbox rig - ball fault, 20 Hz then 30 Hz',
         gen_seu(['ball_20_0', 'ball_30_2'], seu), 5120.0, 25.0,
         'A 50% speed change mid-sequence. 5.12 kHz rig: the fixed v1 '
-        'demod band cannot exist here; the kurtogram band carries the rail.'))
+        'demod band cannot exist here; the kurtogram band carries the rail.',
+        cat='Real - SEU'))
     meta = dict(centers=[round(float(c), 4) for c in CENTERS],
                 env_centers=[round(float(c), 4) for c in ENV_CENTERS],
                 q_db=0.5, db_off=-128.0)
