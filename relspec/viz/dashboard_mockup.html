@@ -1,0 +1,563 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>relspec dashboard — design mockup</title>
+<style>
+  :root{
+    --bg:#F4F3EF; --panel:#FFFFFF; --panel2:#ECEBE6; --well:#FBFAF7;
+    --ink:#1E2833; --muted:#5F6E80; --faint:#9AA5B1;
+    --hair:#D8DCE2; --grid:#E5E3DD; --accent:#1F7A93; --accent-soft:#D9EAEF;
+    --good:#1B7F4D; --good-soft:#DDF0E5; --mon:#B7791F; --mon-soft:#F6ECD7;
+    --alert:#C2542B; --alert-soft:#F8E3D9; --crit:#B03A48; --crit-soft:#F6DDE0;
+    --sel:#E8F0F4;
+    --mono:"SF Mono","Cascadia Code","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0B0F14; --panel:#121924; --panel2:#0F151E; --well:#0A0E13;
+      --ink:#DCE6F2; --muted:#7E8CA0; --faint:#4A5568;
+      --hair:#223041; --grid:#1A2330; --accent:#62B6CB; --accent-soft:#1B2A3A;
+      --good:#2F9E85; --good-soft:#12312B; --mon:#E4A03C; --mon-soft:#332714;
+      --alert:#E07B4E; --alert-soft:#38200F; --crit:#E0566B; --crit-soft:#391721;
+      --sel:#1B2A3A;
+    }
+  }
+  :root[data-theme="dark"]{
+      --bg:#0B0F14; --panel:#121924; --panel2:#0F151E; --well:#0A0E13;
+      --ink:#DCE6F2; --muted:#7E8CA0; --faint:#4A5568;
+      --hair:#223041; --grid:#1A2330; --accent:#62B6CB; --accent-soft:#1B2A3A;
+      --good:#2F9E85; --good-soft:#12312B; --mon:#E4A03C; --mon-soft:#332714;
+      --alert:#E07B4E; --alert-soft:#38200F; --crit:#E0566B; --crit-soft:#391721;
+      --sel:#1B2A3A;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--bg)}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);
+       font-size:13.5px;line-height:1.45}
+  header.top{display:flex;align-items:baseline;gap:14px;padding:14px 20px 10px;
+       border-bottom:1px solid var(--hair);flex-wrap:wrap}
+  header.top h1{font-family:var(--mono);font-size:15px;letter-spacing:.14em;
+       text-transform:uppercase;font-weight:600}
+  header.top h1 b{color:var(--accent)}
+  header.top .sub{color:var(--muted);font-size:12px}
+  nav.tabs{margin-left:auto;display:flex;gap:2px}
+  nav.tabs button{background:none;border:0;border-bottom:2px solid transparent;
+    color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:.1em;
+    text-transform:uppercase;padding:6px 12px;cursor:pointer}
+  nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+  .page{display:none;padding:18px 20px 60px}
+  .page.on{display:block}
+  .disclaimer{font-family:var(--mono);font-size:10px;color:var(--faint);
+    letter-spacing:.06em;margin-top:6px}
+
+  /* chips & pills */
+  .chip{display:inline-flex;align-items:center;gap:6px;border-radius:12px;
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;
+    padding:3px 10px;border:1px solid transparent;white-space:nowrap}
+  .chip b{font-weight:700}
+  .c-good{background:var(--good-soft);color:var(--good)}
+  .c-mon{background:var(--mon-soft);color:var(--mon)}
+  .c-alert{background:var(--alert-soft);color:var(--alert)}
+  .c-crit{background:var(--crit-soft);color:var(--crit)}
+  .c-learn{background:var(--panel2);color:var(--muted)}
+  .zpill{font-family:var(--mono);font-size:10.5px;border-radius:3px;
+    padding:1px 7px;font-variant-numeric:tabular-nums}
+
+  /* layout */
+  .cols{display:grid;grid-template-columns:230px minmax(0,1fr) 320px;gap:18px;
+    align-items:start}
+  @media(max-width:1200px){.cols{grid-template-columns:minmax(0,1fr)}
+    .rail,.feed{display:none}}
+  .card{background:var(--panel);border:1px solid var(--hair);border-radius:8px}
+  .card .hd{font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);
+    padding:10px 14px;border-bottom:1px solid var(--hair)}
+  .card .bd{padding:12px 14px}
+
+  /* tree rail */
+  .rail .node{padding:5px 10px;border-radius:5px;display:flex;gap:8px;
+    align-items:center;cursor:pointer;font-size:12.5px}
+  .rail .node:hover{background:var(--sel)}
+  .rail .node.lvl1{margin-left:14px}.rail .node.lvl2{margin-left:28px;color:var(--muted)}
+  .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .d-good{background:var(--good)}.d-mon{background:var(--mon)}
+  .d-alert{background:var(--alert)}.d-crit{background:var(--crit)}
+
+  /* KPI row */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+    gap:1px;background:var(--hair);border:1px solid var(--hair);
+    border-radius:8px;overflow:hidden;margin-bottom:16px}
+  .kpi{background:var(--panel);padding:10px 14px}
+  .kpi .k{font-family:var(--mono);font-size:9px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--muted)}
+  .kpi .v{font-family:var(--mono);font-size:19px;margin-top:2px;
+    font-variant-numeric:tabular-nums}
+  .kpi .v small{font-size:11px;color:var(--muted)}
+
+  /* asset cards */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+    gap:12px}
+  .acard{background:var(--panel);border:1px solid var(--hair);border-radius:8px;
+    padding:12px 14px;cursor:pointer;position:relative}
+  .acard:hover{border-color:var(--accent)}
+  .acard .nm{font-weight:600;font-size:13.5px}
+  .acard .ty{color:var(--muted);font-size:11.5px;margin-bottom:8px}
+  .acard canvas{display:block;width:100%;height:34px;margin:8px 0 6px}
+  .acard .why{font-size:11.5px;color:var(--muted);line-height:1.4;min-height:32px}
+  .acard .ft{display:flex;justify-content:space-between;align-items:center;
+    margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--faint)}
+  .acard .tr-up{color:var(--alert);font-weight:700}
+  .acard .tr-dn{color:var(--good);font-weight:700}
+
+  /* feed */
+  .feed .item{padding:11px 14px;border-bottom:1px solid var(--grid);cursor:pointer}
+  .feed .item:hover{background:var(--sel)}
+  .feed .t{display:flex;gap:8px;align-items:center;margin-bottom:4px}
+  .feed .ti{font-weight:600;font-size:12.5px}
+  .feed .m{font-size:11.5px;color:var(--muted);line-height:1.45}
+  .feed .who{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:5px}
+  .feed button.ack{margin-left:auto;background:none;border:1px solid var(--hair);
+    border-radius:4px;color:var(--muted);font-family:var(--mono);font-size:10px;
+    padding:2px 9px;cursor:pointer}
+  .feed button.ack:hover{border-color:var(--accent);color:var(--accent)}
+
+  /* asset page */
+  .ahead{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+  .ahead h2{font-size:17px}
+  .ahead .path{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  .btn{background:var(--panel);border:1px solid var(--hair);border-radius:5px;
+    color:var(--ink);font-family:var(--mono);font-size:11px;padding:6px 12px;
+    cursor:pointer}
+  .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+  .btn.danger:hover{border-color:var(--crit);color:var(--crit)}
+  .arows{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;
+    align-items:start}
+  @media(max-width:1100px){.arows{grid-template-columns:minmax(0,1fr)}}
+  .strip{margin-bottom:14px}
+  .strip canvas{display:block;width:100%}
+  .cap{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);margin:0 0 4px 2px}
+  .cap em{font-style:normal;color:var(--faint)}
+  .legendrow{display:flex;gap:14px;font-family:var(--mono);font-size:10px;
+    color:var(--muted);margin-top:4px;flex-wrap:wrap}
+  .legendrow i{font-style:normal}
+  table{width:100%;border-collapse:collapse;font-family:var(--mono);
+    font-size:11px;font-variant-numeric:tabular-nums}
+  th{font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--muted);text-align:right;padding:4px 8px;
+    border-bottom:1px solid var(--hair);font-weight:500}
+  th:first-child,td:first-child{text-align:left}
+  td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+  .comment{border-left:2px solid var(--hair);margin:8px 0 0 6px;padding:2px 0 2px 10px;
+    font-size:12px;color:var(--muted)}
+  .evd{display:inline-block;background:var(--accent-soft);color:var(--accent);
+    font-family:var(--mono);font-size:10px;border-radius:3px;padding:1px 7px;
+    margin-right:5px;cursor:pointer}
+  select,input[type=text]{background:var(--well);border:1px solid var(--hair);
+    border-radius:4px;color:var(--ink);font-family:var(--mono);font-size:11.5px;
+    padding:4px 8px}
+
+  /* mobile frames */
+  .phones{display:flex;gap:34px;justify-content:center;flex-wrap:wrap;padding-top:8px}
+  .phone{width:390px;border:1px solid var(--hair);border-radius:26px;
+    background:var(--bg);overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.15)}
+  .phone .titl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--muted);text-align:center;padding:9px}
+  .phone .screen{height:660px;overflow-y:auto;padding:4px 12px 60px;position:relative}
+  .phone .tabbar{display:flex;border-top:1px solid var(--hair);background:var(--panel)}
+  .phone .tabbar div{flex:1;text-align:center;font-family:var(--mono);
+    font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--faint);padding:11px 0}
+  .phone .tabbar div.on{color:var(--accent)}
+  .mcard{background:var(--panel);border:1px solid var(--hair);border-radius:10px;
+    padding:12px 14px;margin-bottom:10px}
+  .mcard .row{display:flex;align-items:center;gap:10px}
+  .mcard .nm{font-weight:600;font-size:14px}
+  .mcard .ty{color:var(--muted);font-size:11px}
+  .mcard canvas{display:block;width:100%;height:30px;margin-top:8px}
+  .mcard .meta{display:flex;justify-content:space-between;margin-top:6px;
+    font-family:var(--mono);font-size:10px;color:var(--faint)}
+  .filterrow{display:flex;gap:6px;overflow-x:auto;padding:8px 0}
+  .filterrow .chip{cursor:pointer;flex:none}
+  .mhead{display:flex;align-items:center;gap:10px;padding:10px 2px 4px}
+  .mhead h3{font-size:15px}
+</style>
+
+<header class="top">
+  <h1>relspec <b>health</b></h1>
+  <span class="sub">dashboard design mockup — every number here is representative, every layout is the proposal</span>
+  <nav class="tabs">
+    <button aria-selected="true"  data-p="fleet">Fleet</button>
+    <button aria-selected="false" data-p="asset">Asset</button>
+    <button aria-selected="false" data-p="mobile">Mobile</button>
+  </nav>
+</header>
+
+<!-- ================= FLEET ================= -->
+<div class="page on" data-page="fleet">
+  <div class="cols">
+    <div class="rail card"><div class="hd">estate</div><div class="bd" id="tree"></div></div>
+    <div>
+      <div class="kpis">
+        <div class="kpi"><div class="k">assets</div><div class="v">29</div></div>
+        <div class="kpi"><div class="k">sensors</div><div class="v">63</div></div>
+        <div class="kpi"><div class="k">open findings</div><div class="v">7 <small>2 crit</small></div></div>
+        <div class="kpi"><div class="k">data · 30 d</div><div class="v">1.9 <small>MB · 318×</small></div></div>
+        <div class="kpi"><div class="k">raw snapshots · 30 d</div><div class="v">241 <small>audit ≤0.9 dB</small></div></div>
+      </div>
+      <div style="display:flex;gap:16px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+        <canvas id="donut" width="132" height="132" style="width:66px;height:66px"></canvas>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span class="chip c-good">✓ healthy <b>21</b></span>
+          <span class="chip c-mon">◔ monitor <b>5</b></span>
+          <span class="chip c-alert">▲ alert <b>2</b></span>
+          <span class="chip c-crit">◆ critical <b>1</b></span>
+        </div>
+        <span style="margin-left:auto;color:var(--faint);font-family:var(--mono);font-size:10.5px">
+          sorted by tier · trend · staleness</span>
+      </div>
+      <div class="grid" id="cards"></div>
+    </div>
+    <div class="feed card"><div class="hd">insight feed · findings & events</div><div id="feed"></div></div>
+  </div>
+</div>
+
+<!-- ================= ASSET ================= -->
+<div class="page" data-page="asset">
+  <div class="ahead">
+    <h2>PUMP-201</h2>
+    <span class="chip c-alert">▲ alert <b>since 12 days</b></span>
+    <span class="path">North plant / intake / PUMP-201 · centrifugal pump · 4 sensors</span>
+    <div class="actions">
+      <button class="btn primary">＋ New finding</button>
+      <button class="btn">Report ▾</button>
+      <button class="btn danger">Reset baseline…</button>
+      <button class="btn danger">Set data cutoff…</button>
+    </div>
+  </div>
+  <div class="arows">
+    <div>
+      <div class="strip">
+        <div class="cap">health timeline · 180 d <em>· markers: findings ⚑ · maintenance ⛭ · baseline reset ⟲</em></div>
+        <canvas id="healthTl" height="46"></canvas>
+      </div>
+      <div class="strip">
+        <div class="cap">overall velocity · mm/s rms <em>· shaded: ISO zones · ◆ raw snapshot kept (hover = truth-point audit)</em></div>
+        <canvas id="velTrend" height="120"></canvas>
+        <div class="legendrow"><i>◆ first/baseline</i><i style="color:var(--alert)">◆ change event</i>
+          <i>· codec-only frame</i><i style="margin-left:auto">158 codec frames · 27 snapshots · <b style="color:var(--accent)">audit at snapshots: med 0.4 dB · p95 1.2 dB</b></i></div>
+      </div>
+      <div class="strip">
+        <div class="cap">pattern health matrix · z vs own baseline <em>· DE-V sensor · click a row to spotlight in the analysis suite</em></div>
+        <canvas id="pmatrix" height="190"></canvas>
+        <div class="legendrow"><i style="color:var(--accent)">−6σ</i><i>0</i><i style="color:var(--crit)">+6σ</i>
+          <i style="margin-left:auto">baseline: 62 quiet frames since ⟲ reset (day −140)</i></div>
+      </div>
+      <div class="strip card"><div class="hd">analysis suite</div>
+        <div class="bd" style="color:var(--muted);font-size:12.5px">
+          Waterfall · 3-D · Δ decoded−raw · z view · frame inspector — the full
+          explorer embeds here (already built), gaining harmonic &amp; sideband
+          cursors, kinematic pins (BPFO 3.58× · BPFI 5.42× · vane 7×), waveform
+          + envelope views at every ◆ truth point, and DE↔NDE compare.
+        </div></div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px"><div class="hd">finding #F-102 · open</div>
+        <div class="bd">
+          <div class="t" style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+            <span class="chip c-alert">▲ alert</span>
+            <b style="font-size:13px">Outer-race wear developing, DE bearing</b>
+          </div>
+          <div style="font-size:12.5px;color:var(--muted);line-height:1.5">
+            BPFO track energy +9 dB over 3 weeks, z 6.2. Envelope comb verified
+            8/9 harmonics. Recommend bearing inspection at next stop.</div>
+          <div style="margin:9px 0 4px">
+            <span class="evd">frame d162</span><span class="evd">track BPFO 3.58×</span>
+            <span class="evd">band 2–5 kHz</span></div>
+          <div class="who" style="font-family:var(--mono);font-size:10px;color:var(--faint)">
+            M. Winkeler · 2 d ago · <span style="color:var(--mon)">acknowledged</span> by J. Ortiz</div>
+          <div class="comment">Confirmed on portable route measurement — J. Ortiz, 1 d ago</div>
+          <div class="comment">Bearing on order, planned wk 34 — planner, 3 h ago</div>
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <input type="text" placeholder="add comment as M. Winkeler…" style="flex:1">
+            <button class="btn">Post</button></div>
+        </div></div>
+      <div class="card" style="margin-bottom:14px"><div class="hd">compression confidence</div>
+        <div class="bd">
+          <div style="display:flex;gap:14px;align-items:baseline">
+            <span style="font-family:var(--mono);font-size:22px;color:var(--accent)">322×</span>
+            <span style="font-size:11.5px;color:var(--muted)">average vs raw spectra ·
+              27 truth points audited</span></div>
+          <canvas id="confTrend" height="54"></canvas>
+          <div class="legendrow"><i>reconstruction error at each raw snapshot</i>
+            <i style="margin-left:auto">worst ever: 1.9 dB (in dead-zone bound)</i></div>
+        </div></div>
+      <div class="card"><div class="hd">storage parameters · this sensor</div>
+        <div class="bd" style="display:grid;gap:9px;font-size:12px">
+          <label style="display:flex;justify-content:space-between;align-items:center">
+            raw snapshot cadence
+            <select><option>weekly (default)</option><option selected>every 3 days</option>
+              <option>daily</option></select></label>
+          <label style="display:flex;justify-content:space-between;align-items:center">
+            event budget / week <select><option>0</option><option selected>2</option><option>5</option></select></label>
+          <label style="display:flex;justify-content:space-between;align-items:center">
+            raw retention <select><option selected>2 years</option><option>5 years</option></select></label>
+          <div style="font-family:var(--mono);font-size:10.5px;color:var(--muted);
+            border-top:1px solid var(--grid);padding-top:8px">
+            estimated: <b style="color:var(--ink)">4.6 MB/year</b> raw + 0.18 MB/year
+            spectra &nbsp;·&nbsp; change is logged as an event</div>
+        </div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MOBILE ================= -->
+<div class="page" data-page="mobile">
+  <div class="phones">
+    <div class="phone"><div class="titl">fleet · triage</div>
+      <div class="screen">
+        <div class="filterrow">
+          <span class="chip c-crit">◆ critical 1</span><span class="chip c-alert">▲ alert 2</span>
+          <span class="chip c-mon">◔ monitor 5</span><span class="chip c-learn">stale 3</span>
+        </div>
+        <div id="mcards"></div>
+      </div>
+      <div class="tabbar"><div class="on">Fleet</div><div>Inbox 7</div><div>Search</div></div>
+    </div>
+    <div class="phone"><div class="titl">asset sheet</div>
+      <div class="screen">
+        <div class="mhead"><h3>PUMP-201</h3><span class="chip c-alert">▲ alert</span></div>
+        <div class="cap" style="margin-top:6px">health · 90 d</div>
+        <canvas id="mHealth" height="30" style="width:100%"></canvas>
+        <div class="cap" style="margin-top:12px">velocity mm/s · acceleration g · envelope g</div>
+        <canvas id="mTrends" height="120" style="width:100%"></canvas>
+        <div class="cap" style="margin-top:12px">events & findings</div>
+        <div class="mcard"><div class="row"><span class="chip c-alert">▲</span>
+          <div><div class="nm" style="font-size:12.5px">Outer-race wear developing</div>
+          <div class="ty">F-102 · M. Winkeler · 2 comments</div></div>
+          <button class="btn" style="margin-left:auto">Ack</button></div></div>
+        <div class="mcard"><div class="row"><span class="chip c-learn">⟲</span>
+          <div><div class="nm" style="font-size:12.5px">Baseline reset</div>
+          <div class="ty">after impeller replacement · day −140</div></div></div></div>
+        <div class="mcard"><div class="row"><span class="chip c-mon">◔</span>
+          <div><div class="nm" style="font-size:12.5px">Gate change · step</div>
+          <div class="ty">score 6.1 · frame d162 · auto</div></div></div></div>
+        <button class="btn" style="width:100%;margin-top:8px">Open full analysis on desktop ↗</button>
+      </div>
+      <div class="tabbar"><div class="on">Fleet</div><div>Inbox 7</div><div>Search</div></div>
+    </div>
+  </div>
+  <p class="disclaimer" style="text-align:center;margin-top:14px">
+    cards sort by tier · trend · staleness — the phone answers “what do I look at first”; deep spectra stay on desktop</p>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const dpr=Math.min(2,devicePixelRatio||1);
+function fit(cv,h){const w=cv.clientWidth||cv.parentElement.clientWidth;
+  cv.width=w*dpr;cv.height=h*dpr;cv.style.height=h+'px';
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return [g,w,h]}
+function rnd(seed){let s=seed>>>0;return()=>((s=Math.imul(s^s>>>15,s|1),
+  s^=s+Math.imul(s^s>>>7,s|61),(s^s>>>14)>>>0)/4294967296)}
+
+const TIERS={good:['✓','healthy'],mon:['◔','monitor'],alert:['▲','alert'],crit:['◆','critical']};
+const ASSETS=[
+ ['PUMP-201','centrifugal pump','alert','BPFO z 6.2 · vel 5.8 mm/s (zone C) · rising',1,'2 h',7],
+ ['FAN-112','centrifugal fan','crit','looseness harmonics z 8.4 · vel 9.3 (zone D)',2,'1 h',3],
+ ['CMP-021','screw compressor','mon','envelope RMS drift · CUSUM 11.2',0,'3 h',9],
+ ['PUMP-186','centrifugal pump','good','all patterns within ±2σ',0,'2 h',5],
+ ['MOT-054','induction motor','good','all patterns within ±2σ',0,'5 h',11],
+ ['GBX-009','bevel gearbox','mon','GMF sidebands z 3.1 · steady',1,'2 h',2],
+];
+function sparky(cv,seed,tier,rise){
+  const[g,w,h]=fit(cv,parseInt(cv.style.height)||34);
+  const r=rnd(seed);const n=40;const col=css('--'+(tier==='good'?'accent':tier));
+  g.strokeStyle=col;g.lineWidth=1.6;g.beginPath();
+  let v=0.35+r()*0.1;
+  for(let i=0;i<n;i++){v+=(r()-0.48)*0.06;
+    if(rise&&i>n*0.6)v+=0.028;v=Math.max(0.1,Math.min(0.95,v));
+    const x=w*i/(n-1),y=h-4-(h-10)*v;i?g.lineTo(x,y):g.moveTo(x,y)}
+  g.stroke();
+  g.fillStyle=col;g.beginPath();
+  g.arc(w-2,h-4-(h-10)*v,2.6,0,7);g.fill();
+}
+/* fleet cards */
+const cards=$('#cards');
+ASSETS.forEach((a,i)=>{
+  const[nm,ty,tier,why,findings,age]=a;
+  const el=document.createElement('div');el.className='acard';
+  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:start">
+    <div><div class="nm">${nm}</div><div class="ty">${ty}</div></div>
+    <span class="chip c-${tier}">${TIERS[tier][0]} ${TIERS[tier][1]}</span></div>
+    <canvas></canvas><div class="why">${why}</div>
+    <div class="ft"><span>${findings?`⚑ ${findings} open`:'no findings'}</span>
+    <span>${a[5]} ago ${tier==='alert'||tier==='crit'?'<span class="tr-up">▲</span>':''}</span></div>`;
+  cards.appendChild(el);
+  sparky(el.querySelector('canvas'),i*77+3,tier,tier==='alert'||tier==='crit');
+});
+/* tree */
+$('#tree').innerHTML=`
+ <div class="node"><span class="dot d-crit"></span><b>North plant</b><span style="margin-left:auto;color:var(--faint);font-family:var(--mono);font-size:10px">18</span></div>
+ <div class="node lvl1"><span class="dot d-crit"></span>intake</div>
+ <div class="node lvl2"><span class="dot d-alert"></span>PUMP-201</div>
+ <div class="node lvl2"><span class="dot d-crit"></span>FAN-112</div>
+ <div class="node lvl2"><span class="dot d-good"></span>PUMP-186</div>
+ <div class="node lvl1"><span class="dot d-mon"></span>process</div>
+ <div class="node lvl2"><span class="dot d-mon"></span>CMP-021</div>
+ <div class="node lvl2"><span class="dot d-good"></span>MOT-054</div>
+ <div class="node"><span class="dot d-mon"></span><b>South plant</b><span style="margin-left:auto;color:var(--faint);font-family:var(--mono);font-size:10px">11</span></div>
+ <div class="node lvl1"><span class="dot d-mon"></span>utilities</div>
+ <div class="node lvl2"><span class="dot d-mon"></span>GBX-009</div>`;
+/* donut */
+(function(){
+  const cv=$('#donut'),g=cv.getContext('2d');g.setTransform(2,0,0,2,0,0);
+  const data=[[21,'--good'],[5,'--mon'],[2,'--alert'],[1,'--crit']];
+  const tot=29;let a0=-Math.PI/2;
+  data.forEach(([n,c])=>{const a1=a0+n/tot*2*Math.PI;
+    g.beginPath();g.strokeStyle=css(c);g.lineWidth=9;
+    g.arc(33,33,25,a0+0.03,a1-0.03);g.stroke();a0=a1});
+  g.fillStyle=css('--ink');g.font='600 13px '+css('--mono');
+  g.textAlign='center';g.fillText('29',33,31);
+  g.fillStyle=css('--muted');g.font='8px '+css('--mono');g.fillText('assets',33,42);
+})();
+/* feed */
+$('#feed').innerHTML=[
+ ['crit','FAN-112 · foundation looseness','1×–4× harmonics z 8.4, step change confirmed on both sensors. Stop recommended.','auto-rule + R. Chen · 1 h','Ack'],
+ ['alert','PUMP-201 · outer-race wear','BPFO +9 dB / 3 wks, verified 8/9 harmonics. Bearing on order.','M. Winkeler · 2 d','Open'],
+ ['mon','CMP-021 · envelope drift','CUSUM 11.2 on envelope RMS. Possible lubrication; route check scheduled.','J. Ortiz · 3 d','Ack'],
+ ['learn','GBX-009 · baseline reset','After oil change; health re-learning (12 of 20 frames).','planner · 5 d',''],
+].map(([t,ti,m,who,btn])=>`<div class="item"><div class="t">
+  <span class="chip c-${t}">${(TIERS[t]||['⟲'])[0]}</span><span class="ti">${ti}</span>
+  ${btn?`<button class="ack">${btn}</button>`:''}</div>
+  <div class="m">${m}</div><div class="who">${who}</div></div>`).join('');
+
+/* ============ asset page canvases ============ */
+function healthBand(cv,h){
+  const[g,w]=fit(cv,h);
+  const segs=[[0,0.18,'good'],[0.18,0.22,'learn'],[0.22,0.55,'good'],
+              [0.55,0.72,'mon'],[0.72,1,'alert']];
+  segs.forEach(([a,b,t])=>{g.fillStyle=t==='learn'?css('--panel2'):css('--'+t);
+    g.globalAlpha=t==='learn'?1:0.8;
+    g.fillRect(w*a,h*0.3,w*(b-a),h*0.4);g.globalAlpha=1});
+  const marks=[[0.18,'⟲'],[0.57,'⚑'],[0.74,'⚑'],[0.86,'⛭']];
+  g.font='11px '+css('--sans');g.textAlign='center';g.fillStyle=css('--ink');
+  marks.forEach(([x,s])=>{g.fillText(s,w*x,h*0.22);
+    g.strokeStyle=css('--faint');g.beginPath();
+    g.moveTo(w*x,h*0.28);g.lineTo(w*x,h*0.72);g.stroke()});
+  g.font='9px '+css('--mono');g.fillStyle=css('--muted');g.textAlign='left';
+  g.fillText('−180 d',2,h-2);g.textAlign='right';g.fillText('today',w-2,h-2);
+}
+function velTrend(){
+  const cv=$('#velTrend');const[g,w,h]=fit(cv,120);
+  const zones=[[0,2.8,'--good'],[2.8,7.1,'--mon'],[7.1,11,'--alert']];
+  const ymax=11,Y=v=>h-16-(h-30)*v/ymax;
+  zones.forEach(([a,b,c])=>{g.fillStyle=css(c);g.globalAlpha=0.10;
+    g.fillRect(30,Y(b),w-40,Y(a)-Y(b));g.globalAlpha=1});
+  g.font='9px '+css('--mono');g.fillStyle=css('--muted');g.textAlign='right';
+  [0,2.8,7.1,11].forEach(v=>g.fillText(v,26,Y(v)+3));
+  const r=rnd(42);const n=158;let v=1.6;const pts=[];
+  for(let i=0;i<n;i++){v+=(r()-0.49)*0.16;if(i>110)v+=0.055;
+    v=Math.max(0.8,v);pts.push(v)}
+  g.strokeStyle=css('--accent');g.lineWidth=1.5;g.beginPath();
+  pts.forEach((p,i)=>{const x=30+(w-40)*i/(n-1);i?g.lineTo(x,Y(p)):g.moveTo(x,Y(p))});
+  g.stroke();
+  for(let i=0;i<n;i+=1){const x=30+(w-40)*i/(n-1);
+    if(i%6===0||i>110&&i%3===0&&r()>0.6){
+      const ev=i>110&&r()>0.5;
+      g.fillStyle=ev?css('--alert'):css('--ink');
+      g.beginPath();g.moveTo(x,h-9);g.lineTo(x-2.8,h-4.5);g.lineTo(x+2.8,h-4.5);
+      g.closePath();g.fill();
+    } else {g.fillStyle=css('--faint');g.fillRect(x,h-7,1,2)}}
+}
+function pmatrix(){
+  const cv=$('#pmatrix');const[g,w,h]=fit(cv,190);
+  const rows=[['comb 1.00× · shaft',0],['comb 3.58× · BPFO',1],['sidebands Δ0.40 · cage',0.7],
+    ['comb 5.42× · BPFI',0.1],['line 7.00× · vane',0],['comb 2.03× · mesh?',0.05],
+    ['haystack 6.8×',0.5],['line 12.05× · anchor',0]];
+  const L=150,rh=(h-20)/rows.length,n=90;
+  const neu=css('--grid');
+  rows.forEach(([lab,hot],ri)=>{
+    const r=rnd(ri*991+7);
+    for(let i=0;i<n;i++){
+      let z=(r()-0.5)*1.6;
+      if(hot&&i>55)z+=hot*(i-55)/35*7;
+      const t=Math.max(-1,Math.min(1,z/6));
+      let col;
+      if(Math.abs(t)<0.12)col=neu;
+      else col=(t>0?css('--crit'):css('--accent'));
+      g.globalAlpha=Math.abs(t)<0.12?1:0.15+0.85*Math.abs(t);
+      g.fillStyle=col;
+      g.fillRect(L+(w-L-6)*i/n,8+ri*rh,(w-L-6)/n-0.6,rh-2.5);
+      g.globalAlpha=1;
+    }
+    g.fillStyle=css(hot>0.5?'--crit':'--muted');
+    g.font='10px '+css('--mono');g.textAlign='left';
+    g.fillText(lab,2,8+ri*rh+rh/2+3);
+  });
+  g.fillStyle=css('--faint');g.font='9px '+css('--mono');
+  g.textAlign='left';g.fillText('−90 d',L,h-2);
+  g.textAlign='right';g.fillText('today',w-6,h-2);
+}
+function conf(){
+  const cv=$('#confTrend');const[g,w,h]=fit(cv,54);
+  const r=rnd(9);g.strokeStyle=css('--accent');g.lineWidth=1.4;g.beginPath();
+  for(let i=0;i<27;i++){const x=6+(w-12)*i/26,y=h-8-(h-18)*(0.15+r()*0.28);
+    i?g.lineTo(x,y):g.moveTo(x,y);g.fillStyle=css('--accent');
+    g.fillRect(x-1,y-1,2,2)}
+  g.stroke();
+  g.font='9px '+css('--mono');g.fillStyle=css('--muted');
+  g.textAlign='left';g.fillText('0 dB',4,h-2);g.fillText('2 dB',4,10);
+}
+function drawAsset(){
+  healthBand($('#healthTl'),46); velTrend(); pmatrix(); conf();
+}
+
+/* mobile */
+const MC=[['FAN-112','crit','looseness z 8.4 · vel 9.3 zone D','1 h'],
+ ['PUMP-201','alert','BPFO z 6.2 · rising','2 h'],
+ ['GBX-009','mon','GMF sidebands z 3.1','2 h'],
+ ['CMP-021','mon','envelope drift · CUSUM 11','3 h'],
+ ['PUMP-186','good','within ±2σ','2 h'],['MOT-054','good','within ±2σ','5 h']];
+$('#mcards').innerHTML=MC.map(([nm,t,why,age],i)=>
+ `<div class="mcard"><div class="row">
+   <span class="chip c-${t}">${TIERS[t][0]}</span>
+   <div style="flex:1"><div class="nm">${nm}</div><div class="ty">${why}</div></div>
+   <span style="font-family:var(--mono);font-size:10px;color:var(--faint)">${age}</span></div>
+   <canvas data-i="${i}" data-t="${t}"></canvas>
+   <div class="meta"><span>swipe → acknowledge</span><span>tap for asset sheet</span></div>
+  </div>`).join('');
+function drawMobile(){
+  document.querySelectorAll('#mcards canvas').forEach(cv=>
+    sparky(cv,+cv.dataset.i*131+5,cv.dataset.t,
+           cv.dataset.t==='alert'||cv.dataset.t==='crit'));
+  healthBand($('#mHealth'),30); mT();
+}
+function mT(){const cv=$('#mTrends');const[g,w,h]=fit(cv,120);
+  ['--accent','--mon','--crit'].forEach((c,k)=>{
+    const r=rnd(k*55+2);g.strokeStyle=css(c);g.lineWidth=1.4;g.beginPath();
+    let v=0.3+k*0.05;
+    for(let i=0;i<60;i++){v+=(r()-0.48)*0.05;if(i>40)v+=0.02;
+      const x=w*i/59,y=(k+1)*h/3-6-(h/3-12)*Math.min(0.95,v);
+      i?g.lineTo(x,y):g.moveTo(x,y)}
+    g.stroke()})}
+
+/* tabs + theme redraw */
+document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav.tabs button').forEach(x=>
+    x.setAttribute('aria-selected',String(x===b)));
+  document.querySelectorAll('.page').forEach(p=>
+    p.classList.toggle('on',p.dataset.page===b.dataset.p));
+  const p=b.dataset.p;
+  if (p==='fleet') document.querySelectorAll('.acard canvas').forEach((cv,i)=>
+    sparky(cv,i*77+3,ASSETS[i][2],ASSETS[i][2]==='alert'||ASSETS[i][2]==='crit'));
+  if (p==='asset') drawAsset();
+  if (p==='mobile') drawMobile();
+});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>location.reload());
+new MutationObserver(()=>location.reload())
+  .observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+</script>
