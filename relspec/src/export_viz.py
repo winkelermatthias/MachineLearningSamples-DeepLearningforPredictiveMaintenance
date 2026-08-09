@@ -9,14 +9,38 @@ Python (match_key tolerance), so the front end just draws.
 import sys, os, json, base64, time
 sys.path.insert(0, os.path.dirname(__file__) or '.')
 import numpy as np
-from relspec.pipeline import CENTERS, ENV_CENTERS, to_amp, NBINS, ENV_BINS
+from scipy.signal import welch
+from relspec.pipeline import (CENTERS, ENV_CENTERS, to_amp, to_u8, NBINS,
+                              ENV_BINS, Gate)
 from relspec.codec2 import Codec2, Decoder2
-from relspec.pipeline2 import extract2
+from relspec.pipeline2 import extract2, band_for
+from relspec.dsp2 import envelope_banded
 from relspec.patterns import extract_patterns
 from relspec.synth2 import FaultState2, machine_catalog2, generate2, progression
 from relspec import datasets as DS
 
 B64 = lambda a: base64.b64encode(np.asarray(a, dtype=np.uint8).tobytes()).decode()
+
+def fullres(x, fs, fr, band_key):
+    """Full-resolution Welch spectra of both rails, quantised with the same
+    0.5 dB step as the payload, capped at the order range the codec carries.
+    This is what the analyst's FFT would have shown - the overlay against the
+    decoded reconstruction is the honest no-loss/loss picture."""
+    nps = DS.nperseg_for(fs)
+    f, p = welch(x, fs=fs, nperseg=min(nps, len(x)),
+                 noverlap=min(nps, len(x))//2, window='hann',
+                 scaling='spectrum', detrend='constant')
+    a = np.sqrt(np.maximum(p, 0))*np.sqrt(2)
+    df = float(f[1]-f[0])
+    hi = min(200.5*fr, 0.97*fs/2)
+    na = int(hi/df)
+    e = envelope_banded(x, fs, band_for(band_key, x, fs))
+    fe, pe = welch(e, fs=fs, nperseg=min(nps, len(e)),
+                   noverlap=min(nps, len(e))//2, window='hann',
+                   scaling='spectrum', detrend='constant')
+    ae = np.sqrt(np.maximum(pe, 0))*np.sqrt(2)
+    ne = int(min(20.5*fr, 0.97*fs/2)/df)
+    return to_u8(a[:na]), df, to_u8(ae[:ne])
 
 def frame_patterns(amp, centers, is_env):
     kw = dict(min_harmonics=3, f_hi=6.5) if is_env else {}
@@ -48,22 +72,45 @@ def process_sequence(name, title, gen, fs, fr_nominal, note=''):
     de = Decoder2(nbins=ENV_BINS, n_peaks=32, n_bands=12)
     mad_a = np.full(NBINS, 4.0); mad_e = np.full(ENV_BINS, 4.0)
     regs = dict(acc=TrackRegistry(), env=TrackRegistry())
+    gate = Gate()
     frames = []
     t0 = time.time()
+    ti_ = 0
     for x, fr_true in gen:
         e = extract2(x, fs, band_key=name, fr_nominal=fr_nominal)
         pa, ka = ca.encode(e.acc_u8, mad_a)
+        bd_a = (None if ka == 'anchor' else
+                [round(v/8) for v in (ca.last_breakdown['gains_bits'],
+                                      ca.last_breakdown['peak_bits'],
+                                      ca.last_breakdown['act_bits'])])
         pe, ke = ce.encode(e.env_u8, mad_e)
+        bd_e = (None if ke == 'anchor' else
+                [round(v/8) for v in (ce.last_breakdown['gains_bits'],
+                                      ce.last_breakdown['peak_bits'],
+                                      ce.last_breakdown['act_bits'])])
         ra, _ = da.decode(pa); re_, _ = de.decode(pe)
         mad_a = np.maximum(0.95*mad_a+0.05*np.abs(e.acc_u8.astype(float)-ra.astype(float)), 1.0)
         mad_e = np.maximum(0.95*mad_e+0.05*np.abs(e.env_u8.astype(float)-re_.astype(float)), 1.0)
+        # the edge anomaly gate, exactly as the firmware policy runs it
+        if gate.n == 0:
+            gate.init(e); gd = dict(s=0.0, dr=0.0, dec='init', mb=0, k=0)
+        else:
+            s = gate.decide(e, ti_*43200)
+            gd = dict(s=round(float(s['score']), 2),
+                      dr=round(float(s['drift']), 2), dec=s['decision'],
+                      mb=int(s['mask_bands']), k=int(s['kind']),
+                      df=int(s['dfeat']))
+        ti_ += 1
+        af, adf, ef = fullres(x, fs, e.fr, name)
         fr_rec = dict(fr=round(e.fr, 4), tier=e.tier,
                       fr_true=round(fr_true, 4) if fr_true else None,
                       bytes=len(pa)+len(pe), ba=len(pa), be=len(pe),
                       kind='A' if 'anchor' in (ka+ke) else
                            ('P' if 'residual_p' in (ka, ke) else 'R'),
                       a_o=B64(e.acc_u8), a_d=B64(ra),
-                      e_o=B64(e.env_u8), e_d=B64(re_))
+                      e_o=B64(e.env_u8), e_d=B64(re_),
+                      af=B64(af), adf=round(adf, 4), ef=B64(ef),
+                      bd=dict(a=bd_a, e=bd_e), gate=gd)
         for rail, u_o, u_d, cen in (('acc', e.acc_u8, ra, CENTERS),
                                     ('env', e.env_u8, re_, ENV_CENTERS)):
             acc_o = frame_patterns(to_amp(u_o), cen, rail == 'env')
