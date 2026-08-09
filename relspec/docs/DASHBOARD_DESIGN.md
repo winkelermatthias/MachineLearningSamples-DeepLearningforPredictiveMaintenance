@@ -28,6 +28,15 @@ Companion mockup: `viz/dashboard_mockup.html` (Fleet, Asset, Mobile).
 
 ## 2. Health model
 
+> **Status: built.** Sections 2-3 are implemented server-side
+> (`platform/server/relspec_service/health.py`): per-pattern z with
+> Welford quiet-frame baselines and a |z|<3 teach guard, health tiers
+> with named drivers and 5-frame hysteresis, vanished-track flagging,
+> and the per-acquisition fingerprint — served by
+> `GET /v1/sensors/{id}/health` and `GET /v1/fleet/health`, verified by
+> two API-level fault campaigns in `platform/tests/test_health.py`.
+
+
 ### 2.1 Per-sensor health
 
 Four tiers — **Healthy · Monitor · Alert · Critical** — computed

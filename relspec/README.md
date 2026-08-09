@@ -169,10 +169,11 @@ bin precision is not the bottleneck; anchor identity is.
 - Diagnosis is explicitly out of scope. An earlier attempt matched combs to the
   nearest kinematic line and produced findings on 14 of 16 assets including
   every healthy one; it detected presence, not abnormality. Removed.
-- Pattern observations average two per pattern. Only transmitted acquisitions
-  carry spectra, about 13% of running acquisitions, so trending is starved. The
-  fix - ride the 26-byte change fingerprint on every running acquisition and
-  leave full spectra gated - is specified and cheap but not built.
+- ~~Pattern observations average two per pattern... trending is starved.~~
+  Closed: every acquisition now carries a 30-byte banded fingerprint
+  (16 acc + 8 env dB bands + gate score/drift + vel RMS), stored and served
+  by the health endpoint, so trends have per-acquisition resolution while
+  full spectra stay gated.
 - Envelope residual share is 35% mean. Much of an envelope is genuinely not
   patterned, but this is unconfirmed rather than explained.
 - Firmware is 85.8 KB BSS as configured, mostly FFT workspace. NFFT 2048 and a
