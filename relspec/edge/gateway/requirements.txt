@@ -1,0 +1,4 @@
+asyncua>=1.1
+httpx>=0.27
+numpy>=1.26
+zstandard>=0.22

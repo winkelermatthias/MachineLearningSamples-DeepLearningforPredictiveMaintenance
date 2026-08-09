@@ -182,3 +182,27 @@ bin precision is not the bottleneck; anchor identity is.
   integration) is specified and its core validated standalone, but
   `pipeline.extract` still uses block Welch.
 - Anchor selection is validated over only 3.9% of speed span, all CWRU offers.
+
+---
+
+## The full system (sensor → cloud → screen)
+
+Everything above ships as one deployable project:
+
+```
+edge/firmware/   C99 sensor firmware: portable RSP/1 core (host-tested),
+                 ESP32-S3 port skeleton, POSIX device simulator
+edge/gateway/    gateway container: beacon discovery, stream reassembly,
+                 SQLite store-and-forward, edge features, OPC UA server,
+                 cloud uplink
+edge/tests/      end-to-end chain test: C sim → gateway → real Postgres
+platform/        cloud: FastAPI + TimescaleDB ingest/query API, passphrase
+                 workspaces, MCP server, webapp
+viz/             explorer + CMMS dashboard prototype (artifacts)
+docker-compose.yml   one command for the whole stack: db, api, webapp,
+                 MCP, gateway, two simulated sensor nodes
+```
+
+Hardware reference design, protocol spec, and gateway architecture:
+`docs/EDGE_FIRMWARE.md`. Chain verification: `make -C edge/firmware test`
+and `pytest edge/tests/`.

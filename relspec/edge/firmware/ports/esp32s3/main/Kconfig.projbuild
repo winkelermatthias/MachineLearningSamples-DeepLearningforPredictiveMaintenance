@@ -1,0 +1,14 @@
+menu "relspec node"
+config RELSPEC_DEVICE_ID
+    string "Device ID (max 12 chars)"
+    default "RS-000A01"
+config RELSPEC_GATEWAY_HOST
+    string "Gateway IP"
+    default "192.168.1.10"
+config RELSPEC_WIFI_SSID
+    string "WiFi SSID"
+    default "plantnet"
+config RELSPEC_WIFI_PASS
+    string "WiFi password"
+    default ""
+endmenu

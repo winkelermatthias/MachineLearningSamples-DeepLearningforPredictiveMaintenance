@@ -1,0 +1,123 @@
+# relspec — full stack: cloud (TimescaleDB + API + webapp + MCP) and
+# edge (gateway + simulated sensor fleet). One command brings up the
+# entire chain firmware->gateway->cloud->webapp:
+#
+#   cp platform/.env.example .env   # set POSTGRES_PASSWORD, RELSPEC_PEPPER,
+#                                   # RS_PASSPHRASE (workspace passphrase)
+#   docker compose up --build
+#
+#   webapp    http://localhost:8080     gateway status http://localhost:8090/status
+#   OPC UA    opc.tcp://localhost:4840/relspec/
+#   MCP       http://localhost:8765
+#
+# Real hardware: point devices' RSP/1 streams at tcp/47701 and beacons
+# at udp/47700 of the gateway host, then remove the devicesim services.
+
+name: relspec
+
+services:
+  db:
+    image: timescale/timescaledb:2.15.3-pg16
+    environment:
+      POSTGRES_DB: relspec
+      POSTGRES_USER: relspec
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U relspec -d relspec"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: platform/server/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://relspec:${POSTGRES_PASSWORD}@db:5432/relspec
+      RELSPEC_PEPPER: ${RELSPEC_PEPPER:?set in .env}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request as u; u.urlopen('http://127.0.0.1:8000/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: platform/web/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mcp:
+    build:
+      context: .
+      dockerfile: platform/mcpserver/Dockerfile
+    environment:
+      RELSPEC_API: http://api:8000
+      RELSPEC_MCP_TRANSPORT: http
+      PORT: "8765"
+    ports:
+      - "8765:8765"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: edge/gateway
+    environment:
+      RS_CLOUD: http://api:8000
+      RS_PASSPHRASE: ${RS_PASSPHRASE:?set in .env — workspace passphrase}
+      RS_MAPPING: /data/devices.json
+      RS_SPOOL: /data/gateway-spool.db
+    ports:
+      - "47700:47700/udp"   # RSP/1 beacons
+      - "47701:47701"       # RSP/1 waveform streams
+      - "4840:4840"         # OPC UA readouts
+      - "8090:8080"         # gateway status/control JSON
+    volumes:
+      - gwdata:/data
+      - ./edge/gateway/devices.example.json:/data/devices.json:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # two simulated sensor nodes; replace with real hardware in production
+  devicesim-a:
+    build:
+      context: edge/firmware
+    command: ["--id", "RS-000A01", "--gateway", "gateway:47701",
+              "--beacon", "gateway:47700", "--fs", "8192",
+              "--acq-ms", "2000", "--period-ms", "120000",
+              "--count", "100000", "--growth", "0.5"]
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
+  devicesim-b:
+    build:
+      context: edge/firmware
+    command: ["--id", "RS-000B02", "--gateway", "gateway:47701",
+              "--beacon", "gateway:47700", "--fs", "8192",
+              "--acq-ms", "2000", "--period-ms", "180000",
+              "--count", "100000", "--growth", "0.1", "--seed", "7"]
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  gwdata:
