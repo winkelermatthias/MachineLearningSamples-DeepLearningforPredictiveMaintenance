@@ -21,17 +21,37 @@ class Device:
     peak_g: float = 0.0
     crest: float = 0.0
     acq_count: int = 0
+    authenticated: bool = False
+    quarantined: bool = False
+    quarantine_drops: int = 0      # acquisition windows discarded
     extra: dict = field(default_factory=dict)
 
 
 class Registry:
-    def __init__(self, mapping: dict[str, str]):
+    """Mapping file values are either "Plant/Asset/Comp/Sensor" (legacy,
+    keyless) or {"path": ..., "key": "<hex>"} for authenticated devices."""
+
+    def __init__(self, mapping: dict):
         self._devs: dict[str, Device] = {}
-        self._mapping = mapping
+        self._paths: dict[str, str] = {}
+        self._keys: dict[str, bytes] = {}
+        for dev, v in mapping.items():
+            if isinstance(v, dict):
+                self._paths[dev] = v.get('path', '')
+                if v.get('key'):
+                    self._keys[dev] = bytes.fromhex(v['key'])
+            else:
+                self._paths[dev] = v
         self.on_change = None          # callback(dev) for OPC UA refresh
 
     def mapping_for(self, dev_id: str) -> str:
-        return self._mapping.get(dev_id, '')
+        return self._paths.get(dev_id, '')
+
+    def key_for(self, dev_id: str) -> bytes | None:
+        return self._keys.get(dev_id)
+
+    def known(self, dev_id: str) -> bool:
+        return dev_id in self._paths
 
     def get(self, dev_id: str) -> Device:
         if dev_id not in self._devs:

@@ -102,7 +102,8 @@ services:
     command: ["--id", "RS-000A01", "--gateway", "gateway:47701",
               "--beacon", "gateway:47700", "--fs", "8192",
               "--acq-ms", "2000", "--period-ms", "120000",
-              "--count", "100000", "--growth", "0.5"]
+              "--count", "100000", "--growth", "0.5",
+              "--key", "8f3a1c2b4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8"]
     depends_on:
       - gateway
     restart: unless-stopped

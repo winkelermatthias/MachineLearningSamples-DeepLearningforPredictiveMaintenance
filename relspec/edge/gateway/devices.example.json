@@ -1,4 +1,7 @@
 {
-  "RS-000A01": "North plant/PUMP-201/drive-end/S1",
+  "RS-000A01": {
+    "path": "North plant/PUMP-201/drive-end/S1",
+    "key": "8f3a1c2b4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8"
+  },
   "RS-000B02": "North plant/PUMP-201/non-drive-end/S2"
 }

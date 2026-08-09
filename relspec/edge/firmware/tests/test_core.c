@@ -5,6 +5,7 @@
 #include <string.h>
 #include "../core/rs_proto.h"
 #include "../core/rs_ring.h"
+#include "../core/rs_sha256.h"
 
 static void test_crc(void)
 {
@@ -109,6 +110,91 @@ static void test_ring(void)
     assert(rs_ring_count(&r) == 0);
 }
 
+static void hex_eq(const uint8_t *got, const char *want_hex, size_t n)
+{
+    for (size_t i = 0; i < n; i++) {
+        unsigned b;
+        assert(sscanf(want_hex + 2 * i, "%2x", &b) == 1);
+        assert(got[i] == (uint8_t)b);
+    }
+}
+
+static void test_sha256(void)
+{
+    uint8_t d[32];
+    rs_sha256((const uint8_t *)"abc", 3, d);
+    hex_eq(d, "ba7816bf8f01cfea414140de5dae2223"
+              "b00361a396177a9cb410ff61f20015ad", 32);
+    rs_sha256((const uint8_t *)"", 0, d);
+    hex_eq(d, "e3b0c44298fc1c149afbf4c8996fb924"
+              "27ae41e4649b934ca495991b7852b855", 32);
+    /* multi-block + streamed update must agree with one-shot */
+    uint8_t big[200];
+    for (int i = 0; i < 200; i++) big[i] = (uint8_t)(i * 7);
+    rs_sha256(big, sizeof big, d);
+    uint8_t d2[32];
+    rs_sha256_t c;
+    rs_sha256_init(&c);
+    rs_sha256_update(&c, big, 63);
+    rs_sha256_update(&c, big + 63, 137);
+    rs_sha256_final(&c, d2);
+    assert(memcmp(d, d2, 32) == 0);
+}
+
+static void test_hmac(void)
+{
+    /* RFC 4231 test cases 1, 2 and 6 (key longer than block size) */
+    uint8_t key[131], mac[32];
+    memset(key, 0x0b, 20);
+    rs_hmac_sha256(key, 20, (const uint8_t *)"Hi There", 8, mac);
+    hex_eq(mac, "b0344c61d8db38535ca8afceaf0bf12b"
+                "881dc200c9833da726e9376c2e32cff7", 32);
+    rs_hmac_sha256((const uint8_t *)"Jefe", 4,
+                   (const uint8_t *)"what do ya want for nothing?", 28, mac);
+    hex_eq(mac, "5bdcc146bf60754e6a042426089575c7"
+                "5a003f089d2739839dec58b964ec3843", 32);
+    memset(key, 0xaa, 131);
+    rs_hmac_sha256(key, 131, (const uint8_t *)
+                   "Test Using Larger Than Block-Size Key - Hash Key First",
+                   54, mac);
+    hex_eq(mac, "60e431591ee0b67f0d8a26aacbf5b77f"
+                "8e0bc6213728c5140546040f0ee37f54", 32);
+}
+
+static void test_auth_frame(void)
+{
+    /* tag pinned against Python: hmac(key=0x0b*20,
+     * "RS-000TEST\0\0" + LE32(0xA1B2C3D4), sha256)[:16] */
+    uint8_t key[20]; memset(key, 0x0b, sizeof key);
+    uint8_t tag[RS_AUTH_TAG_LEN];
+    rs_auth_tag(key, sizeof key, "RS-000TEST", 0xA1B2C3D4u, tag);
+    hex_eq(tag, "0851b0eb205494213db7ef5d6d050849", RS_AUTH_TAG_LEN);
+    /* CHALLENGE control roundtrip carries the nonce */
+    rs_ctrl_t c = { RS_C_CHALLENGE, 0xA1B2C3D4u }, cout;
+    uint8_t cbuf[RS_CTRL_LEN];
+    rs_ctrl_encode(&c, cbuf);
+    assert(rs_ctrl_parse(cbuf, sizeof cbuf, &cout) == 0);
+    assert(cout.cmd == RS_C_CHALLENGE && cout.arg == 0xA1B2C3D4u);
+    /* F_AUTH frame roundtrip: tag survives the int16 payload path */
+    int16_t pay[RS_AUTH_TAG_LEN / 2];
+    memcpy(pay, tag, RS_AUTH_TAG_LEN);
+    rs_data_hdr_t h = {0}, out;
+    h.type = RS_F_AUTH; h.n = RS_AUTH_TAG_LEN / 2;
+    strcpy(h.dev_id, "RS-000TEST");
+    uint8_t buf[RS_DATA_HDR_LEN + RS_AUTH_TAG_LEN + 4];
+    size_t len = rs_frame_encode(&h, pay, buf);
+    assert(len == rs_frame_len(RS_AUTH_TAG_LEN / 2));
+    const uint8_t *p;
+    assert(rs_frame_parse(buf, len, &out, &p) == 0);
+    assert(out.type == RS_F_AUTH && out.n == RS_AUTH_TAG_LEN / 2);
+    assert(memcmp(p, tag, RS_AUTH_TAG_LEN) == 0);
+    /* a wrong key must not produce the same tag */
+    key[0] ^= 1;
+    uint8_t bad[RS_AUTH_TAG_LEN];
+    rs_auth_tag(key, sizeof key, "RS-000TEST", 0xA1B2C3D4u, bad);
+    assert(memcmp(bad, tag, RS_AUTH_TAG_LEN) != 0);
+}
+
 int main(void)
 {
     test_crc();
@@ -116,6 +202,9 @@ int main(void)
     test_frame();
     test_ctrl();
     test_ring();
+    test_sha256();
+    test_hmac();
+    test_auth_frame();
     printf("firmware core: all tests passed\n");
     return 0;
 }

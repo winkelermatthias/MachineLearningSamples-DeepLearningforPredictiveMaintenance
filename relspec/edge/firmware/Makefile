@@ -2,7 +2,7 @@ CC ?= cc
 CFLAGS ?= -std=c99 -O2 -Wall -Wextra -Werror -Wconversion
 LDLIBS = -lm
 
-CORE = core/rs_proto.c core/rs_ring.c
+CORE = core/rs_proto.c core/rs_ring.c core/rs_sha256.c
 
 all: test device-sim
 

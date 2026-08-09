@@ -82,6 +82,8 @@ firmware/core/     rs_proto.[ch]  RSP/1 serialization + CRC-32  (host-tested)
                    rs_ring.[ch]   SPSC sample ring: DMA/ISR producer,
                                   task consumer, all-or-none push,
                                   drop counting (gap = restart window)
+                   rs_sha256.[ch] SHA-256 + HMAC-SHA256 (no deps) for the
+                                  CHALLENGE/F_AUTH device authentication
 firmware/ports/
     posix/         device simulator: the same core driven by a synthetic
                    shaft+vane+BPFO-impact signal; full RSP/1 including
@@ -102,8 +104,9 @@ Design rules the code enforces:
   little-endian put/get; identical C and Python implementations, both
   pinned by tests.
 - **Devices hold no cloud credentials.** A stolen node yields a WiFi
-  password, not plant data: only the gateway knows the workspace
-  passphrase.
+  password and its own per-device HMAC key — revoked by deleting one
+  mapping entry — not plant data: only the gateway knows the workspace
+  passphrase (or `RS_CLOUD_KEY` token).
 
 ## 3. RSP/1 wire protocol
 
@@ -127,7 +130,31 @@ scale_g(f32) | payload int16[n] | crc`
 
 **Control** — same TCP socket, gateway → device, 16 bytes:
 `magic 'RSC1' | cmd | arg | crc` with START / STOP / SET_FS /
-SET_ACQ_MS / IDENT (blink for a technician) / REBOOT.
+SET_ACQ_MS / IDENT (blink for a technician) / REBOOT / CHALLENGE.
+
+**Device authentication** — per-device HMAC, challenge–response:
+
+```
+device               gateway
+  |---- HELLO --------->|   gateway looks up the device key
+  |<--- CHALLENGE ------|   ctrl frame, arg = random 32-bit nonce
+  |---- F_AUTH -------->|   payload (16 bytes) =
+  |                     |   HMAC-SHA256(key, dev_id[12] || nonce LE32)[:16]
+  |---- DATA ... ------>|   accepted only after the tag verifies
+```
+
+- The key is provisioned per device: `--key <hex>` on the simulator,
+  Kconfig/NVS on hardware; the gateway holds the same key in its
+  mapping file. SHA-256 + HMAC are implemented dependency-free in
+  `core/rs_sha256.c` (pinned by RFC 4231 vectors in `make test`).
+- Gateway policy: a device **with** a configured key must present a
+  valid tag before any DATA/ACQ_END is accepted — windows arriving
+  earlier (or after a bad tag) are dropped and counted
+  (`quarantine_drops`). A **wrong tag quarantines** the device:
+  registered, visible in `/status` (`quarantined: true`), never
+  spooled. **Unknown** devices (not in the mapping) are quarantined
+  the same way. Mapped devices **without** a key keep working
+  unauthenticated — the gateway logs a warning (migration path).
 
 ## 4. Gateway container
 
@@ -153,9 +180,24 @@ Objects/Devices/<dev_id>/
 
 Values update on every completed acquisition and beacon; any SCADA /
 historian subscribes like to any other OPC UA server. Device→sensor
-mapping lives in `devices.json` (`{"RS-000A01": "Plant/Asset/Comp/S1"}`);
-unmapped devices are ingested and buffered but marked `skipped` at
-uplink until mapped — nothing silently vanishes.
+mapping lives in `devices.json`; values are either a bare path
+(legacy, keyless) or a keyed record:
+
+```json
+{
+  "RS-000A01": {"path": "Plant/Asset/Comp/S1", "key": "<hex device key>"},
+  "RS-000B02": "Plant/Asset/Comp/S2"
+}
+```
+
+Unknown devices are quarantined at the stream server (registered and
+counted in `/status`, never spooled) — nothing silently vanishes, and
+nothing unmapped consumes disk or uplink either.
+
+Uplink credentials: `RS_PASSPHRASE` is traded for a bearer token on
+start (re-minted on 401). Alternatively `RS_CLOUD_KEY` supplies a
+pre-issued token that is sent as `Bearer` verbatim — no passphrase on
+the gateway at all; the passphrase path remains the fallback.
 
 ## 5. Packaging: the big project
 
@@ -179,12 +221,16 @@ at the gateway host.
 ## 6. Verification
 
 - `make test` (firmware): CRC vectors, ring overflow/wrap discipline,
-  frame/beacon/ctrl roundtrip + corruption rejection — compiled
+  frame/beacon/ctrl roundtrip + corruption rejection, SHA-256 + HMAC
+  (RFC 4231 vectors) and the F_AUTH tag/frame roundtrip — compiled
   `-Wall -Wextra -Werror -Wconversion`.
-- `pytest edge/tests/test_chain.py` (4 tests, ~9 s): full chain
+- `pytest edge/tests/test_chain.py` (7 tests, ~12 s): full chain
   streaming to a real Postgres cloud; OPC UA client readback of device
   features and gateway gauges; control-channel START of an idle device
-  flowing through to the cloud; spool ordering/marking discipline.
+  flowing through to the cloud; a keyed device authenticating and
+  streaming end-to-end; a wrong-key device quarantined (zero
+  acquisitions accepted); `RS_CLOUD_KEY` sent verbatim as Bearer;
+  spool ordering/marking discipline.
 - Observed end-to-end in the chain test: the cloud's significance
   policy answering the gateway per acquisition
   (`first_waveform` → raw stored; `weekly_budget_exhausted` → codec

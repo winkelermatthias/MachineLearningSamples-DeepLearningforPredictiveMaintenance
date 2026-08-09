@@ -4,9 +4,11 @@ Run locally:  DATABASE_URL=postgresql://... uvicorn relspec_service.app:app
 """
 from __future__ import annotations
 import base64, datetime as dt, json, uuid
+from concurrent.futures import ThreadPoolExecutor
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import run_in_threadpool
 import pathlib
 from . import auth, cache, config, db, ingest, queries
 
@@ -24,11 +26,16 @@ def _auth_err(_, exc: auth.AuthError):
 
 @app.exception_handler(ingest.IngestError)
 def _ing_err(_, exc: ingest.IngestError):
-    return JSONResponse(status_code=exc.status, content={'detail': exc.detail})
+    headers = ({'Retry-After': str(exc.retry_after)}
+               if getattr(exc, 'retry_after', None) else None)
+    return JSONResponse(status_code=exc.status, content={'detail': exc.detail},
+                        headers=headers)
 
-def principal(request: Request, cur) -> auth.Principal:
+def principal(request: Request, cur, need: str = 'full') -> auth.Principal:
     client = request.client.host if request.client else 'unknown'
-    return auth.authenticate(request.headers.get('authorization'), cur, client)
+    pr = auth.authenticate(request.headers.get('authorization'), cur, client)
+    auth.require_scope(pr, need)
+    return pr
 
 def cached_json(request: Request, wsid: str, cur, key_extra, builder):
     """ETag + LRU wrapper for range queries. Immutable resources skip this
@@ -85,7 +92,7 @@ async def create_workspace(request: Request):
 def me(request: Request):
     with db.pool().connection() as conn:
         cur = conn.cursor()
-        pr = principal(request, cur)
+        pr = principal(request, cur, 'read')
         row = cur.execute(
             '''SELECT name, data_version, created_at,
                (SELECT count(*) FROM sensor s WHERE s.workspace_id=w.workspace_id),
@@ -94,10 +101,12 @@ def me(request: Request):
                   ON a2.acq_id=wf.acq_id WHERE a2.workspace_id=w.workspace_id)
                FROM workspace w WHERE workspace_id=%s''',
             (pr.workspace_id,)).fetchone()
-    return dict(workspace_id=pr.workspace_id, name=row[0], data_version=row[1],
-                created_at=row[2].isoformat(), sensors=row[3],
-                acquisitions=row[4], waveforms_stored=row[5],
-                token=auth.mint_token(pr.workspace_id))
+    out = dict(workspace_id=pr.workspace_id, name=row[0], data_version=row[1],
+               created_at=row[2].isoformat(), sensors=row[3],
+               acquisitions=row[4], waveforms_stored=row[5])
+    if pr.key_id is None:   # a scoped key must not escalate to a ws token
+        out['token'] = auth.mint_token(pr.workspace_id)
+    return out
 
 # ----------------------------------------------------------------- hierarchy
 @app.post('/v1/hierarchy:ensure')
@@ -164,7 +173,7 @@ def _ensure(cur, table: str, nat: dict, extra: dict, idcol: str) -> str:
 def get_hierarchy(request: Request):
     with db.pool().connection() as conn:
         cur = conn.cursor()
-        pr = principal(request, cur)
+        pr = principal(request, cur, 'read')
         return cached_json(request, pr.workspace_id, cur, '',
                            lambda: queries.hierarchy(cur, pr.workspace_id))
 
@@ -173,34 +182,102 @@ def get_hierarchy(request: Request):
 async def post_waveform(request: Request):
     body = await request.json()
     with db.pool().connection() as conn:
-        pr = principal(request, conn.cursor())
-    return ingest.ingest_one(pr.workspace_id, body)
+        pr = principal(request, conn.cursor(), 'ingest')
+    ingest.reserve_rate(pr.workspace_id)
+    # DSP + codec work runs off the event loop
+    return await run_in_threadpool(ingest.ingest_one, pr.workspace_id, body)
 
 @app.post('/v1/waveforms:batch')
 async def post_batch(request: Request):
     """NDJSON in, NDJSON out; one waveform per line, verdict or error per
-    line, processing continues past bad lines."""
+    line, processing continues past bad lines. Lines are grouped per sensor:
+    order is preserved within a sensor (the chain demands it), while
+    different sensors process concurrently in a small thread pool."""
     with db.pool().connection() as conn:
-        pr = principal(request, conn.cursor())
+        pr = principal(request, conn.cursor(), 'ingest')
     raw = await request.body()
-    out = []
+    out: dict[int, dict] = {}
+    parsed: list[tuple[int, dict]] = []
     for i, line in enumerate(raw.decode().splitlines()):
         line = line.strip()
         if not line: continue
         try:
-            out.append(ingest.ingest_one(pr.workspace_id, json.loads(line)))
-        except (ingest.IngestError, json.JSONDecodeError) as e:
-            detail = getattr(e, 'detail', str(e))
-            out.append(dict(line=i, error=detail))
-    return Response('\n'.join(json.dumps(o) for o in out),
+            parsed.append((i, json.loads(line)))
+        except json.JSONDecodeError as e:
+            out[i] = dict(line=i, error=str(e))
+    ingest.reserve_rate(pr.workspace_id, len(parsed))
+    groups: dict[str, list[tuple[int, dict]]] = {}
+    for i, body in parsed:
+        key = str(body.get('sensor_id') or body.get('sensor_path') or '')
+        groups.setdefault(key, []).append((i, body))
+
+    def run_group(items):
+        for i, body in items:
+            try:
+                out[i] = ingest.ingest_one(pr.workspace_id, body)
+            except ingest.IngestError as e:
+                out[i] = dict(line=i, error=e.detail)
+
+    def run_all():
+        if not groups: return
+        with ThreadPoolExecutor(max_workers=min(4, len(groups))) as ex:
+            list(ex.map(run_group, groups.values()))
+
+    await run_in_threadpool(run_all)
+    return Response('\n'.join(json.dumps(out[i]) for i in sorted(out)),
                     media_type='application/x-ndjson')
+
+# ---------------------------------------------------------------------- keys
+@app.post('/v1/keys')
+async def create_key(request: Request):
+    body = await request.json()
+    scope = body.get('scope', 'read')
+    if scope not in auth.SCOPES:
+        raise auth.AuthError(400, f'scope must be one of {list(auth.SCOPES)}')
+    with db.pool().connection() as conn:
+        cur = conn.cursor()
+        pr = principal(request, cur, 'full')
+        key_id = uuid.uuid4().hex
+        cur.execute(
+            'INSERT INTO api_key (key_id, workspace_id, scope, label) '
+            'VALUES (%s,%s,%s,%s)',
+            (key_id, pr.workspace_id, scope, str(body.get('label') or '')))
+        conn.commit()
+    return dict(key_id=key_id, scope=scope,
+                token=auth.mint_key_token(pr.workspace_id, key_id, scope),
+                note='store the token now; it is not retrievable later')
+
+@app.get('/v1/keys')
+def list_keys(request: Request):
+    with db.pool().connection() as conn:
+        cur = conn.cursor()
+        pr = principal(request, cur, 'full')
+        rows = cur.execute(
+            'SELECT key_id, scope, label, created, revoked FROM api_key '
+            'WHERE workspace_id=%s ORDER BY created', (pr.workspace_id,)).fetchall()
+    return [dict(key_id=k, scope=s, label=l, created=c.isoformat(), revoked=r)
+            for k, s, l, c, r in rows]
+
+@app.delete('/v1/keys/{key_id}')
+def revoke_key(key_id: str, request: Request):
+    with db.pool().connection() as conn:
+        cur = conn.cursor()
+        pr = principal(request, cur, 'full')
+        row = cur.execute(
+            'UPDATE api_key SET revoked=TRUE '
+            'WHERE key_id=%s AND workspace_id=%s RETURNING key_id',
+            (key_id, pr.workspace_id)).fetchone()
+        conn.commit()
+    if not row:
+        return JSONResponse(status_code=404, content={'detail': 'no such key'})
+    return dict(key_id=key_id, revoked=True)
 
 # --------------------------------------------------------------------- reads
 @app.get('/v1/fleet/overview')
 def overview(request: Request):
     with db.pool().connection() as conn:
         cur = conn.cursor()
-        pr = principal(request, cur)
+        pr = principal(request, cur, 'read')
         return cached_json(request, pr.workspace_id, cur, '',
                            lambda: queries.fleet_overview(cur, pr.workspace_id))
 
@@ -209,7 +286,7 @@ def trend(sensor_id: str, request: Request):
     t0, t1 = _t01(request)
     with db.pool().connection() as conn:
         cur = conn.cursor()
-        pr = principal(request, cur)
+        pr = principal(request, cur, 'read')
         return cached_json(request, pr.workspace_id, cur, (sensor_id, t0, t1),
                            lambda: queries.trend(cur, pr.workspace_id,
                                                  sensor_id, t0, t1))
@@ -220,7 +297,7 @@ def frames(sensor_id: str, request: Request, limit: int = 500):
     limit = min(limit, 2000)
     with db.pool().connection() as conn:
         cur = conn.cursor()
-        pr = principal(request, cur)
+        pr = principal(request, cur, 'read')
         return cached_json(request, pr.workspace_id, cur,
                            (sensor_id, t0, t1, limit),
                            lambda: queries.frames(cur, pr.workspace_id,
@@ -230,7 +307,7 @@ def frames(sensor_id: str, request: Request, limit: int = 500):
 def spectra(acq_id: str, request: Request):
     with db.pool().connection() as conn:
         cur = conn.cursor()
-        pr = principal(request, cur)
+        pr = principal(request, cur, 'read')
         out = queries.spectra(cur, pr.workspace_id, acq_id)
     if out is None:
         return JSONResponse(status_code=404, content={'detail': 'not found'})
@@ -242,7 +319,7 @@ def bundle(sensor_id: str, request: Request, limit: int = 400):
     limit = min(limit, 1500)
     with db.pool().connection() as conn:
         cur = conn.cursor()
-        pr = principal(request, cur)
+        pr = principal(request, cur, 'read')
         resp = cached_json(request, pr.workspace_id, cur, (sensor_id, limit),
                            lambda: _bundle_or_404(cur, pr.workspace_id,
                                                   sensor_id, limit))
@@ -257,7 +334,7 @@ def events(request: Request, limit: int = 500):
     t0, t1 = _t01(request)
     with db.pool().connection() as conn:
         cur = conn.cursor()
-        pr = principal(request, cur)
+        pr = principal(request, cur, 'read')
         return cached_json(request, pr.workspace_id, cur, (t0, t1, limit),
                            lambda: queries.events(cur, pr.workspace_id,
                                                   t0, t1, limit))
@@ -266,7 +343,7 @@ def events(request: Request, limit: int = 500):
 def waveform(acq_id: str, request: Request):
     with db.pool().connection() as conn:
         cur = conn.cursor()
-        pr = principal(request, cur)
+        pr = principal(request, cur, 'read')
         out = queries.waveform(cur, pr.workspace_id, acq_id)
     if out is None:
         return JSONResponse(status_code=404,

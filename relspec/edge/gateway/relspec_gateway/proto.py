@@ -4,7 +4,7 @@ Byte-for-byte the same wire format; the C unit tests and
 tests/test_chain.py both pin it, so a drift on either side fails CI.
 """
 from __future__ import annotations
-import struct, zlib
+import hmac, struct, zlib
 from dataclasses import dataclass
 
 PORT_BEACON = 47700
@@ -14,8 +14,9 @@ MAGIC_BEACON = 0x31425352
 MAGIC_DATA = 0x31445352
 MAGIC_CTRL = 0x31435352
 
-F_HELLO, F_DATA, F_ACQ_END, F_STATUS = 1, 2, 3, 4
-C_START, C_STOP, C_SET_FS, C_SET_ACQ_MS, C_IDENT, C_REBOOT = 1, 2, 3, 4, 5, 6
+F_HELLO, F_DATA, F_ACQ_END, F_STATUS, F_AUTH = 1, 2, 3, 4, 5
+(C_START, C_STOP, C_SET_FS, C_SET_ACQ_MS, C_IDENT, C_REBOOT,
+ C_CHALLENGE) = 1, 2, 3, 4, 5, 6, 7
 
 BF_STREAMING = 0x01
 
@@ -85,3 +86,13 @@ def peek_frame_len(hdr8: bytes) -> int | None:
 def encode_ctrl(cmd: int, arg: int = 0) -> bytes:
     head = struct.pack('<IBBBBI', MAGIC_CTRL, cmd, 0, 0, 0, arg)
     return head + struct.pack('<I', crc32(head))
+
+
+AUTH_TAG_LEN = 16
+
+
+def auth_tag(key: bytes, dev_id: str, nonce: int) -> bytes:
+    """F_AUTH payload — mirrors rs_auth_tag() in core/rs_sha256.c."""
+    msg = dev_id.encode('ascii')[:12].ljust(12, b'\0') + \
+        struct.pack('<I', nonce)
+    return hmac.new(key, msg, 'sha256').digest()[:AUTH_TAG_LEN]

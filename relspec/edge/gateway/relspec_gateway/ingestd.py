@@ -7,7 +7,7 @@ next frame is read. Control frames can be pushed back to any connected
 device (used by the /ctrl HTTP endpoint and auto-STOP policies).
 """
 from __future__ import annotations
-import asyncio, datetime as dt, logging
+import asyncio, datetime as dt, hmac, logging, secrets
 import numpy as np
 from . import proto
 from .edgeproc import features
@@ -39,8 +39,12 @@ class StreamServer:
     async def handle(self, reader: asyncio.StreamReader,
                      writer: asyncio.StreamWriter):
         dev_id = ''
+        dev = None
         window: list[bytes] = []
         w_t0_us = 0; w_fs = 0.0; w_scale = 0.0
+        key = None          # configured device key, if any
+        nonce = None        # outstanding CHALLENGE nonce
+        authed = False      # this connection may spool acquisitions
         try:
             while True:
                 head = await reader.readexactly(8)
@@ -57,15 +61,60 @@ class StreamServer:
                 hdr, payload = parsed
                 if hdr.type == proto.F_HELLO:
                     dev_id = hdr.dev_id
-                    d = self.registry.get(dev_id)
-                    d.connected = True
+                    dev = self.registry.get(dev_id)
+                    dev.connected = True
                     self.conns[dev_id] = writer
-                    log.info('device %s connected (fs=%s)', dev_id, hdr.fs_hz)
+                    key = self.registry.key_for(dev_id)
+                    authed = False
+                    if key:
+                        nonce = secrets.randbits(32)
+                        writer.write(proto.encode_ctrl(proto.C_CHALLENGE,
+                                                       nonce))
+                        await writer.drain()
+                        log.info('device %s connected; challenge sent',
+                                 dev_id)
+                    elif self.registry.known(dev_id):
+                        authed = True
+                        log.warning('device %s has no key configured; '
+                                    'accepting unauthenticated', dev_id)
+                        log.info('device %s connected (fs=%s)',
+                                 dev_id, hdr.fs_hz)
+                    else:
+                        dev.quarantined = True
+                        log.warning('unknown device %s quarantined '
+                                    '(not in mapping)', dev_id)
+                elif hdr.type == proto.F_AUTH:
+                    if dev and key and nonce is not None and \
+                            hmac.compare_digest(
+                                payload[:proto.AUTH_TAG_LEN],
+                                proto.auth_tag(key, dev_id, nonce)):
+                        authed = True
+                        dev.authenticated = True
+                        log.info('device %s authenticated', dev_id)
+                    elif dev:
+                        dev.quarantined = True
+                        log.warning('device %s failed auth; quarantined',
+                                    dev_id)
+                    nonce = None
+                    if dev and self.registry.on_change:
+                        self.registry.on_change(dev)
                 elif hdr.type == proto.F_DATA:
+                    if dev is None or dev.quarantined or not authed:
+                        continue
                     if not window:
                         w_t0_us, w_fs, w_scale = hdr.t0_us, hdr.fs_hz, hdr.scale_g
                     window.append(payload)
                 elif hdr.type == proto.F_ACQ_END:
+                    if dev is None or dev.quarantined or not authed:
+                        if dev:
+                            dev.quarantine_drops += 1
+                            log.warning('%s: dropped window %d '
+                                        '(unauthenticated/quarantined)',
+                                        dev.dev_id, dev.quarantine_drops)
+                            if self.registry.on_change:
+                                self.registry.on_change(dev)
+                        window = []
+                        continue
                     self._finish(hdr, window, w_t0_us, w_fs, w_scale, payload)
                     window = []
         except (asyncio.IncompleteReadError, ConnectionResetError):

@@ -3,16 +3,43 @@ persist everything in a single transaction. The server owns every policy
 decision; the response tells the client honestly what happened.
 """
 from __future__ import annotations
-import base64, datetime as dt, json, uuid
+import base64, collections, datetime as dt, hashlib, json, threading, time, uuid
 import numpy as np
+import psycopg.errors
 import zstandard
 from . import config, db, pipeline
 
 class IngestError(Exception):
-    def __init__(self, status: int, detail: str):
-        self.status, self.detail = status, detail
+    def __init__(self, status: int, detail: str, retry_after: int | None = None):
+        self.status, self.detail, self.retry_after = status, detail, retry_after
 
 G = 9.80665
+
+# Per-workspace sliding-window rate cap (in-memory, per replica). Batch
+# reserves all its lines up front so it cannot sidestep the cap.
+_rate: dict[str, collections.deque] = {}
+_rate_lock = threading.Lock()
+
+def reserve_rate(wsid: str, n: int = 1):
+    cap = config.INGEST_RATE_PER_MIN
+    now = time.time()
+    with _rate_lock:
+        q = _rate.setdefault(wsid, collections.deque())
+        while q and now-q[0] >= 60: q.popleft()
+        if len(q)+n > cap:
+            retry = max(1, int(60-(now-q[0]))+1) if q else 60
+            raise IngestError(429, f'ingest rate cap {cap}/min exceeded',
+                              retry_after=retry)
+        q.extend([now]*n)
+
+def _sensor_lock(cur, sensor_id: str):
+    """Serialize read-process-write per sensor: the codec/gate chain is a
+    strict sequence, so concurrent posts for one sensor must queue. The
+    xact lock releases on commit/rollback; different sensors don't collide
+    (beyond a 2^-64 hash coincidence, which only costs concurrency)."""
+    h = int.from_bytes(hashlib.sha256(sensor_id.encode()).digest()[:8],
+                       'big', signed=True)
+    cur.execute('SELECT pg_advisory_xact_lock(%s)', (h,))
 
 def decode_samples(body: dict) -> np.ndarray:
     enc = body.get('encoding', 'float32')
@@ -35,6 +62,9 @@ def decode_samples(body: dict) -> np.ndarray:
     elif units in ('m/s2', 'm/s^2', 'mps2'): x = x/G
     elif units in ('mm/s2', 'mm/s^2'): x = x/(1000*G)
     else: raise IngestError(400, f'unsupported units {body.get("units")!r}')
+    if len(x) > config.MAX_SAMPLES:
+        raise IngestError(413,
+            f'{len(x)} samples exceeds the {config.MAX_SAMPLES} limit')
     if not np.isfinite(x).all():
         raise IngestError(400, 'waveform contains NaN or Inf')
     return x
@@ -90,6 +120,9 @@ def ingest_one(wsid: str, body: dict) -> dict:
     except Exception:
         raise IngestError(400, f'bad ts {ts_raw!r} (ISO-8601 required)')
     fs = float(body.get('fs') or 0)
+    if not (config.FS_MIN <= fs <= config.FS_MAX):
+        raise IngestError(400,
+            f'fs must be between {config.FS_MIN:g} and {config.FS_MAX:g} Hz')
     x = decode_samples(body)
     validate(x, fs)
     client_ref = body.get('client_ref')
@@ -97,6 +130,7 @@ def ingest_one(wsid: str, body: dict) -> dict:
     with db.pool().connection() as conn:
         cur = conn.cursor()
         sensor = _resolve_sensor(cur, wsid, body)
+        _sensor_lock(cur, sensor['sensor_id'])
         # idempotency: same (sensor, client_ref) returns the original verdict
         if client_ref:
             row = cur.execute(
@@ -142,19 +176,23 @@ def ingest_one(wsid: str, body: dict) -> dict:
         pb = sum(len(res['frames'][r]['payload']) for r in pipeline.RAILS)
         kinds = [res['frames'][r]['kind'] for r in pipeline.RAILS]
         fk = 'A' if 'anchor' in kinds else ('P' if 'residual_p' in kinds else 'R')
-        cur.execute(
-            '''INSERT INTO acquisition (workspace_id, acq_id, sensor_id, ts,
-               client_ref, fs, n_samples, fr_est, tier, conf, vel_rms, acc_rms,
-               env_rms, acc_kurt, acc_crest, gate_score, gate_drift,
-               gate_decision, gate_kind, frame_kind, payload_bytes,
-               waveform_stored, sig_reason)
-               VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                       %s,%s,%s,%s,%s,%s)''',
-            (wsid, acq_id, sensor['sensor_id'], ts, client_ref, fs, len(x),
-             res['fr'], res['tier'], res['conf'], res['vel_rms'],
-             res['acc_rms'], res['env_rms'], res['acc_kurt'], res['acc_crest'],
-             res['gate']['score'], res['gate']['drift'],
-             res['gate']['decision'], res['gate']['kind'], fk, pb, store, reason))
+        try:
+            cur.execute(
+                '''INSERT INTO acquisition (workspace_id, acq_id, sensor_id, ts,
+                   client_ref, fs, n_samples, fr_est, tier, conf, vel_rms, acc_rms,
+                   env_rms, acc_kurt, acc_crest, gate_score, gate_drift,
+                   gate_decision, gate_kind, frame_kind, payload_bytes,
+                   waveform_stored, sig_reason)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                           %s,%s,%s,%s,%s,%s)''',
+                (wsid, acq_id, sensor['sensor_id'], ts, client_ref, fs, len(x),
+                 res['fr'], res['tier'], res['conf'], res['vel_rms'],
+                 res['acc_rms'], res['env_rms'], res['acc_kurt'], res['acc_crest'],
+                 res['gate']['score'], res['gate']['drift'],
+                 res['gate']['decision'], res['gate']['kind'], fk, pb, store, reason))
+        except psycopg.errors.UniqueViolation:
+            # backstop under the advisory lock: cannot normally trigger
+            raise IngestError(409, 'sensor already has an acquisition at this ts')
         for rail in pipeline.RAILS:
             f = res['frames'][rail]
             cur.execute(

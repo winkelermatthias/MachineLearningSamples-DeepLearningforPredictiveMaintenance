@@ -71,6 +71,29 @@ def check_token(token: str) -> str | None:
     except Exception:
         return None
 
+# Derived API keys: same bearer shape, separate HMAC context, no expiry —
+# revocation lives in the api_key table, which authenticate() consults.
+def _key_token_key() -> bytes:
+    return hashlib.sha256(b'relspec-key|'+config.PEPPER.encode()).digest()
+
+def mint_key_token(wsid: str, key_id: str, scope: str) -> str:
+    msg = f'{wsid}|{key_id}|{scope}'.encode()
+    sig = hmac.new(_key_token_key(), msg, hashlib.sha256).digest()[:20]
+    return base64.urlsafe_b64encode(msg+b'|'+sig).decode()
+
+def check_key_token(token: str) -> tuple[str, str, str] | None:
+    try:
+        raw = base64.urlsafe_b64decode(token.encode())
+        msg, sig = raw.rsplit(b'|', 1)
+        if not hmac.compare_digest(
+                hmac.new(_key_token_key(), msg, hashlib.sha256).digest()[:20], sig):
+            return None
+        wsid, key_id, scope = msg.decode().split('|')
+        if scope not in SCOPES: return None
+        return wsid, key_id, scope
+    except Exception:
+        return None
+
 # in-memory failure throttle: 5 bad passphrase attempts / minute / client
 _fails: dict[str, list[float]] = {}
 def throttle(client: str):
@@ -82,20 +105,38 @@ def throttle(client: str):
 def record_fail(client: str):
     _fails.setdefault(client, []).append(time.time())
 
+SCOPES = ('read', 'ingest', 'full')
+
 @dataclass
 class Principal:
     workspace_id: str
+    scope: str = 'full'
+    key_id: str | None = None
+
+def require_scope(pr: Principal, need: str):
+    """'full' does everything; 'read'/'ingest' keys only their own lane."""
+    if pr.scope != 'full' and pr.scope != need:
+        raise AuthError(403, f'{pr.scope}-scoped key cannot perform this operation')
 
 def authenticate(header: str | None, cur, client: str) -> Principal:
-    """cur: open cursor for verifier lookup. Raises AuthError."""
+    """cur: open cursor for verifier / key lookup. Raises AuthError."""
     if not header:
         raise AuthError(401, 'missing Authorization header')
     kind, _, value = header.partition(' ')
     kind = kind.lower(); value = value.strip()
     if kind == 'bearer':
         wsid = check_token(value)
-        if not wsid: raise AuthError(401, 'invalid or expired token')
-        return Principal(wsid)
+        if wsid: return Principal(wsid)
+        kt = check_key_token(value)
+        if kt:
+            wsid, key_id, scope = kt
+            row = cur.execute(
+                'SELECT revoked FROM api_key WHERE key_id=%s AND workspace_id=%s',
+                (key_id, wsid)).fetchone()
+            if not row or row[0]:
+                raise AuthError(401, 'key revoked or unknown')
+            return Principal(wsid, scope, key_id)
+        raise AuthError(401, 'invalid or expired token')
     if kind == 'passphrase':
         throttle(client)
         try:

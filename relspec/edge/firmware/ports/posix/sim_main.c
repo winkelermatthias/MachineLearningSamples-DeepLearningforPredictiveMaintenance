@@ -6,7 +6,8 @@
  * responds to gateway control frames (START/STOP/SET_FS/IDENT).
  *
  *   ./device-sim --id RS-000A01 --gateway 127.0.0.1:47701 \
- *       --fs 8192 --acq-ms 1000 --count 4 --speed 50 --growth 0.4
+ *       --fs 8192 --acq-ms 1000 --count 4 --speed 50 --growth 0.4 \
+ *       --key 8f3a...   (hex device key; answers the gateway CHALLENGE)
  *
  * --speed N paces the stream N× faster than real time (test rigs);
  * --speed 0 streams flat out.
@@ -28,6 +29,7 @@
 #include <unistd.h>
 #include "../../core/rs_proto.h"
 #include "../../core/rs_ring.h"
+#include "../../core/rs_sha256.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -46,6 +48,7 @@ typedef struct {
     double speed, growth;
     unsigned seed;
     int wait_start;
+    uint8_t key[64]; size_t keylen;   /* per-device auth key (--key hex) */
 } cfg_t;
 
 static uint64_t now_us(void)
@@ -148,7 +151,29 @@ static int send_all(int fd, const uint8_t *buf, size_t len)
     return 0;
 }
 
-typedef struct { int streaming; uint32_t fs_next; } devstate_t;
+typedef struct { int streaming; uint32_t fs_next; int auth_sent; } devstate_t;
+
+/* CHALLENGE -> F_AUTH: prove key possession before the gateway will
+ * accept our DATA frames. Tag = rs_auth_tag(key, dev_id, nonce). */
+static void answer_challenge(int fd, devstate_t *st, const cfg_t *cfg,
+                             uint32_t nonce)
+{
+    if (!cfg->keylen) {
+        fprintf(stderr, "[%s] challenged but no --key set\n", cfg->id);
+        return;
+    }
+    uint8_t tag[RS_AUTH_TAG_LEN];
+    rs_auth_tag(cfg->key, cfg->keylen, cfg->id, nonce, tag);
+    int16_t pay[RS_AUTH_TAG_LEN / 2];
+    memcpy(pay, tag, RS_AUTH_TAG_LEN);
+    rs_data_hdr_t h = {0};
+    h.type = RS_F_AUTH; h.n = RS_AUTH_TAG_LEN / 2;
+    snprintf(h.dev_id, sizeof h.dev_id, "%s", cfg->id);
+    h.t0_us = now_us();
+    uint8_t buf[RS_DATA_HDR_LEN + RS_AUTH_TAG_LEN + 4];
+    if (send_all(fd, buf, rs_frame_encode(&h, pay, buf)) == 0)
+        st->auth_sent = 1;
+}
 
 static void handle_ctrl(int fd, devstate_t *st, const cfg_t *cfg)
 {
@@ -165,10 +190,23 @@ static void handle_ctrl(int fd, devstate_t *st, const cfg_t *cfg)
             case RS_C_SET_FS: st->fs_next = c.arg; break;
             case RS_C_IDENT:
                 fprintf(stderr, "[%s] IDENT blink\n", cfg->id); break;
+            case RS_C_CHALLENGE:
+                answer_challenge(fd, st, cfg, c.arg); break;
             default: break;
             }
         }
     }
+}
+
+static size_t parse_hex(const char *s, uint8_t *out, size_t max)
+{
+    size_t n = 0;
+    unsigned b;
+    while (s[0] && s[1] && n < max && sscanf(s, "%2x", &b) == 1) {
+        out[n++] = (uint8_t)b;
+        s += 2;
+    }
+    return n;
 }
 
 static void send_beacon(int us, const cfg_t *cfg, uint32_t fs,
@@ -192,7 +230,7 @@ int main(int argc, char **argv)
 {
     cfg_t cfg = { "RS-000A01", "127.0.0.1", RS_PORT_STREAM,
                   "127.0.0.1", RS_PORT_BEACON,
-                  8192, 1000, 2000, 4, 1.0, 0.25, 42, 0 };
+                  8192, 1000, 2000, 4, 1.0, 0.25, 42, 0, {0}, 0 };
     for (int i = 1; i < argc - 1 || (i < argc && !strcmp(argv[i], "--wait-start")); i++) {
         const char *a = argv[i], *v = (i + 1 < argc) ? argv[i + 1] : "";
         if (!strcmp(a, "--id")) cfg.id = v;
@@ -212,6 +250,8 @@ int main(int argc, char **argv)
         else if (!strcmp(a, "--speed")) cfg.speed = atof(v);
         else if (!strcmp(a, "--growth")) cfg.growth = atof(v);
         else if (!strcmp(a, "--seed")) cfg.seed = (unsigned)atoi(v);
+        else if (!strcmp(a, "--key"))
+            cfg.keylen = parse_hex(v, cfg.key, sizeof cfg.key);
         else if (!strcmp(a, "--wait-start")) cfg.wait_start = 1;
     }
 
@@ -224,7 +264,7 @@ int main(int argc, char **argv)
     }
     if (fd < 0) { fprintf(stderr, "gateway unreachable\n"); return 2; }
 
-    devstate_t st = { !cfg.wait_start, cfg.fs };
+    devstate_t st = { !cfg.wait_start, cfg.fs, 0 };
     const double scale = FULLSCALE_G / 32768.0;
     uint8_t frame[RS_MAX_FRAME];
     uint32_t seq = 0, uptime = 0;
@@ -237,6 +277,17 @@ int main(int argc, char **argv)
     h.fs_hz = cfg.fs; h.scale_g = (float)scale; h.seq = seq++;
     h.t0_us = now_us();
     if (send_all(fd, frame, rs_frame_encode(&h, NULL, frame)) < 0) return 3;
+
+    /* keyed device: wait for the gateway's CHALLENGE and answer it
+     * before streaming (DATA sent unauthenticated would be dropped) */
+    if (cfg.keylen) {
+        for (int w = 0; w < 500 && !st.auth_sent; w++) {
+            handle_ctrl(fd, &st, &cfg);
+            if (!st.auth_sent) sleep_us(10000);
+        }
+        if (!st.auth_sent)
+            fprintf(stderr, "[%s] no auth challenge from gateway\n", cfg.id);
+    }
 
     for (int acq = 0; acq < cfg.count; ) {
         handle_ctrl(fd, &st, &cfg);

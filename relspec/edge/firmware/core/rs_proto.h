@@ -27,12 +27,17 @@
 #define RS_PROTO_VER 1
 #define RS_DEV_ID_LEN 12
 
-/* data frame types */
-enum { RS_F_HELLO = 1, RS_F_DATA = 2, RS_F_ACQ_END = 3, RS_F_STATUS = 4 };
+/* data frame types. F_AUTH answers a CHALLENGE: payload is
+ * HMAC-SHA256(device_key, dev_id[12] || nonce LE32) truncated to
+ * 16 bytes (n = 8 words). See rs_sha256.h / rs_auth_tag(). */
+enum { RS_F_HELLO = 1, RS_F_DATA = 2, RS_F_ACQ_END = 3, RS_F_STATUS = 4,
+       RS_F_AUTH = 5 };
 
-/* control commands */
+/* control commands. CHALLENGE: arg = random nonce the gateway remembers;
+ * a keyed device must answer with F_AUTH before DATA is accepted. */
 enum { RS_C_START = 1, RS_C_STOP = 2, RS_C_SET_FS = 3,
-       RS_C_SET_ACQ_MS = 4, RS_C_IDENT = 5, RS_C_REBOOT = 6 };
+       RS_C_SET_ACQ_MS = 4, RS_C_IDENT = 5, RS_C_REBOOT = 6,
+       RS_C_CHALLENGE = 7 };
 
 /* beacon flags */
 #define RS_BF_STREAMING 0x01

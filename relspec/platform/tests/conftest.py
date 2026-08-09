@@ -14,6 +14,18 @@ def pg():
     yield srv
     srv.cleanup()
 
+@pytest.fixture(autouse=True)
+def _fresh_inmemory_state():
+    """Rate caps and auth throttles are in-memory per replica; workspace
+    ids are deterministic from passphrases, so without a reset one test's
+    traffic 429-throttles the next. Prod replicas don't share this state
+    across tenants the way one pytest process does."""
+    from relspec_service import ingest, auth
+    ingest._rate.clear()
+    auth._fails.clear()
+    yield
+
+
 @pytest.fixture()
 def client(pg, monkeypatch):
     """Fresh database + migrated schema + TestClient per test."""

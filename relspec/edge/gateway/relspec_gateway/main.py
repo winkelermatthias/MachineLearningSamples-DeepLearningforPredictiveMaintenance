@@ -4,8 +4,8 @@ a tiny HTTP status/control surface.
     python -m relspec_gateway.main --cloud http://api:8000 \
         --passphrase "$RS_PASSPHRASE" --mapping devices.json
 
-Env fallbacks: RS_CLOUD, RS_PASSPHRASE, RS_MAPPING, RS_SPOOL, RS_HTTP_PORT,
-RS_OPCUA_ENDPOINT, RS_BEACON_PORT, RS_STREAM_PORT, RS_BIND.
+Env fallbacks: RS_CLOUD, RS_PASSPHRASE, RS_CLOUD_KEY, RS_MAPPING, RS_SPOOL,
+RS_HTTP_PORT, RS_OPCUA_ENDPOINT, RS_BEACON_PORT, RS_STREAM_PORT, RS_BIND.
 
 HTTP surface (JSON): GET /status; POST /ctrl {dev,cmd,arg}
 """
@@ -29,8 +29,12 @@ def parse_args(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument('--cloud', default=e('RS_CLOUD', 'http://127.0.0.1:8000'))
     ap.add_argument('--passphrase', default=e('RS_PASSPHRASE', ''))
+    ap.add_argument('--cloud-key', default=e('RS_CLOUD_KEY', ''),
+                    help='pre-issued bearer token; sent verbatim instead '
+                         'of trading the passphrase')
     ap.add_argument('--mapping', default=e('RS_MAPPING', 'devices.json'),
-                    help='JSON file: {"<dev_id>": "Plant/Asset/Comp/Sensor"}')
+                    help='JSON file: {"<dev_id>": "Plant/Asset/Comp/Sensor"} '
+                         'or {"<dev_id>": {"path": ..., "key": "<hex>"}}')
     ap.add_argument('--spool', default=e('RS_SPOOL', 'gateway-spool.db'))
     ap.add_argument('--bind', default=e('RS_BIND', '0.0.0.0'))
     ap.add_argument('--beacon-port', type=int,
@@ -85,7 +89,7 @@ class Gateway:
         self.registry = Registry(mapping)
         self.spool = Spool(args.spool)
         self.uplink = Uplink(args.cloud, args.passphrase, self.spool,
-                             self.registry)
+                             self.registry, cloud_key=args.cloud_key)
         self.opcua = OpcUa(self.registry, args.opcua)
         self.stream_srv = None
         self._loop = None

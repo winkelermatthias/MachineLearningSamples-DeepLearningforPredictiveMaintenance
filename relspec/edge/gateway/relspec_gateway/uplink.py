@@ -2,6 +2,9 @@
 
 Auth: the gateway holds the workspace passphrase (devices never do).
 It trades the phrase for a bearer token on start and re-mints on 401.
+Alternatively RS_CLOUD_KEY supplies a pre-issued token that is sent
+as Bearer directly (no passphrase exchange); the passphrase path
+stays as the fallback when no key is configured.
 Failure policy: network/5xx -> exponential backoff, stays pending
 (store-and-forward); 409 out-of-order or 4xx -> 'skipped' with the
 error recorded (never blocks the queue).
@@ -16,9 +19,10 @@ log = logging.getLogger('uplink')
 
 class Uplink:
     def __init__(self, base_url: str, passphrase: str, spool: Spool,
-                 registry=None):
+                 registry=None, cloud_key: str = ''):
         self.base = base_url.rstrip('/')
         self.phrase = passphrase
+        self.cloud_key = cloud_key      # pre-issued bearer, used verbatim
         self.spool = spool
         self.registry = registry
         self.token: str | None = None
@@ -26,6 +30,9 @@ class Uplink:
         self.sent_total = 0
 
     async def _auth(self, client: httpx.AsyncClient):
+        if self.cloud_key:
+            self.token = self.cloud_key
+            return
         r = await client.post(self.base + '/v1/workspaces',
                               json={'passphrase': self.phrase,
                                     'name': 'edge-gateway'})
@@ -58,6 +65,10 @@ class Uplink:
                 self.spool.mark(item['id'], 'sent', r.json())
                 log.info('sent %s %s -> %s', item['dev'], item['ts_iso'],
                          r.json().get('sig_reason'))
+                if self.registry and self.registry.on_change:
+                    # refresh OPC UA gauges promptly (not just on the
+                    # 2 s timer) so SpoolSent tracks the drain live
+                    self.registry.on_change(self.registry.get(item['dev']))
                 return True
             if 400 <= r.status_code < 500:
                 self.spool.mark(item['id'], 'skipped',
