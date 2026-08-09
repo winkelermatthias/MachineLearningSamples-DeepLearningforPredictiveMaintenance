@@ -1,5 +1,7 @@
 # relspec platform — plan
 
+> **Status: built.** The implementation lives in `../platform/` with its own README (run instructions, tests, MCP config). Deviations from this plan are noted there; the significant ones: tests run against real Postgres via an embedded server (pgserver) with the Timescale-specific SQL applied only when the extension exists, and the strict max-1-waveform/week reading is the default (event_budget_per_week=0).
+
 Dockerised service that turns raw time waveforms into the relspec
 representation (features, dual-rail spectra, codec payloads, verified
 patterns, gate events), stores it in TimescaleDB under a simple

@@ -5,3 +5,8 @@ schema.duckdb*
 __pycache__/
 *.pyc
 viz_data.json
+platform/dev-pg/
+platform/.pgdata-test/
+platform/web/app/index.html
+platform/**/__pycache__/
+platform/.env

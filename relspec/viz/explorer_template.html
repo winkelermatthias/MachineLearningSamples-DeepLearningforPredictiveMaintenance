@@ -1403,7 +1403,8 @@ document.getElementById('codecChk').onchange=e=>{S.codec=e.target.checked;refres
 document.getElementById('patChk').onchange=e=>{S.pat=e.target.checked;refresh(['wfov','spec'])};
 document.getElementById('frChk').onchange=e=>{S.fullres=e.target.checked;refresh(['spec'])};
 const sel=document.getElementById('seqSel');
-(function(){
+function rebuildSeqSelect(){
+  sel.innerHTML='';
   const groups={};
   seqs.forEach((s,i)=>{ (groups[s.cat||'Other'] ??= []).push([i,s.title]) });
   for (const [cat, items] of Object.entries(groups)){
@@ -1414,7 +1415,9 @@ const sel=document.getElementById('seqSel');
     }
     sel.appendChild(og);
   }
-})();
+  sel.value=String(S.seq);
+}
+rebuildSeqSelect();
 sel.onchange=()=>{ S.seq=+sel.value; S.frame=0; S.track=-1; _tcol=new Map(); refresh(['all']) };
 
 function setPage(p){
@@ -1452,6 +1455,7 @@ document.querySelectorAll('nav.tabs button').forEach(b=>
 
 /* ---------------- refresh & theme wiring ---------------- */
 function refresh(parts){
+  if (!seqs.length) return;              // API mode before first load
   const p=new Set(parts);
   const all=p.has('all');
   if (S.page==='explore'){
@@ -1484,5 +1488,19 @@ let rsz; addEventListener('resize',()=>{clearTimeout(rsz);rsz=setTimeout(()=>{
   if(S.page==='explore')refresh(['all']); else if(S.page==='three')draw3D();
   else if(S.page==='events')drawEventsTab(); else if(S.page==='help')drawHelp();},150)});
 buildTheme();
-refresh(['all']); drawRice();
+if (seqs.length){ refresh(['all']); drawRice() }
+
+/* hook for the API loader (web/app/app.js): push sequences fetched from the
+   relspec service and re-enter exactly the embedded-data path */
+window.relspecApp = {
+  state: S, seqs, refresh, rebuildSeqSelect, drawRice, cen: CEN,
+  addSequence(seq, select){
+    seqs.push(seq);
+    if (select !== false){ S.seq = seqs.length-1; S.frame = 0; S.track = -1;
+      _tcol = new Map() }
+    rebuildSeqSelect();
+    refresh(['all']); drawRice();
+  },
+  invalidate(){ cache.clear(); frCache.clear(); zCache.clear() },
+};
 </script>
