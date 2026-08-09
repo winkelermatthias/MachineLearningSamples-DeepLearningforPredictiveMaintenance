@@ -14,6 +14,12 @@ from . import auth, cache, config, db, ingest, migrations, queries
 
 app = FastAPI(title='relspec service', version='1.0')
 
+# Cross-origin dashboards (?api= mode) authenticate with explicit Bearer
+# headers, never cookies, so a permissive CORS policy leaks nothing.
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(CORSMiddleware, allow_origins=['*'],
+                   allow_methods=['*'], allow_headers=['*'])
+
 # ------------------------------------------------------------------ plumbing
 @app.on_event('startup')
 def _startup():

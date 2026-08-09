@@ -936,19 +936,25 @@ function donut(p=1,sel='#donut'){
   const cv=$(sel);if(!cv)return;
   const g=cv.getContext('2d');g.setTransform(2,0,0,2,0,0);
   g.clearRect(0,0,70,70);
-  const data=[[21,'--good'],[5,'--mon'],[2,'--alert'],[1,'--crit']];
-  const tot=29;let a0=-Math.PI/2;
+  let data=[[21,'--good'],[5,'--mon'],[2,'--alert'],[1,'--crit']],tot=29;
+  if(LIVE.on&&LIVE.assets){
+    const c={good:0,mon:0,alert:0,crit:0};
+    LIVE.assets.forEach(x=>{if(c[x.tier]!=null)c[x.tier]++});
+    data=[[c.good,'--good'],[c.mon,'--mon'],[c.alert,'--alert'],[c.crit,'--crit']];
+    tot=Math.max(1,LIVE.assets.length);
+  }
+  let a0=-Math.PI/2;
   data.forEach(([n,c])=>{const span=n/tot*2*Math.PI*p;
     g.beginPath();g.strokeStyle=css(c);g.lineWidth=9;g.lineCap='butt';
     g.arc(35,35,26,a0+0.035,a0+span-0.035);g.stroke();a0+=n/tot*2*Math.PI*p});
   g.fillStyle=css('--ink');g.font='700 13px "Space Grotesk"';
-  g.textAlign='center';g.fillText('29',35,33);
+  g.textAlign='center';g.fillText(String(LIVE.on&&LIVE.assets?LIVE.assets.length:29),35,33);
   g.fillStyle=css('--muted');g.font='500 8px "IBM Plex Mono"';g.fillText('ASSETS',35,45);
 }
-function healthBand(cv,hh,marks,p=1){
+function healthBand(cv,hh,marks,p=1,segsIn){
   if(!cv)return;
   const[g,w,h]=fit(cv,hh);
-  const segs=[[0,0.18,'good'],[0.18,0.22,'learn'],[0.22,0.55,'good'],
+  const segs=segsIn||[[0,0.18,'good'],[0.18,0.22,'learn'],[0.22,0.55,'good'],
               [0.55,0.72,'mon'],[0.72,1,'alert']];
   segs.forEach(([a,b,t])=>{if(a>p)return;
     g.fillStyle=t==='learn'?css('--panel2'):css('--'+t);
@@ -984,7 +990,7 @@ function assetSeries(a){
 }
 function velTrend(a,p=1){
   const cv=$('#velTrend');const[g,w,h]=fit(cv,128);
-  const D=assetSeries(a);
+  const D=(a.live&&a.rows)?liveSeries(a):assetSeries(a);
   const zones=[[0,2.8,'--good'],[2.8,7.1,'--mon'],[7.1,11,'--alert']];
   const ymax=11,Y=v=>h-18-(h-34)*v/ymax;
   zones.forEach(([lo,hi,c])=>{g.fillStyle=css(c);g.globalAlpha=0.10;
@@ -1086,6 +1092,7 @@ function mTrends(p=1,sel='#mTrends'){
 
 /* ================= fleet render ================= */
 function kpis(){
+  if(LIVE.on&&LIVE.assets){liveKpis();return}
   const items=[['assets',29,''],['sensors',63,''],['open findings',
     FINDINGS.filter(f=>f.state==='open').length,' · '+FINDINGS.filter(f=>f.tier==='crit'&&f.state==='open').length+' crit'],
     ['data · 30 d',1.9,' MB · 318×'],['raw snapshots · 30 d',241,' · audit ≤0.9 dB']];
@@ -1098,8 +1105,14 @@ function kpis(){
   });
 }
 function tierFilters(){
-  const counts={good:21,mon:5,alert:2,crit:1};
-  $('#tierFilters').innerHTML=['good','mon','alert','crit'].map(t=>
+  let counts={good:21,mon:5,alert:2,crit:1};
+  let keys=['good','mon','alert','crit'];
+  if(LIVE.on&&LIVE.assets){
+    counts={good:0,mon:0,alert:0,crit:0,learn:0};
+    LIVE.assets.forEach(a=>counts[a.tier]=(counts[a.tier]||0)+1);
+    keys=['good','mon','alert','crit','learn'];
+  }
+  $('#tierFilters').innerHTML=keys.map(t=>
     `<button class="chip click c-${t} ${S.tiers.has(t)?'':'off'} ${t==='crit'&&S.tiers.has(t)?'pulse':''}"
       data-t="${t}" aria-pressed="${S.tiers.has(t)}">${TIERS[t][0]} ${TIERS[t][1]} <b>${counts[t]}</b></button>`).join('');
   $$('#tierFilters .chip').forEach(b=>b.onclick=()=>{
@@ -1108,7 +1121,7 @@ function tierFilters(){
     tierFilters();cards()});
 }
 function visibleAssets(){
-  return ASSETS.filter(a=>S.tiers.has(a.tier))
+  return allAssets().filter(a=>S.tiers.has(a.tier))
     .filter(a=>!S.q||a.id.toLowerCase().includes(S.q)||a.ty.includes(S.q))
     .sort((a,b)=>TIER_ORDER[a.tier]-TIER_ORDER[b.tier]);
 }
@@ -1129,7 +1142,7 @@ function cards(){
       </tbody></table></div>`:
       '<div style="color:var(--muted);padding:30px;text-align:center">no assets match the current filters</div>';
     $$('#cards tbody tr').forEach(tr=>{
-      tr.onclick=()=>openAsset(ASSETS.find(x=>x.id===tr.dataset.id));
+      tr.onclick=()=>openAsset(allAssets().find(x=>x.id===tr.dataset.id));
       tr.onkeydown=e=>{if(e.key==='Enter')tr.onclick()}});
     return;
   }
@@ -1145,7 +1158,7 @@ function cards(){
     ||'<div style="color:var(--muted);padding:30px;text-align:center">no assets match the current filters</div>';
   $$('#cards .acard').forEach((el,i)=>{
     setTimeout(()=>el.classList.add('in'),REDUCED?0:i*45);
-    const a=ASSETS.find(x=>x.id===el.dataset.id);
+    const a=allAssets().find(x=>x.id===el.dataset.id);
     animate(p=>sparky(el.querySelector('canvas'),a.seed*77+3,a.tier,a.hot,p),600);
     el.onclick=()=>openAsset(a);
     el.onkeydown=e=>{if(e.key==='Enter')openAsset(a)};
@@ -1153,10 +1166,11 @@ function cards(){
 }
 function tree(){
   const rows=[];
-  ['North plant','South plant'].forEach(pl=>{
-    const inPlant=ASSETS.filter(a=>a.plant===pl);
+  const SRC=allAssets();
+  [...new Set(SRC.map(a=>a.plant))].forEach(pl=>{
+    const inPlant=SRC.filter(a=>a.plant===pl);
     const worst=inPlant.sort((a,b)=>TIER_ORDER[a.tier]-TIER_ORDER[b.tier])[0];
-    rows.push(`<div class="node"><span class="dot d-${worst.tier}"></span><b>${pl}</b><span class="n">${pl==='North plant'?18:11}</span></div>`);
+    rows.push(`<div class="node"><span class="dot d-${worst.tier}"></span><b>${pl}</b><span class="n">${LIVE.on?inPlant.length:(pl==='North plant'?18:11)}</span></div>`);
     [...new Set(inPlant.map(a=>a.area))].forEach(ar=>{
       const inA=inPlant.filter(a=>a.area===ar);
       const w2=inA.sort((a,b)=>TIER_ORDER[a.tier]-TIER_ORDER[b.tier])[0];
@@ -1167,9 +1181,10 @@ function tree(){
   });
   $('#tree').innerHTML=rows.join('');
   $$('#tree .node[data-id]').forEach(n=>n.onclick=()=>
-    openAsset(ASSETS.find(a=>a.id===n.dataset.id)));
+    openAsset(allAssets().find(a=>a.id===n.dataset.id)));
 }
 function feed(){
+  if(LIVE.on&&LIVE.assets){liveFeed();return}
   $('#feed').innerHTML=FINDINGS.map(f=>{
     const chip=f.state==='event'?'c-learn':'c-'+f.tier;
     const icon=f.state==='event'?'⟲':TIERS[f.tier]?.[0]||'⚑';
@@ -1184,7 +1199,7 @@ function feed(){
     e.stopPropagation();ackFinding(b.dataset.id)});
   $$('#feed .item').forEach(it=>it.onclick=()=>{
     const f=FINDINGS.find(x=>x.id===it.dataset.id);
-    const a=ASSETS.find(x=>x.id===f.asset);
+    const a=allAssets().find(x=>x.id===f.asset);
     if(a)openAsset(a)});
 }
 function ackFinding(id){
@@ -1203,8 +1218,9 @@ function renderAsset(){
   $('#aTitle').textContent=a.id;
   $('#aTier').innerHTML=`<span class="chip c-${a.tier} ${a.tier==='crit'?'pulse':''}">${TIERS[a.tier][0]} ${TIERS[a.tier][1]} <b>since ${a.since}</b></span>`;
   $('#aPath').textContent=`${a.plant} / ${a.area} / ${a.id} · ${a.ty} · ${a.sensors} sensors`;
-  const marks=[[0.18,'⟲'],[0.57,'⚑'],[0.74,'⚑'],[0.86,'⛭'],...S.resetMarks];
-  animate(p=>healthBand($('#healthTl'),46,marks,p),700);
+  if(a.live&&!a.rows){liveAssetRows(a);return}
+  const marks=a.live?[]:[[0.18,'⟲'],[0.57,'⚑'],[0.74,'⚑'],[0.86,'⛭'],...S.resetMarks];
+  animate(p=>healthBand($('#healthTl'),46,marks,p,a.live?liveSegs(a):undefined),700);
   animate(p=>velTrend(a,p),800);
   animate(p=>pmatrix(a,p),900);
   animate(p=>confChart(p),700);
@@ -1357,7 +1373,7 @@ function renderMobile(){
         <div class="meta"><span>swipe → acknowledge</span><span>tap for asset sheet</span></div>
       </div>`).join('');
     $$('#mcards .mcard').forEach(el=>{
-      const a=ASSETS.find(x=>x.id===el.dataset.id);
+      const a=allAssets().find(x=>x.id===el.dataset.id);
       animate(p=>sparky(el.querySelector('canvas'),a.seed*131+5,a.tier,a.hot,p),550);
       el.onclick=()=>{if(el.__swp)return;
         S.masset=a;
@@ -2189,6 +2205,166 @@ $$('#aAnchors button').forEach(b=>b.onclick=()=>{
   $$('#aAnchors button').forEach(x=>x.classList.toggle('on',x===b));
   const el=document.getElementById(b.dataset.t);
   if(el)el.scrollIntoView({behavior:REDUCED?'auto':'smooth',block:'start'})});
+
+/* ================= live API mode =================
+   Activated by ?api=<base> in the URL, or same-origin when served from
+   the platform webapp under /app (nginx proxies /v1). Demo mode — the
+   page opened as a plain file — is untouched. */
+const API_BASE=(()=>{
+  const q=new URLSearchParams(location.search).get('api');
+  if(q)return q.replace(/\/$/,'');
+  if(location.pathname.includes('/app'))return '';
+  return null})();
+const LIVE={on:false,token:null,assets:null,plants:null,t:null};
+const TIER_OF=h=>h==null?'learn':['good','mon','alert','crit'][Math.min(h,3)];
+TIERS.learn=['◌','learning'];
+TIER_ORDER.learn=4;
+function allAssets(){return (LIVE.on&&LIVE.assets)?LIVE.assets:ASSETS}
+async function api(path,opts={}){
+  const r=await fetch(API_BASE+path,{...opts,headers:{
+    'content-type':'application/json',
+    ...(LIVE.token?{authorization:'Bearer '+LIVE.token}:{}),
+    ...(opts.headers||{})}});
+  if(!r.ok)throw new Error(path+' -> '+r.status);
+  return r.json();
+}
+function connectCard(){
+  modal(`<div class="hd">Connect · live workspace</div>
+    <div class="bd">
+      <div style="font-size:12.5px;color:var(--muted)">This page found a relspec
+        API at <b style="font-family:var(--mono)">${API_BASE||'this origin'}</b>.
+        Enter the workspace passphrase for live fleet data — or stay on the
+        demo dataset.</div>
+      <label>passphrase<input type="text" id="lpPhrase" autocomplete="off"></label>
+      <div style="font:500 10px var(--mono);color:var(--crit)" id="lpErr"></div>
+    </div>
+    <div class="ft"><button class="btn ghost" onclick="closeModal()">Demo data</button>
+      <button class="btn primary" id="lpGo">Connect</button></div>`);
+  $('#lpGo').onclick=async()=>{
+    try{
+      const out=await api('/v1/workspaces',{method:'POST',
+        body:JSON.stringify({passphrase:$('#lpPhrase').value})});
+      LIVE.token=out.token;LIVE.on=true;
+      S.tiers.add('learn');
+      closeModal();
+      await liveRefresh();
+      sseLoop();
+      markDemoPages();
+      toast('Connected — live workspace data');
+      setPage('fleet');
+    }catch(e){$('#lpErr').textContent='connect failed: '+e.message}
+  };
+}
+async function liveRefresh(){
+  const fh=await api('/v1/fleet/health');
+  const ov=await api('/v1/fleet/overview');
+  const ovBy={};ov.forEach(s2=>ovBy[s2.sensor_id]=s2);
+  const byAsset={};
+  fh.sensors.forEach(sn=>{
+    const a=byAsset[sn.asset]=byAsset[sn.asset]||{
+      id:sn.asset,ty:'live asset',plant:sn.plant,area:sn.component,
+      sensors:0,hmax:-1,why:'all sensors learning',age:'—',open:0,hot:0,
+      live:true,sensorIds:[],since:'—',rows:null,
+      seed:([...sn.asset].reduce((h,c)=>(h*31+c.charCodeAt(0))>>>0,7)%97)+3};
+    a.sensors++;a.sensorIds.push(sn.sensor_id);
+    const hrs=Math.max(0,Math.round((Date.now()-new Date(sn.ts))/36e5));
+    a.age=hrs+' h';
+    if(sn.health!=null&&sn.health>a.hmax){
+      a.hmax=sn.health;
+      const d=(sn.drivers||[]).slice()
+        .sort((x,y)=>(y.state||0)-(x.state||0))[0];
+      const o=ovBy[sn.sensor_id];
+      a.why=(d?`${d.signal}: ${d.value??d.decision??''}`:'')+
+        (o&&o.vel_rms!=null?` · vel ${(+o.vel_rms).toFixed(2)} mm/s`:'');
+    }
+  });
+  LIVE.assets=Object.values(byAsset).map(a=>({...a,
+    tier:a.hmax<0?'learn':TIER_OF(a.hmax),hot:a.hmax>=2?1:0}));
+  LIVE.plants=fh.plants;
+  if(S.page==='fleet'||S.page==='overview')redrawPage();
+}
+function liveKpis(){
+  const A=LIVE.assets;
+  const nSens=A.reduce((n,a)=>n+a.sensors,0);
+  const crit=A.filter(a=>a.tier==='crit').length,
+        alert=A.filter(a=>a.tier==='alert').length;
+  kpisInto('#kpis',[
+    ['assets',A.length,''],['sensors',nSens,''],
+    ['alert / critical',alert+crit,` · ${crit} crit`],
+    ['plants',LIVE.plants.length,''],
+    ['mode',1,' · LIVE']]);
+}
+function liveFeed(){
+  const hot=LIVE.assets.filter(a=>a.hmax>=1)
+    .sort((x,y)=>y.hmax-x.hmax).slice(0,8);
+  $('#feed').innerHTML=(hot.length?hot.map(a=>
+    `<div class="item" data-id="${a.id}"><div class="t">
+      <span class="chip c-${a.tier}">${TIERS[a.tier][0]}</span>
+      <span class="ti">${a.id} · ${TIERS[a.tier][1]}</span></div>
+      <div class="m">${a.why}</div>
+      <div class="who">live · ${a.age} ago</div></div>`).join(''):
+    '<div class="item"><div class="m">no elevated assets — the machines '+
+    'state, nothing to report</div></div>')+
+    '<div class="item"><div class="who">live workspace · findings UI uses '+
+    'demo data until the findings API lands</div></div>';
+  $$('#feed .item[data-id]').forEach(it=>it.onclick=()=>{
+    const a=allAssets().find(x=>x.id===it.dataset.id);
+    if(a)openAsset(a)});
+}
+function liveAssetRows(a){
+  const sid=a.sensorIds[0];
+  api(`/v1/sensors/${sid}/health`).then(rows=>{
+    a.rows=rows;renderAsset()}).catch(e=>toast('live load failed: '+e.message,1));
+}
+function liveSegs(a){
+  const rows=a.rows||[];
+  if(!rows.length)return [[0,1,'learn']];
+  return rows.map((r,i)=>[i/rows.length,(i+1)/rows.length,TIER_OF(r.health)]);
+}
+function liveSeries(a){
+  const rows=a.rows||[];
+  const vel=rows.map(r=>r.fp&&r.fp.vel_rms!=null?r.fp.vel_rms:(r.vel_rms||0));
+  return {vel,snaps:[],mat:[],n:Math.max(2,vel.length)};
+}
+function markDemoPages(){
+  ['wo','analytics','sensors','audit'].forEach(pg=>{
+    const h2=document.querySelector(`.page[data-page="${pg}"] .ahead h2`);
+    if(h2&&!h2.dataset.demo){h2.dataset.demo='1';
+      h2.insertAdjacentHTML('afterend',
+        '<span class="chip c-learn">demo data</span>')}
+  });
+}
+async function sseLoop(){
+  while(LIVE.on){
+    try{
+      const r=await fetch(API_BASE+'/v1/events/stream',
+        {headers:{authorization:'Bearer '+LIVE.token}});
+      const rd=r.body.getReader();
+      const dec=new TextDecoder();let buf='';
+      for(;;){
+        const{value,done}=await rd.read();
+        if(done)break;
+        buf+=dec.decode(value,{stream:true});
+        let i;
+        while((i=buf.indexOf('\n\n'))>=0){
+          const chunk=buf.slice(0,i);buf=buf.slice(i+2);
+          const m=chunk.match(/^data: (.*)$/m);
+          if(!m)continue;
+          try{
+            const ev=JSON.parse(m[1]);
+            if(ev.kind==='acquisition'){
+              clearTimeout(LIVE.t);
+              LIVE.t=setTimeout(liveRefresh,2000);
+              toast(`live · new acquisition — ${TIERS[TIER_OF(ev.health)][1]}`);
+            }
+          }catch(_){}
+        }
+      }
+    }catch(_){}
+    await new Promise(res=>setTimeout(res,5000));
+  }
+}
+if(API_BASE!==null)setTimeout(connectCard,600);
 
 /* ================= device detection ================= */
 function isMobileDevice(){

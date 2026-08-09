@@ -22,5 +22,13 @@ def build():
     out.write_text(html)
     print(f'wrote {out} ({len(html)//1024} KiB)')
 
+    # ship the CMMS dashboard alongside the explorer; served under /app it
+    # auto-detects same-origin API mode and offers the passphrase connect
+    dash = ROOT / 'viz' / 'dashboard_mockup.html'
+    if dash.exists():
+        dst = HERE / 'app' / 'dashboard.html'
+        dst.write_text(dash.read_text())
+        print(f'wrote {dst} ({dst.stat().st_size//1024} KiB)')
+
 if __name__ == '__main__':
     build()
