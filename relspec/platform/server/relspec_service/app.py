@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 import pathlib
-from . import auth, cache, config, db, ingest, queries
+from . import auth, cache, config, db, ingest, migrations, queries
 
 app = FastAPI(title='relspec service', version='1.0')
 
@@ -357,6 +357,71 @@ def events(request: Request, limit: int = 500):
         return cached_json(request, pr.workspace_id, cur, (t0, t1, limit),
                            lambda: queries.events(cur, pr.workspace_id,
                                                   t0, t1, limit))
+
+@app.get('/v1/events/stream')
+async def events_stream(request: Request):
+    """SSE: live acquisition/gate events for this workspace. Heartbeat
+    comments every 15 s; reconcile with GET /v1/events on reconnect."""
+    from fastapi.responses import StreamingResponse
+    from . import events_stream as es
+    with db.pool().connection() as conn:
+        pr = principal(request, conn.cursor())
+    q = await es.BROKER.subscribe(pr.workspace_id)
+    return StreamingResponse(es.sse_generator(pr.workspace_id, q),
+                             media_type='text/event-stream',
+                             headers={'cache-control': 'no-cache',
+                                      'x-accel-buffering': 'no'})
+
+# ---------------------------------------------------------------- migrations
+@app.post('/v1/migrations')
+async def create_migration(request: Request):
+    body = await request.json()
+    items = body.get('manifest') or []
+    if not isinstance(items, list) or not items:
+        return JSONResponse({'detail': 'manifest must be a non-empty list'},
+                            status_code=400)
+    with db.pool().connection() as conn:
+        cur = conn.cursor()
+        pr = principal(request, cur, 'ingest')
+        report = migrations.validate(cur, pr.workspace_id, items)
+        if body.get('dry_run'):
+            ok = sum(1 for r in report if r['ok'])
+            return dict(dry_run=True, total=len(report), ok=ok,
+                        errors=len(report) - ok, items=report)
+        job_id = migrations.create(cur, pr.workspace_id, items, report)
+        conn.commit()
+    migrations.start_worker(pr.workspace_id, job_id)
+    return dict(job_id=job_id, total=len(items),
+                invalid=sum(1 for r in report if not r['ok']))
+
+@app.get('/v1/migrations/{job_id}')
+def migration_status(job_id: str, request: Request):
+    with db.pool().connection() as conn:
+        cur = conn.cursor()
+        pr = principal(request, cur, 'read')
+        out = migrations.status(cur, pr.workspace_id, job_id)
+    return out if out else JSONResponse({'detail': 'not found'},
+                                        status_code=404)
+
+@app.post('/v1/migrations/{job_id}:pause')
+def migration_pause(job_id: str, request: Request):
+    with db.pool().connection() as conn:
+        cur = conn.cursor()
+        pr = principal(request, cur, 'ingest')
+        ok = migrations.set_state(cur, pr.workspace_id, job_id, 'paused')
+        conn.commit()
+    return {'paused': ok}
+
+@app.post('/v1/migrations/{job_id}:resume')
+async def migration_resume(job_id: str, request: Request):
+    with db.pool().connection() as conn:
+        cur = conn.cursor()
+        pr = principal(request, cur, 'ingest')
+        ok = migrations.set_state(cur, pr.workspace_id, job_id, 'running')
+        conn.commit()
+    if ok:
+        migrations.start_worker(pr.workspace_id, job_id)
+    return {'resumed': ok}
 
 @app.get('/v1/acquisitions/{acq_id}/waveform')
 def waveform(acq_id: str, request: Request):

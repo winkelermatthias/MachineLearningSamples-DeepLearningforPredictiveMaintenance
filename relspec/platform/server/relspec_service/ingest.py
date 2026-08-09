@@ -262,6 +262,19 @@ def ingest_one(wsid: str, body: dict) -> dict:
                  json.dumps(dict(score=res['gate']['score'],
                                  kind=res['gate']['kind']))))
         db.bump_version(cur, wsid)
+        # NOTIFY rides the same transaction: subscribers hear about the
+        # acquisition exactly when it becomes visible, never before
+        cur.execute('SELECT pg_notify(%s, %s)', ('relspec_events', json.dumps(
+            dict(ws=wsid, kind='acquisition', sensor_id=sensor['sensor_id'],
+                 acq_id=acq_id, ts=ts.isoformat(), health=tier_h,
+                 gate=res['gate']['decision'], stored=store))))
+        if res['gate']['decision'] == 'up_change':
+            cur.execute('SELECT pg_notify(%s, %s)',
+                        ('relspec_events', json.dumps(
+                            dict(ws=wsid, kind='gate_change',
+                                 sensor_id=sensor['sensor_id'],
+                                 ts=ts.isoformat(),
+                                 score=res['gate']['score']))))
         conn.commit()
     return dict(acq_id=acq_id, duplicate=False, waveform_stored=store,
                 sig_reason=reason, payload_bytes=pb, frame_kind=fk,
