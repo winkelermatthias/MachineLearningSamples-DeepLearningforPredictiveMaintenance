@@ -1,0 +1,964 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>relspec — machine health, evidenced</title>
+<style>
+__FONTS_CSS__
+  /* ============ relspec design system · "instrument, warmed by the flame"
+     Dark-forward precision instrument; light is the daylight shift.
+     One signature element: the spectral-flame gradient (wordmark comb,
+     active-tab underline, hero rule). Everything else is restraint. */
+  :root{
+    --bg:#F5F4F1; --panel:#FFFFFF; --panel2:#ECEAE5; --well:#FBFAF8;
+    --ink:#171F28; --muted:#5B6878; --faint:#98A2AF;
+    --hair:#DCDFE4; --grid:#E8E6E1;
+    --accent:#0B7285; --accent-ink:#FFFFFF; --accent-soft:#D9EBEE;
+    --good:#177B52; --good-soft:#DCF0E6; --mon:#A8731C; --mon-soft:#F5EBD6;
+    --alert:#BC4F27; --alert-soft:#F7E2D8; --crit:#AF3A47; --crit-soft:#F6DCDF;
+    --comb:#3572B0; --modc:#9A6F1F; --line:#0E8A57; --hay:#8A4FA0;
+    --sel:#E7F0F2; --shadow:0 1px 2px rgba(23,31,40,.05),0 8px 24px rgba(23,31,40,.07);
+    --shadow-lift:0 2px 4px rgba(23,31,40,.06),0 14px 34px rgba(23,31,40,.12);
+    --flame:linear-gradient(90deg,#E9A23B,#D95F33,#A93460,#5F2B82);
+    --disp:'Archivo',system-ui,sans-serif;
+    --mono:'IBM Plex Mono','SF Mono',Menlo,Consolas,monospace;
+    --dur-1:140ms; --dur-2:240ms; --dur-3:420ms;
+    --ease:cubic-bezier(.2,.7,.2,1);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0A0D12; --panel:#11161F; --panel2:#0D1219; --well:#070A0F;
+      --ink:#E8EDF4; --muted:#8593A6; --faint:#4C5666;
+      --hair:#202A38; --grid:#161F2B;
+      --accent:#56C4B4; --accent-ink:#06231F; --accent-soft:#12312E;
+      --good:#3AA981; --good-soft:#0F2E23; --mon:#E0A63F; --mon-soft:#33270F;
+      --alert:#E0784A; --alert-soft:#37200F; --crit:#E05A6E; --crit-soft:#391721;
+      --comb:#4E8BC7; --modc:#B98A33; --line:#2F9E85; --hay:#AC6BBE;
+      --sel:#18232F; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.45);
+      --shadow-lift:0 2px 4px rgba(0,0,0,.5),0 16px 40px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+      --bg:#0A0D12; --panel:#11161F; --panel2:#0D1219; --well:#070A0F;
+      --ink:#E8EDF4; --muted:#8593A6; --faint:#4C5666;
+      --hair:#202A38; --grid:#161F2B;
+      --accent:#56C4B4; --accent-ink:#06231F; --accent-soft:#12312E;
+      --good:#3AA981; --good-soft:#0F2E23; --mon:#E0A63F; --mon-soft:#33270F;
+      --alert:#E0784A; --alert-soft:#37200F; --crit:#E05A6E; --crit-soft:#391721;
+      --comb:#4E8BC7; --modc:#B98A33; --line:#2F9E85; --hay:#AC6BBE;
+      --sel:#18232F; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.45);
+      --shadow-lift:0 2px 4px rgba(0,0,0,.5),0 16px 40px rgba(0,0,0,.55);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--bg)}
+  body{background:var(--bg);color:var(--ink);font-family:var(--disp);
+       font-size:13.5px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  ::selection{background:var(--accent-soft)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+  /* ---------- header / brand ---------- */
+  header.top{display:flex;align-items:center;gap:20px;padding:0 22px;
+    height:58px;border-bottom:1px solid var(--hair);background:var(--panel);
+    position:sticky;top:0;z-index:20}
+  .wordmark{display:flex;align-items:center;gap:10px;user-select:none}
+  .wordmark svg{display:block}
+  .wordmark .nm{font:700 19px/1 var(--disp);letter-spacing:-0.02em}
+  .wordmark .nm i{font-style:normal;color:var(--muted);font-weight:500}
+  .wordmark .tag{font:500 9.5px var(--mono);letter-spacing:.16em;
+    text-transform:uppercase;color:var(--faint);margin-left:2px}
+  nav.tabs{display:flex;gap:4px;height:100%}
+  nav.tabs button{position:relative;background:none;border:0;height:100%;
+    color:var(--muted);font:600 13px var(--disp);padding:0 16px;cursor:pointer;
+    transition:color var(--dur-1) var(--ease)}
+  nav.tabs button:hover{color:var(--ink)}
+  nav.tabs button[aria-selected="true"]{color:var(--ink)}
+  nav.tabs button::after{content:'';position:absolute;left:12px;right:12px;
+    bottom:-1px;height:2.5px;border-radius:2px;background:var(--flame);
+    transform:scaleX(0);transition:transform var(--dur-2) var(--ease)}
+  nav.tabs button[aria-selected="true"]::after{transform:scaleX(1)}
+  .hdr-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .search{background:var(--well);border:1px solid var(--hair);border-radius:7px;
+    color:var(--ink);font:400 12.5px var(--disp);padding:7px 12px;width:200px;
+    transition:border-color var(--dur-1) var(--ease),width var(--dur-2) var(--ease)}
+  .search:focus{border-color:var(--accent);width:250px;outline:none}
+  .themebtn{background:var(--well);border:1px solid var(--hair);border-radius:7px;
+    color:var(--muted);font:500 11px var(--mono);padding:7px 12px;cursor:pointer;
+    transition:all var(--dur-1) var(--ease)}
+  .themebtn:hover{color:var(--ink);border-color:var(--faint)}
+
+  /* ---------- buttons ---------- */
+  .btn{display:inline-flex;align-items:center;gap:7px;border-radius:7px;
+    font:600 13px var(--disp);padding:9px 16px;cursor:pointer;
+    border:1px solid var(--hair);background:var(--panel);color:var(--ink);
+    transition:transform var(--dur-1) var(--ease),box-shadow var(--dur-1) var(--ease),
+      border-color var(--dur-1) var(--ease),background var(--dur-1) var(--ease)}
+  .btn:hover{border-color:var(--faint);box-shadow:var(--shadow)}
+  .btn:active{transform:scale(.985)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .btn.primary:hover{filter:brightness(1.07);box-shadow:var(--shadow)}
+  .btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+  .btn.ghost:hover{background:var(--sel);color:var(--ink);box-shadow:none}
+  .btn.danger{color:var(--crit);border-color:var(--hair)}
+  .btn.danger:hover{background:var(--crit);border-color:var(--crit);color:#fff}
+  .btn.sm{padding:5px 11px;font-size:12px;border-radius:6px}
+  .btn[disabled]{opacity:.45;pointer-events:none}
+
+  /* ---------- chips ---------- */
+  .chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;
+    font:500 10.5px var(--mono);letter-spacing:.05em;padding:4px 11px;
+    border:1px solid transparent;white-space:nowrap;
+    transition:all var(--dur-1) var(--ease)}
+  .chip b{font-weight:600}
+  .chip.click{cursor:pointer}
+  .chip.click:hover{filter:brightness(.96)}
+  :root[data-theme="dark"] .chip.click:hover{filter:brightness(1.15)}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) .chip.click:hover{filter:brightness(1.15)} }
+  .chip.off{background:transparent!important;color:var(--faint)!important;
+    border-color:var(--hair)}
+  .c-good{background:var(--good-soft);color:var(--good)}
+  .c-mon{background:var(--mon-soft);color:var(--mon)}
+  .c-alert{background:var(--alert-soft);color:var(--alert)}
+  .c-crit{background:var(--crit-soft);color:var(--crit)}
+  .c-learn{background:var(--panel2);color:var(--muted)}
+  .pulse{position:relative}
+  .pulse::before{content:'';position:absolute;inset:-3px;border-radius:999px;
+    border:1.5px solid var(--crit);opacity:0;animation:pulse 2.4s var(--ease) infinite}
+  @keyframes pulse{0%{opacity:.7;transform:scale(.9)}70%{opacity:0;transform:scale(1.15)}100%{opacity:0}}
+
+  /* ---------- layout / cards ---------- */
+  .page{display:none;padding:20px 22px 70px;max-width:1720px;margin:0 auto}
+  .page.on{display:block;animation:pagein var(--dur-3) var(--ease)}
+  @keyframes pagein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .cols{display:grid;grid-template-columns:236px minmax(0,1fr) 330px;gap:18px;align-items:start}
+  @media(max-width:1240px){.cols{grid-template-columns:minmax(0,1fr)}.rail,.feedwrap{display:none}}
+  .card{background:var(--panel);border:1px solid var(--hair);border-radius:10px;
+    box-shadow:var(--shadow)}
+  .card .hd{font:500 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;
+    color:var(--muted);padding:11px 16px;border-bottom:1px solid var(--hair);
+    display:flex;align-items:center;gap:8px}
+  .card .bd{padding:14px 16px}
+  .combrule{display:inline-flex;gap:2px;align-items:flex-end;height:10px}
+  .combrule i{width:2px;background:var(--flame);border-radius:1px}
+  .combrule i:nth-child(1){height:4px}.combrule i:nth-child(2){height:9px}
+  .combrule i:nth-child(3){height:6px}.combrule i:nth-child(4){height:10px}
+  .combrule i:nth-child(5){height:5px}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:1px;background:var(--hair);border:1px solid var(--hair);
+    border-radius:10px;overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow)}
+  .kpi{background:var(--panel);padding:12px 16px;position:relative}
+  .kpi::before{content:'';position:absolute;left:16px;top:0;width:26px;height:2px;
+    background:var(--flame);opacity:0;transition:opacity var(--dur-2)}
+  .kpi:first-child::before{opacity:1}
+  .kpi .k{font:500 9px var(--mono);letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted)}
+  .kpi .v{font:600 21px/1.25 var(--disp);letter-spacing:-.01em;margin-top:3px;
+    font-variant-numeric:tabular-nums}
+  .kpi .v small{font:500 11px var(--mono);color:var(--muted);letter-spacing:0}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(252px,1fr));gap:14px}
+  .acard{background:var(--panel);border:1px solid var(--hair);border-radius:10px;
+    padding:14px 16px;cursor:pointer;box-shadow:var(--shadow);
+    transition:transform var(--dur-2) var(--ease),box-shadow var(--dur-2) var(--ease),
+      border-color var(--dur-2) var(--ease);opacity:0;transform:translateY(8px)}
+  .acard.in{opacity:1;transform:none}
+  .acard:hover{transform:translateY(-2px);box-shadow:var(--shadow-lift);
+    border-color:var(--faint)}
+  .acard:active{transform:scale(.99)}
+  .acard .nm{font:600 14.5px var(--disp);letter-spacing:-.01em}
+  .acard .ty{color:var(--muted);font-size:11.5px;margin-bottom:6px}
+  .acard canvas{display:block;width:100%;height:36px;margin:8px 0 6px}
+  .acard .why{font-size:11.8px;color:var(--muted);line-height:1.45;min-height:34px}
+  .acard .ft{display:flex;justify-content:space-between;align-items:center;
+    margin-top:9px;font:500 10px var(--mono);color:var(--faint)}
+  .tr-up{color:var(--alert);font-weight:700}
+
+  .rail .node{padding:6px 10px;border-radius:6px;display:flex;gap:9px;
+    align-items:center;cursor:pointer;font-size:12.8px;
+    transition:background var(--dur-1) var(--ease)}
+  .rail .node:hover{background:var(--sel)}
+  .rail .node.lvl1{margin-left:14px}
+  .rail .node.lvl2{margin-left:28px;color:var(--muted)}
+  .rail .node .n{margin-left:auto;font:500 10px var(--mono);color:var(--faint)}
+  .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .d-good{background:var(--good)}.d-mon{background:var(--mon)}
+  .d-alert{background:var(--alert)}.d-crit{background:var(--crit)}
+
+  .feed .item{padding:12px 16px;border-bottom:1px solid var(--grid);cursor:pointer;
+    transition:background var(--dur-1) var(--ease)}
+  .feed .item:hover{background:var(--sel)}
+  .feed .t{display:flex;gap:8px;align-items:center;margin-bottom:4px}
+  .feed .ti{font:600 12.8px var(--disp)}
+  .feed .m{font-size:11.8px;color:var(--muted);line-height:1.5}
+  .feed .who{font:500 10px var(--mono);color:var(--faint);margin-top:6px}
+  .feed .ackd{opacity:.55}
+  .feed button.ack{margin-left:auto}
+
+  /* asset page */
+  .ahead{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+  .ahead h2{font:700 20px var(--disp);letter-spacing:-.02em}
+  .ahead .path{font:500 11px var(--mono);color:var(--muted)}
+  .actions{margin-left:auto;display:flex;gap:9px;flex-wrap:wrap}
+  .arows{display:grid;grid-template-columns:minmax(0,1fr) 336px;gap:18px;align-items:start}
+  @media(max-width:1140px){.arows{grid-template-columns:minmax(0,1fr)}}
+  .strip{margin-bottom:16px}
+  .strip canvas{display:block;width:100%}
+  .cap{font:500 9.5px var(--mono);letter-spacing:.15em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 5px 2px}
+  .cap em{font-style:normal;color:var(--faint);text-transform:none;letter-spacing:.04em}
+  .legendrow{display:flex;gap:14px;font:500 10px var(--mono);color:var(--muted);
+    margin-top:5px;flex-wrap:wrap}
+  .legendrow i{font-style:normal}
+  .evd{display:inline-block;background:var(--accent-soft);color:var(--accent);
+    font:500 10px var(--mono);border-radius:4px;padding:2px 8px;margin:0 5px 4px 0;
+    cursor:pointer;transition:filter var(--dur-1)}
+  .evd:hover{filter:brightness(.95)}
+  .comment{border-left:2px solid var(--hair);margin:9px 0 0 6px;
+    padding:2px 0 2px 11px;font-size:12px;color:var(--muted)}
+  select,input[type=text],textarea{background:var(--well);border:1px solid var(--hair);
+    border-radius:6px;color:var(--ink);font:400 12.5px var(--disp);padding:7px 10px;
+    transition:border-color var(--dur-1)}
+  select:focus,input[type=text]:focus,textarea:focus{border-color:var(--accent);outline:none}
+
+  /* phones */
+  .phones{display:flex;gap:36px;justify-content:center;flex-wrap:wrap;padding-top:8px}
+  .phone{width:392px;border:1px solid var(--hair);border-radius:28px;
+    background:var(--bg);overflow:hidden;box-shadow:var(--shadow-lift)}
+  .phone .titl{font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);text-align:center;padding:10px}
+  .phone .screen{height:660px;overflow-y:auto;padding:4px 12px 66px;position:relative}
+  .phone .tabbar{display:flex;border-top:1px solid var(--hair);background:var(--panel)}
+  .phone .tabbar button{flex:1;text-align:center;font:600 9.5px var(--mono);
+    letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+    padding:12px 0;background:none;border:0;cursor:pointer;position:relative}
+  .phone .tabbar button.on{color:var(--accent)}
+  .phone .tabbar button.on::before{content:'';position:absolute;top:-1px;left:30%;
+    right:30%;height:2px;background:var(--flame);border-radius:2px}
+  .mcard{background:var(--panel);border:1px solid var(--hair);border-radius:12px;
+    padding:13px 15px;margin-bottom:10px;box-shadow:var(--shadow);
+    position:relative;touch-action:pan-y;transition:transform var(--dur-2) var(--ease),
+      opacity var(--dur-2) var(--ease)}
+  .mcard .row{display:flex;align-items:center;gap:10px}
+  .mcard .nm{font:600 14px var(--disp)}
+  .mcard .ty{color:var(--muted);font-size:11.3px}
+  .mcard canvas{display:block;width:100%;height:32px;margin-top:8px}
+  .mcard .meta{display:flex;justify-content:space-between;margin-top:7px;
+    font:500 10px var(--mono);color:var(--faint)}
+  .filterrow{display:flex;gap:6px;overflow-x:auto;padding:8px 0;scrollbar-width:none}
+  .mhead{display:flex;align-items:center;gap:10px;padding:10px 2px 6px}
+  .mhead h3{font:700 16px var(--disp);letter-spacing:-.01em}
+
+  /* tables */
+  table{width:100%;border-collapse:collapse;font:400 11px var(--mono);
+    font-variant-numeric:tabular-nums}
+  th{font:500 9px var(--mono);letter-spacing:.13em;text-transform:uppercase;
+    color:var(--muted);text-align:right;padding:5px 8px;
+    border-bottom:1px solid var(--hair)}
+  th:first-child,td:first-child{text-align:left}
+  td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--grid)}
+
+  /* modal + toast */
+  .overlay{position:fixed;inset:0;background:rgba(10,13,18,.5);z-index:40;
+    display:none;align-items:center;justify-content:center;
+    animation:fadein var(--dur-2) var(--ease)}
+  .overlay.on{display:flex}
+  @keyframes fadein{from{opacity:0}to{opacity:1}}
+  .modal{background:var(--panel);border:1px solid var(--hair);border-radius:12px;
+    box-shadow:var(--shadow-lift);width:min(480px,94vw);
+    animation:modalin var(--dur-2) var(--ease)}
+  @keyframes modalin{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+  .modal .hd{font:600 14px var(--disp);padding:16px 20px;border-bottom:1px solid var(--hair)}
+  .modal .bd{padding:16px 20px;display:grid;gap:12px}
+  .modal .ft{padding:14px 20px;border-top:1px solid var(--hair);
+    display:flex;gap:9px;justify-content:flex-end}
+  .modal label{display:grid;gap:5px;font:500 10px var(--mono);
+    letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .modal .warn{background:var(--crit-soft);color:var(--crit);border-radius:7px;
+    padding:10px 13px;font-size:12px;line-height:1.5}
+  #toasts{position:fixed;right:18px;bottom:18px;z-index:60;display:grid;gap:8px}
+  .toast{background:var(--panel);border:1px solid var(--hair);border-left:3px solid var(--accent);
+    border-radius:8px;box-shadow:var(--shadow-lift);padding:11px 16px;
+    font-size:12.5px;max-width:340px;animation:toastin var(--dur-2) var(--ease)}
+  .toast.err{border-left-color:var(--crit)}
+  @keyframes toastin{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+  #tip{position:fixed;z-index:70;pointer-events:none;background:var(--panel);
+    border:1px solid var(--hair);border-radius:6px;padding:7px 10px;
+    font:500 11px var(--mono);display:none;box-shadow:var(--shadow-lift);
+    white-space:pre;line-height:1.55}
+  .disclaimer{font:500 9.5px var(--mono);color:var(--faint);letter-spacing:.06em}
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+  }
+</style>
+
+<header class="top">
+  <div class="wordmark" id="home" role="button" tabindex="0">
+    <svg width="26" height="22" viewBox="0 0 26 22" aria-hidden="true">
+      <defs><linearGradient id="fl" x1="0" x2="1">
+        <stop offset="0" stop-color="#E9A23B"/><stop offset=".4" stop-color="#D95F33"/>
+        <stop offset=".72" stop-color="#A93460"/><stop offset="1" stop-color="#5F2B82"/>
+      </linearGradient></defs>
+      <g fill="url(#fl)">
+        <rect x="1"  y="12" width="3" height="10" rx="1"/>
+        <rect x="6"  y="2"  width="3" height="20" rx="1"/>
+        <rect x="11" y="8"  width="3" height="14" rx="1"/>
+        <rect x="16" y="0"  width="3" height="22" rx="1"/>
+        <rect x="21" y="10" width="3" height="12" rx="1"/>
+      </g>
+    </svg>
+    <span class="nm">relspec<i>·health</i></span>
+    <span class="tag">machine health, evidenced</span>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true"  data-p="fleet">Fleet</button>
+    <button role="tab" aria-selected="false" data-p="asset">Asset</button>
+    <button role="tab" aria-selected="false" data-p="mobile">Mobile</button>
+  </nav>
+  <div class="hdr-right">
+    <input class="search" id="q" type="text" placeholder="Search assets…" aria-label="search assets">
+    <button class="themebtn" id="themeBtn" title="theme">◐ system</button>
+  </div>
+</header>
+
+<!-- ================= FLEET ================= -->
+<div class="page on" data-page="fleet">
+  <div class="cols">
+    <div class="rail card"><div class="hd"><span class="combrule"><i></i><i></i><i></i><i></i><i></i></span>estate</div>
+      <div class="bd" id="tree" style="padding:10px 8px"></div></div>
+    <div>
+      <div class="kpis" id="kpis"></div>
+      <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+        <canvas id="donut" width="140" height="140" style="width:70px;height:70px"></canvas>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="tierFilters"></div>
+        <span class="disclaimer" style="margin-left:auto">sorted by tier · trend · staleness — design prototype, representative data</span>
+      </div>
+      <div class="grid" id="cards"></div>
+    </div>
+    <div class="feedwrap card"><div class="hd">insight feed · findings &amp; events</div>
+      <div class="feed" id="feed"></div></div>
+  </div>
+</div>
+
+<!-- ================= ASSET ================= -->
+<div class="page" data-page="asset">
+  <div class="ahead">
+    <h2 id="aTitle">PUMP-201</h2>
+    <span id="aTier"></span>
+    <span class="path" id="aPath"></span>
+    <div class="actions">
+      <button class="btn primary" id="newFinding">＋ New finding</button>
+      <button class="btn" id="reportBtn">Report ▾</button>
+      <button class="btn danger" id="resetBtn">Reset baseline…</button>
+      <button class="btn danger" id="cutoffBtn">Set data cutoff…</button>
+    </div>
+  </div>
+  <div class="arows">
+    <div>
+      <div class="strip">
+        <div class="cap">health timeline · 180 d <em>· ⚑ findings · ⛭ maintenance · ⟲ baseline reset</em></div>
+        <canvas id="healthTl" height="46"></canvas>
+      </div>
+      <div class="strip">
+        <div class="cap">overall velocity · mm/s rms <em>· shaded ISO zones · ◆ raw snapshot (hover for truth-point audit)</em></div>
+        <canvas id="velTrend" height="128"></canvas>
+        <div class="legendrow"><i>◆ baseline snapshot</i><i style="color:var(--alert)">◆ change event</i>
+          <i>· codec-only</i><i style="margin-left:auto" id="auditLine"></i></div>
+      </div>
+      <div class="strip">
+        <div class="cap">pattern health matrix · z vs own baseline <em>· hover cells · click a row to spotlight</em></div>
+        <canvas id="pmatrix" height="196"></canvas>
+        <div class="legendrow"><i style="color:var(--comb)">−6σ</i><i>0</i><i style="color:var(--crit)">+6σ</i>
+          <i style="margin-left:auto" id="baseLine">baseline: 62 quiet frames since ⟲ reset</i></div>
+      </div>
+      <div class="strip card"><div class="hd">analysis suite</div>
+        <div class="bd" style="color:var(--muted);font-size:12.6px">
+          Waterfall · 3-D · Δ decoded−raw · z view · frame inspector — the built
+          explorer embeds here, gaining harmonic &amp; sideband cursors, kinematic
+          pins (BPFO 3.58× · BPFI 5.42× · vane 7×), waveform + envelope views at
+          every ◆ truth point, and DE↔NDE compare.
+        </div></div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:16px" id="findingCard"></div>
+      <div class="card" style="margin-bottom:16px"><div class="hd">compression confidence</div>
+        <div class="bd">
+          <div style="display:flex;gap:14px;align-items:baseline">
+            <span style="font:600 24px var(--disp);color:var(--accent)" id="ratioN">322×</span>
+            <span style="font-size:11.8px;color:var(--muted)">average vs raw spectra ·
+              27 truth points audited</span></div>
+          <canvas id="confTrend" height="56"></canvas>
+          <div class="legendrow"><i>reconstruction error at each raw snapshot</i>
+            <i style="margin-left:auto">worst ever: 1.9 dB — inside the dead-zone bound</i></div>
+        </div></div>
+      <div class="card"><div class="hd">storage parameters · this sensor</div>
+        <div class="bd" style="display:grid;gap:10px;font-size:12.5px">
+          <label style="display:flex;justify-content:space-between;align-items:center;font-family:var(--disp);text-transform:none;letter-spacing:0">
+            raw snapshot cadence
+            <select id="pCad"><option value="7">weekly (default)</option>
+              <option value="3" selected>every 3 days</option><option value="1">daily</option></select></label>
+          <label style="display:flex;justify-content:space-between;align-items:center;font-family:var(--disp);text-transform:none;letter-spacing:0">
+            event budget / week
+            <select id="pBud"><option>0</option><option selected>2</option><option>5</option></select></label>
+          <label style="display:flex;justify-content:space-between;align-items:center;font-family:var(--disp);text-transform:none;letter-spacing:0">
+            raw retention
+            <select id="pRet"><option value="2" selected>2 years</option><option value="5">5 years</option></select></label>
+          <div style="font:500 10.5px var(--mono);color:var(--muted);
+            border-top:1px solid var(--grid);padding-top:9px" id="pEst"></div>
+        </div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MOBILE ================= -->
+<div class="page" data-page="mobile">
+  <div class="phones">
+    <div class="phone"><div class="titl">fleet · triage</div>
+      <div class="screen" id="mScreen"></div>
+      <div class="tabbar" id="mTabs">
+        <button class="on" data-m="fleet">Fleet</button>
+        <button data-m="inbox">Inbox <span id="mInboxN"></span></button>
+        <button data-m="search">Search</button>
+      </div>
+    </div>
+    <div class="phone"><div class="titl">asset sheet</div>
+      <div class="screen">
+        <div class="mhead"><h3>PUMP-201</h3><span class="chip c-alert">▲ alert</span></div>
+        <div class="cap" style="margin-top:6px">health · 90 d</div>
+        <canvas id="mHealth" height="30" style="width:100%"></canvas>
+        <div class="cap" style="margin-top:13px">velocity mm/s · acceleration g · envelope g</div>
+        <canvas id="mTrends" height="120" style="width:100%"></canvas>
+        <div class="cap" style="margin-top:13px">events &amp; findings</div>
+        <div id="mAssetFeed"></div>
+        <button class="btn" style="width:100%;margin-top:8px;justify-content:center">Open full analysis on desktop ↗</button>
+      </div>
+      <div class="tabbar"><button class="on">Fleet</button><button>Inbox</button><button>Search</button></div>
+    </div>
+  </div>
+  <p class="disclaimer" style="text-align:center;margin-top:16px">
+    swipe a card right to acknowledge · cards sort by tier · trend · staleness</p>
+</div>
+
+<!-- modals -->
+<div class="overlay" id="ovl"><div class="modal" id="modal"></div></div>
+<div id="toasts"></div>
+<div id="tip"></div>
+
+<script>
+'use strict';
+/* ================= utilities ================= */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const dpr=Math.min(2,devicePixelRatio||1);
+const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function fit(cv,h){const w=cv.clientWidth||cv.parentElement.clientWidth||300;
+  cv.width=w*dpr;cv.height=h*dpr;cv.style.height=h+'px';
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return[g,w,h]}
+function rnd(seed){let s=seed>>>0;return()=>((s=Math.imul(s^s>>>15,s|1),
+  s^=s+Math.imul(s^s>>>7,s|61),(s^s>>>14)>>>0)/4294967296)}
+const easeOut=t=>1-Math.pow(1-t,3);
+function animate(draw,ms=650){
+  if(REDUCED){draw(1);return}
+  const t0=performance.now();
+  (function f(t){const p=Math.min(1,(t-t0)/ms);draw(easeOut(p));
+    if(p<1)requestAnimationFrame(f)})(t0);
+}
+function toast(msg,err){
+  const t=document.createElement('div');t.className='toast'+(err?' err':'');
+  t.textContent=msg;$('#toasts').appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';
+    setTimeout(()=>t.remove(),320)},3600);
+}
+const tip=$('#tip');
+function showTip(x,y,txt){tip.style.display='block';tip.textContent=txt;
+  const r=tip.getBoundingClientRect();
+  tip.style.left=Math.min(x+14,innerWidth-r.width-10)+'px';
+  tip.style.top=Math.min(y+14,innerHeight-r.height-10)+'px'}
+function hideTip(){tip.style.display='none'}
+
+/* ================= data ================= */
+const TIERS={good:['✓','healthy'],mon:['◔','monitor'],alert:['▲','alert'],crit:['◆','critical']};
+const ASSETS=[
+ {id:'PUMP-201',ty:'centrifugal pump',tier:'alert',why:'BPFO z 6.2 · vel 5.8 mm/s (zone C) · rising',
+  open:1,age:'2 h',seed:7,hot:1,plant:'North plant',area:'intake',sensors:4,since:'12 days'},
+ {id:'FAN-112',ty:'centrifugal fan',tier:'crit',why:'looseness harmonics z 8.4 · vel 9.3 (zone D)',
+  open:2,age:'1 h',seed:3,hot:1.4,plant:'North plant',area:'intake',sensors:2,since:'3 days'},
+ {id:'CMP-021',ty:'screw compressor',tier:'mon',why:'envelope RMS drift · CUSUM 11.2',
+  open:0,age:'3 h',seed:9,hot:0.25,plant:'North plant',area:'process',sensors:3,since:'8 days'},
+ {id:'PUMP-186',ty:'centrifugal pump',tier:'good',why:'all patterns within ±2σ',
+  open:0,age:'2 h',seed:5,hot:0,plant:'North plant',area:'intake',sensors:2,since:'—'},
+ {id:'MOT-054',ty:'induction motor',tier:'good',why:'all patterns within ±2σ',
+  open:0,age:'5 h',seed:11,hot:0,plant:'North plant',area:'process',sensors:2,since:'—'},
+ {id:'GBX-009',ty:'bevel gearbox',tier:'mon',why:'GMF sidebands z 3.1 · steady',
+  open:1,age:'2 h',seed:13,hot:0.2,plant:'South plant',area:'utilities',sensors:3,since:'21 days'},
+];
+const TIER_ORDER={crit:0,alert:1,mon:2,good:3};
+let FINDINGS=[
+ {id:'F-104',tier:'crit',asset:'FAN-112',ti:'Foundation looseness',m:'1×–4× harmonics z 8.4, step change confirmed on both sensors. Stop recommended.',who:'auto-rule + R. Chen',when:'1 h',state:'open'},
+ {id:'F-102',tier:'alert',asset:'PUMP-201',ti:'Outer-race wear developing',m:'BPFO +9 dB / 3 wks, verified 8/9 harmonics. Bearing on order.',who:'M. Winkeler',when:'2 d',state:'ack'},
+ {id:'F-101',tier:'mon',asset:'CMP-021',ti:'Envelope drift',m:'CUSUM 11.2 on envelope RMS. Possible lubrication; route check scheduled.',who:'J. Ortiz',when:'3 d',state:'open'},
+ {id:'E-88',tier:'learn',asset:'GBX-009',ti:'Baseline reset',m:'After oil change; health re-learning (12 of 20 frames).',who:'planner',when:'5 d',state:'event'},
+];
+const S={page:'fleet',tiers:new Set(['crit','alert','mon','good']),q:'',
+  asset:ASSETS[0],theme:localStorage.getItem('rs_theme')||'system',
+  mtab:'fleet',resetMarks:[]};
+
+/* ================= theme ================= */
+function applyTheme(){
+  const r=document.documentElement;
+  if(S.theme==='system')r.removeAttribute('data-theme');
+  else r.setAttribute('data-theme',S.theme);
+  $('#themeBtn').textContent={system:'◐ system',light:'○ light',dark:'● dark'}[S.theme];
+  localStorage.setItem('rs_theme',S.theme);
+  redrawPage();
+}
+$('#themeBtn').onclick=()=>{S.theme={system:'light',light:'dark',dark:'system'}[S.theme];applyTheme()};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>redrawPage());
+
+/* ================= charts ================= */
+function sparky(cv,seed,tier,rise,p=1){
+  const[g,w,h]=fit(cv,parseInt(cv.style.height)||36);
+  const r=rnd(seed);const n=40;const col=css('--'+(tier==='good'?'accent':tier));
+  const pts=[];let v=0.35+r()*0.1;
+  for(let i=0;i<n;i++){v+=(r()-0.48)*0.06;if(rise&&i>n*0.6)v+=0.028*rise;
+    v=Math.max(0.1,Math.min(0.95,v));pts.push(v)}
+  const m=Math.max(2,Math.floor(n*p));
+  g.strokeStyle=col;g.lineWidth=1.7;g.beginPath();
+  for(let i=0;i<m;i++){const x=w*i/(n-1),y=h-5-(h-12)*pts[i];
+    i?g.lineTo(x,y):g.moveTo(x,y)}
+  g.stroke();
+  if(p>=1){g.fillStyle=col;g.beginPath();
+    g.arc(w*(m-1)/(n-1),h-5-(h-12)*pts[m-1],2.8,0,7);g.fill()}
+}
+function donut(p=1){
+  const cv=$('#donut'),g=cv.getContext('2d');g.setTransform(2,0,0,2,0,0);
+  g.clearRect(0,0,70,70);
+  const data=[[21,'--good'],[5,'--mon'],[2,'--alert'],[1,'--crit']];
+  const tot=29;let a0=-Math.PI/2;
+  data.forEach(([n,c])=>{const span=n/tot*2*Math.PI*p;
+    g.beginPath();g.strokeStyle=css(c);g.lineWidth=9;g.lineCap='butt';
+    g.arc(35,35,26,a0+0.035,a0+span-0.035);g.stroke();a0+=n/tot*2*Math.PI*p});
+  g.fillStyle=css('--ink');g.font='600 14px Archivo';
+  g.textAlign='center';g.fillText('29',35,33);
+  g.fillStyle=css('--muted');g.font='500 8px "IBM Plex Mono"';g.fillText('ASSETS',35,45);
+}
+function healthBand(cv,hh,marks,p=1){
+  const[g,w,h]=fit(cv,hh);
+  const segs=[[0,0.18,'good'],[0.18,0.22,'learn'],[0.22,0.55,'good'],
+              [0.55,0.72,'mon'],[0.72,1,'alert']];
+  segs.forEach(([a,b,t])=>{if(a>p)return;
+    g.fillStyle=t==='learn'?css('--panel2'):css('--'+t);
+    g.globalAlpha=t==='learn'?1:0.85;
+    g.fillRect(w*a,h*0.32,w*(Math.min(b,p)-a),h*0.38);g.globalAlpha=1});
+  g.font='11px system-ui';g.textAlign='center';g.fillStyle=css('--ink');
+  (marks||[[0.18,'⟲'],[0.57,'⚑'],[0.74,'⚑'],[0.86,'⛭']]).forEach(([x,s])=>{
+    if(x>p)return;
+    g.fillText(s,w*x,h*0.24);
+    g.strokeStyle=css('--faint');g.beginPath();
+    g.moveTo(w*x,h*0.30);g.lineTo(w*x,h*0.72);g.stroke()});
+  g.font='500 9px "IBM Plex Mono"';g.fillStyle=css('--muted');g.textAlign='left';
+  g.fillText('−180 d',2,h-2);g.textAlign='right';g.fillText('today',w-2,h-2);
+}
+/* asset data (per asset, deterministic) */
+function assetSeries(a){
+  const r=rnd(a.seed*271+11);const n=158;let v=1.5+r()*0.4;const vel=[];
+  for(let i=0;i<n;i++){v+=(r()-0.49)*0.16;
+    if(a.hot&&i>110)v+=0.05*a.hot;v=Math.max(0.8,v);vel.push(v)}
+  const snaps=[];
+  for(let i=0;i<n;i+=6)snaps.push({i,ev:false});
+  if(a.hot)for(let i=112;i<n;i+=9)snaps.push({i,ev:true});
+  const rows=[['comb 1.00× · shaft',0],['comb 3.58× · BPFO',a.hot],
+    ['sidebands Δ0.40 · cage',a.hot*0.7],['comb 5.42× · BPFI',0.08],
+    ['line 7.00× · vane',0],['comb 2.03× · mesh?',0.05],
+    ['haystack 6.8×',a.hot*0.5],['line 12.05× · anchor',0]];
+  const mat=rows.map(([lab,hot],ri)=>{
+    const rr=rnd(ri*991+a.seed*7);const z=[];
+    for(let i=0;i<90;i++){let zz=(rr()-0.5)*1.6;
+      if(hot&&i>55)zz+=hot*(i-55)/35*7;z.push(zz)}
+    return {lab,hot,z}});
+  return {vel,snaps,mat,n};
+}
+function velTrend(a,p=1){
+  const cv=$('#velTrend');const[g,w,h]=fit(cv,128);
+  const D=assetSeries(a);
+  const zones=[[0,2.8,'--good'],[2.8,7.1,'--mon'],[7.1,11,'--alert']];
+  const ymax=11,Y=v=>h-18-(h-34)*v/ymax;
+  zones.forEach(([lo,hi,c])=>{g.fillStyle=css(c);g.globalAlpha=0.10;
+    g.fillRect(32,Y(hi),w-42,Y(lo)-Y(hi));g.globalAlpha=1});
+  g.font='500 9px "IBM Plex Mono"';g.fillStyle=css('--muted');g.textAlign='right';
+  [0,2.8,7.1,11].forEach(v=>g.fillText(v,28,Y(v)+3));
+  const n=D.n,m=Math.max(2,Math.floor(n*p));
+  g.strokeStyle=css('--accent');g.lineWidth=1.6;g.beginPath();
+  for(let i=0;i<m;i++){const x=32+(w-42)*i/(n-1);
+    i?g.lineTo(x,Y(D.vel[i])):g.moveTo(x,Y(D.vel[i]))}
+  g.stroke();
+  D.snaps.forEach(({i,ev})=>{if(i>=m)return;
+    const x=32+(w-42)*i/(n-1);
+    g.fillStyle=ev?css('--alert'):css('--ink');
+    g.beginPath();g.moveTo(x,h-10);g.lineTo(x-3,h-5);g.lineTo(x+3,h-5);
+    g.closePath();g.fill()});
+  for(let i=0;i<m;i++){if(D.snaps.some(s=>s.i===i))continue;
+    const x=32+(w-42)*i/(n-1);
+    g.fillStyle=css('--faint');g.fillRect(x,h-8,1,2)}
+  cv.onmousemove=e=>{const r=cv.getBoundingClientRect();
+    const i=Math.round((e.clientX-r.left-32)/((w-42)/(n-1)));
+    if(i<0||i>=n){hideTip();return}
+    const s=D.snaps.find(s2=>Math.abs(s2.i-i)<3);
+    showTip(e.clientX,e.clientY,
+      `day ${i-158}\nvel ${D.vel[Math.max(0,Math.min(n-1,i))].toFixed(2)} mm/s`+
+      (s?`\n◆ raw snapshot (${s.ev?'change event':'baseline'})\naudit: 0.${3+(i%5)} dB vs decoded`:
+         '\n· codec frame only'))};
+  cv.onmouseleave=hideTip;
+}
+function pmatrix(a,p=1){
+  const cv=$('#pmatrix');const[g,w,h]=fit(cv,196);
+  const D=assetSeries(a);
+  const L=158,rh=(h-22)/D.mat.length,n=90,m=Math.max(1,Math.floor(n*p));
+  D.mat.forEach((row,ri)=>{
+    for(let i=0;i<m;i++){
+      const t=Math.max(-1,Math.min(1,row.z[i]/6));
+      g.globalAlpha=Math.abs(t)<0.12?1:0.16+0.84*Math.abs(t);
+      g.fillStyle=Math.abs(t)<0.12?css('--grid'):(t>0?css('--crit'):css('--comb'));
+      g.fillRect(L+(w-L-6)*i/n,9+ri*rh,(w-L-6)/n-0.6,rh-3);
+      g.globalAlpha=1}
+    g.fillStyle=css(row.hot>0.5?'--crit':'--muted');
+    g.font='500 10px "IBM Plex Mono"';g.textAlign='left';
+    g.fillText(row.lab,2,9+ri*rh+rh/2+3)});
+  g.fillStyle=css('--faint');g.font='500 9px "IBM Plex Mono"';
+  g.textAlign='left';g.fillText('−90 d',L,h-3);
+  g.textAlign='right';g.fillText('today',w-6,h-3);
+  cv.onmousemove=e=>{const r=cv.getBoundingClientRect();
+    const x=e.clientX-r.left,y=e.clientY-r.top;
+    if(x<L){hideTip();return}
+    const ri=Math.floor((y-9)/rh),i=Math.floor((x-L)/((w-L-6)/n));
+    if(ri<0||ri>=D.mat.length||i<0||i>=n){hideTip();return}
+    showTip(e.clientX,e.clientY,
+      `${D.mat[ri].lab}\nday ${i-90} · z ${D.mat[ri].z[i].toFixed(1)}σ vs baseline`)};
+  cv.onmouseleave=hideTip;
+  cv.onclick=()=>toast('Track spotlighted in analysis suite (explorer opens here)');
+}
+function confChart(p=1){
+  const cv=$('#confTrend');const[g,w,h]=fit(cv,56);
+  const r=rnd(9);const m=Math.max(2,Math.floor(27*p));
+  g.strokeStyle=css('--accent');g.lineWidth=1.5;g.beginPath();
+  const pts=[];for(let i=0;i<27;i++)pts.push(0.15+r()*0.28);
+  for(let i=0;i<m;i++){const x=6+(w-12)*i/26,y=h-9-(h-20)*pts[i];
+    i?g.lineTo(x,y):g.moveTo(x,y)}
+  g.stroke();
+  g.fillStyle=css('--accent');
+  for(let i=0;i<m;i++){const x=6+(w-12)*i/26,y=h-9-(h-20)*pts[i];
+    g.fillRect(x-1,y-1,2.2,2.2)}
+  g.font='500 9px "IBM Plex Mono"';g.fillStyle=css('--muted');
+  g.textAlign='left';g.fillText('0 dB',4,h-1);g.fillText('2 dB',4,9);
+}
+function mTrends(p=1){
+  const cv=$('#mTrends');if(!cv.clientWidth)return;
+  const[g,w,h]=fit(cv,120);
+  ['--accent','--mon','--crit'].forEach((c,k)=>{
+    const r=rnd(k*55+2);g.strokeStyle=css(c);g.lineWidth=1.5;g.beginPath();
+    let v=0.3+k*0.05;const m=Math.max(2,Math.floor(60*p));
+    for(let i=0;i<m;i++){v+=(r()-0.48)*0.05;if(i>40)v+=0.02;
+      const x=w*i/59,y=(k+1)*h/3-6-(h/3-12)*Math.min(0.95,v);
+      i?g.lineTo(x,y):g.moveTo(x,y)}
+    g.stroke()});
+}
+
+/* ================= fleet render ================= */
+function kpis(){
+  const items=[['assets',29,''],['sensors',63,''],['open findings',
+    FINDINGS.filter(f=>f.state==='open').length,' · '+FINDINGS.filter(f=>f.tier==='crit'&&f.state==='open').length+' crit'],
+    ['data · 30 d',1.9,' MB · 318×'],['raw snapshots · 30 d',241,' · audit ≤0.9 dB']];
+  $('#kpis').innerHTML=items.map(([k,v,s])=>
+    `<div class="kpi"><div class="k">${k}</div>
+     <div class="v"><span class="cnt" data-v="${v}">0</span><small>${s}</small></div></div>`).join('');
+  $$('#kpis .cnt').forEach(el=>{
+    const target=+el.dataset.v;const dec=String(target).includes('.')?1:0;
+    animate(p=>{el.textContent=(target*p).toFixed(dec)},700);
+  });
+}
+function tierFilters(){
+  const counts={good:21,mon:5,alert:2,crit:1};
+  $('#tierFilters').innerHTML=['good','mon','alert','crit'].map(t=>
+    `<button class="chip click c-${t} ${S.tiers.has(t)?'':'off'} ${t==='crit'&&S.tiers.has(t)?'pulse':''}"
+      data-t="${t}" aria-pressed="${S.tiers.has(t)}">${TIERS[t][0]} ${TIERS[t][1]} <b>${counts[t]}</b></button>`).join('');
+  $$('#tierFilters .chip').forEach(b=>b.onclick=()=>{
+    const t=b.dataset.t;
+    S.tiers.has(t)?S.tiers.delete(t):S.tiers.add(t);
+    tierFilters();cards()});
+}
+function visibleAssets(){
+  return ASSETS.filter(a=>S.tiers.has(a.tier))
+    .filter(a=>!S.q||a.id.toLowerCase().includes(S.q)||a.ty.includes(S.q))
+    .sort((a,b)=>TIER_ORDER[a.tier]-TIER_ORDER[b.tier]);
+}
+function cards(){
+  const list=visibleAssets();
+  $('#cards').innerHTML=list.map(a=>
+    `<div class="acard" data-id="${a.id}" tabindex="0" role="button">
+      <div style="display:flex;justify-content:space-between;align-items:start">
+        <div><div class="nm">${a.id}</div><div class="ty">${a.ty}</div></div>
+        <span class="chip c-${a.tier}">${TIERS[a.tier][0]} ${TIERS[a.tier][1]}</span></div>
+      <canvas></canvas><div class="why">${a.why}</div>
+      <div class="ft"><span>${a.open?`⚑ ${a.open} open`:'no findings'}</span>
+      <span>${a.age} ago ${a.hot?'<span class="tr-up">▲</span>':''}</span></div></div>`).join('')
+    ||'<div style="color:var(--muted);padding:30px;text-align:center">no assets match the current filters</div>';
+  $$('#cards .acard').forEach((el,i)=>{
+    setTimeout(()=>el.classList.add('in'),REDUCED?0:i*45);
+    const a=ASSETS.find(x=>x.id===el.dataset.id);
+    animate(p=>sparky(el.querySelector('canvas'),a.seed*77+3,a.tier,a.hot,p),600);
+    el.onclick=()=>openAsset(a);
+    el.onkeydown=e=>{if(e.key==='Enter')openAsset(a)};
+  });
+}
+function tree(){
+  const rows=[];
+  ['North plant','South plant'].forEach(pl=>{
+    const inPlant=ASSETS.filter(a=>a.plant===pl);
+    const worst=inPlant.sort((a,b)=>TIER_ORDER[a.tier]-TIER_ORDER[b.tier])[0];
+    rows.push(`<div class="node"><span class="dot d-${worst.tier}"></span><b>${pl}</b><span class="n">${pl==='North plant'?18:11}</span></div>`);
+    [...new Set(inPlant.map(a=>a.area))].forEach(ar=>{
+      const inA=inPlant.filter(a=>a.area===ar);
+      const w2=inA.sort((a,b)=>TIER_ORDER[a.tier]-TIER_ORDER[b.tier])[0];
+      rows.push(`<div class="node lvl1"><span class="dot d-${w2.tier}"></span>${ar}</div>`);
+      inA.forEach(a=>rows.push(
+        `<div class="node lvl2" data-id="${a.id}"><span class="dot d-${a.tier}"></span>${a.id}</div>`));
+    });
+  });
+  $('#tree').innerHTML=rows.join('');
+  $$('#tree .node[data-id]').forEach(n=>n.onclick=()=>
+    openAsset(ASSETS.find(a=>a.id===n.dataset.id)));
+}
+function feed(){
+  $('#feed').innerHTML=FINDINGS.map(f=>{
+    const chip=f.state==='event'?'c-learn':'c-'+f.tier;
+    const icon=f.state==='event'?'⟲':TIERS[f.tier]?.[0]||'⚑';
+    return `<div class="item ${f.state==='ack'?'ackd':''}" data-id="${f.id}">
+      <div class="t"><span class="chip ${chip}">${icon}</span>
+        <span class="ti">${f.asset} · ${f.ti}</span>
+        ${f.state==='open'?`<button class="btn sm ghost ack" data-id="${f.id}">Ack</button>`:
+          f.state==='ack'?`<span style="margin-left:auto;font:500 10px var(--mono);color:var(--mon)">acknowledged</span>`:''}
+      </div><div class="m">${f.m}</div>
+      <div class="who">${f.who} · ${f.when}</div></div>`}).join('');
+  $$('#feed .ack').forEach(b=>b.onclick=e=>{
+    e.stopPropagation();ackFinding(b.dataset.id)});
+  $$('#feed .item').forEach(it=>it.onclick=()=>{
+    const f=FINDINGS.find(x=>x.id===it.dataset.id);
+    const a=ASSETS.find(x=>x.id===f.asset);
+    if(a)openAsset(a)});
+}
+function ackFinding(id){
+  const f=FINDINGS.find(x=>x.id===id);
+  if(!f||f.state!=='open')return;
+  f.state='ack';
+  toast(`${f.id} acknowledged — logged as event`);
+  feed();kpis();renderMobile();
+}
+
+/* ================= asset render ================= */
+function openAsset(a){S.asset=a;setPage('asset')}
+function renderAsset(){
+  const a=S.asset;
+  $('#aTitle').textContent=a.id;
+  $('#aTier').innerHTML=`<span class="chip c-${a.tier} ${a.tier==='crit'?'pulse':''}">${TIERS[a.tier][0]} ${TIERS[a.tier][1]} <b>since ${a.since}</b></span>`;
+  $('#aPath').textContent=`${a.plant} / ${a.area} / ${a.id} · ${a.ty} · ${a.sensors} sensors`;
+  const marks=[[0.18,'⟲'],[0.57,'⚑'],[0.74,'⚑'],[0.86,'⛭'],...S.resetMarks];
+  animate(p=>healthBand($('#healthTl'),46,marks,p),700);
+  animate(p=>velTrend(a,p),800);
+  animate(p=>pmatrix(a,p),900);
+  animate(p=>confChart(p),700);
+  $('#auditLine').innerHTML=`158 codec frames · 27 snapshots · <b style="color:var(--accent)">audit: med 0.4 dB · p95 1.2 dB</b>`;
+  findingCard();
+  estimate();
+}
+function findingCard(){
+  const f=FINDINGS.find(x=>x.asset===S.asset.id&&x.state!=='event');
+  $('#findingCard').innerHTML=f?`
+    <div class="hd">finding ${f.id} · ${f.state==='open'?'open':'acknowledged'}</div>
+    <div class="bd">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:7px">
+        <span class="chip c-${f.tier}">${TIERS[f.tier][0]} ${f.tier}</span>
+        <b style="font:600 13.5px var(--disp)">${f.ti}</b></div>
+      <div style="font-size:12.6px;color:var(--muted);line-height:1.55">${f.m}</div>
+      <div style="margin:10px 0 4px">
+        <span class="evd">frame d162</span><span class="evd">track BPFO 3.58×</span>
+        <span class="evd">band 2–5 kHz</span></div>
+      <div style="font:500 10px var(--mono);color:var(--faint)">${f.who} · ${f.when} ago</div>
+      <div class="comment">Confirmed on portable route measurement — J. Ortiz, 1 d ago</div>
+      <div class="comment">Bearing on order, planned wk 34 — planner, 3 h ago</div>
+      <div style="margin-top:11px;display:flex;gap:8px">
+        <input type="text" id="cmt" placeholder="add comment…" style="flex:1">
+        <button class="btn sm" id="postCmt">Post</button></div>
+    </div>`:`<div class="hd">findings</div>
+      <div class="bd" style="color:var(--muted);font-size:12.5px">
+      No findings on this asset. ＋ New finding creates one with evidence links.</div>`;
+  const pc=$('#postCmt');
+  if(pc)pc.onclick=()=>{const v=$('#cmt').value.trim();
+    if(!v)return;
+    const bd=pc.closest('.bd');
+    const c=document.createElement('div');c.className='comment';
+    c.textContent=`${v} — you, just now`;
+    bd.insertBefore(c,pc.parentElement);
+    $('#cmt').value='';toast('Comment posted to finding thread')};
+}
+function estimate(){
+  const cad=+$('#pCad').value,bud=+$('#pBud').value,ret=+$('#pRet').value;
+  const perYear=(365/cad+bud*10)*0.035;   // ~35 KB per snapshot
+  $('#pEst').innerHTML=`estimated: <b style="color:var(--ink)">${perYear.toFixed(1)} MB/year</b> raw
+    + 0.18 MB/year spectra · retention ${ret} y · change is logged as an event`;
+}
+['pCad','pBud','pRet'].forEach(id=>$('#'+id).onchange=()=>{
+  estimate();toast('Storage parameters updated — logged as event')});
+
+/* ---- modals ---- */
+function modal(html){$('#modal').innerHTML=html;$('#ovl').classList.add('on');
+  const first=$('#modal input,#modal select,#modal textarea');if(first)first.focus()}
+function closeModal(){$('#ovl').classList.remove('on')}
+$('#ovl').onclick=e=>{if(e.target.id==='ovl')closeModal()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+$('#newFinding').onclick=()=>{
+  modal(`<div class="hd">New finding · ${S.asset.id}</div>
+    <div class="bd">
+      <label>severity<select id="fSev"><option>monitor</option><option selected>alert</option>
+        <option>critical</option><option>info</option></select></label>
+      <label>title<input type="text" id="fTi" placeholder="e.g. Outer-race wear developing"></label>
+      <label>fault type<select><option>bearing — outer race</option><option>bearing — inner race</option>
+        <option>imbalance</option><option>misalignment</option><option>looseness</option>
+        <option>lubrication</option><option>electrical</option><option>other</option></select></label>
+      <label>evidence <span style="text-transform:none;letter-spacing:0">(from current selection)</span>
+        <div><span class="evd">frame d162</span><span class="evd">track BPFO 3.58×</span></div></label>
+      <label>notes<textarea id="fNote" rows="3" placeholder="what you saw, what you recommend"></textarea></label>
+    </div>
+    <div class="ft"><button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" id="fGo">Publish finding</button></div>`);
+  $('#fGo').onclick=()=>{
+    const ti=$('#fTi').value.trim()||'Untitled finding';
+    const sev={info:'mon',monitor:'mon',alert:'alert',critical:'crit'}[$('#fSev').value]||'alert';
+    FINDINGS.unshift({id:'F-'+(105+FINDINGS.length),tier:sev,asset:S.asset.id,
+      ti,m:$('#fNote').value.trim()||'(no notes)',who:'you',when:'now',state:'open'});
+    closeModal();toast('Finding published to the feed');
+    findingCard();feed();kpis();renderMobile();
+  };
+};
+function confirmModal(title,warn,verb,onGo){
+  modal(`<div class="hd">${title}</div>
+    <div class="bd"><div class="warn">${warn}</div>
+      <label>type <b style="font-family:var(--mono)">${S.asset.id}</b> to confirm
+        <input type="text" id="cfIn" autocomplete="off"></label></div>
+    <div class="ft"><button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn danger" id="cfGo" disabled>${verb}</button></div>`);
+  $('#cfIn').oninput=()=>{$('#cfGo').disabled=$('#cfIn').value!==S.asset.id};
+  $('#cfGo').onclick=()=>{closeModal();onGo()};
+}
+$('#resetBtn').onclick=()=>confirmModal('Reset baseline · '+S.asset.id,
+  'Forces a codec anchor, re-initialises the gate baseline and restarts every '+
+  'pattern baseline window. Health goes to “learning” until warm. This is an '+
+  'event — it cannot be undone, only explained.', 'Reset baseline',
+  ()=>{S.resetMarks=[[0.985,'⟲']];
+    $('#baseLine').textContent='baseline: learning (0 of 20 frames since ⟲ reset today)';
+    renderAsset();toast('Baseline reset — ⟲ event stamped on the timeline')});
+$('#cutoffBtn').onclick=()=>confirmModal('Set data cutoff · '+S.asset.id,
+  'History before the cutoff is excluded from baselines, trends and health '+
+  '(soft-archived, revealable, never deleted by this action).', 'Set cutoff',
+  ()=>toast('Data cutoff set at −180 d — logged as event'));
+$('#reportBtn').onclick=()=>{
+  modal(`<div class="hd">Generate report · ${S.asset.id}</div>
+    <div class="bd">
+      <label>template<select id="rT"><option>Asset detail (period)</option>
+        <option>Executive summary (plant)</option></select></label>
+      <label>period<select><option>last 30 days</option><option selected>last 90 days</option>
+        <option>last 12 months</option></select></label>
+      <div style="font-size:12px;color:var(--muted)">Includes health timeline, ISO-zoned
+        trends, pattern matrix extract, findings log with evidence, and the
+        snapshot/compression audit.</div></div>
+    <div class="ft"><button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" id="rGo">Generate</button></div>`);
+  $('#rGo').onclick=()=>{closeModal();
+    toast('Report queued — rendered server-side as HTML + print PDF')};
+};
+
+/* ================= mobile ================= */
+function renderMobile(){
+  $('#mInboxN').textContent=FINDINGS.filter(f=>f.state==='open').length;
+  const scr=$('#mScreen');
+  if(S.mtab==='fleet'){
+    scr.innerHTML=`<div class="filterrow">
+      <span class="chip c-crit">◆ 1</span><span class="chip c-alert">▲ 2</span>
+      <span class="chip c-mon">◔ 5</span><span class="chip c-learn">stale 3</span></div>
+      <div id="mcards"></div>`;
+    $('#mcards').innerHTML=visibleAssets().map((a,i)=>
+      `<div class="mcard" data-id="${a.id}"><div class="row">
+        <span class="chip c-${a.tier}">${TIERS[a.tier][0]}</span>
+        <div style="flex:1"><div class="nm">${a.id}</div><div class="ty">${a.why}</div></div>
+        <span style="font:500 10px var(--mono);color:var(--faint)">${a.age}</span></div>
+        <canvas></canvas>
+        <div class="meta"><span>swipe → acknowledge</span><span>tap for asset sheet</span></div>
+      </div>`).join('');
+    $$('#mcards .mcard').forEach(el=>{
+      const a=ASSETS.find(x=>x.id===el.dataset.id);
+      animate(p=>sparky(el.querySelector('canvas'),a.seed*131+5,a.tier,a.hot,p),550);
+      swipeable(el,()=>{el.style.transform='translateX(110%)';el.style.opacity='0';
+        setTimeout(()=>{el.remove()},240);
+        toast(`${a.id} acknowledged from mobile`)});
+    });
+  } else if(S.mtab==='inbox'){
+    scr.innerHTML=`<div class="mhead"><h3>Inbox</h3></div>`+FINDINGS.map(f=>
+      `<div class="mcard"><div class="row">
+        <span class="chip ${f.state==='event'?'c-learn':'c-'+f.tier}">${f.state==='event'?'⟲':TIERS[f.tier]?.[0]||'⚑'}</span>
+        <div style="flex:1"><div class="nm" style="font-size:12.8px">${f.asset} · ${f.ti}</div>
+        <div class="ty">${f.who} · ${f.when}</div></div>
+        ${f.state==='open'?`<button class="btn sm" data-id="${f.id}">Ack</button>`:''}
+      </div></div>`).join('');
+    $$('#mScreen .btn[data-id]').forEach(b=>b.onclick=()=>{ackFinding(b.dataset.id)});
+  } else {
+    scr.innerHTML=`<div class="mhead"><h3>Search</h3></div>
+      <input type="text" placeholder="asset, sensor, finding…" style="width:100%"
+        oninput="this.nextElementSibling.textContent=this.value?'3 results for “'+this.value+'” (prototype)':''">
+      <div style="color:var(--muted);font-size:12px;margin-top:10px"></div>`;
+  }
+}
+function swipeable(el,onSwipe){
+  let x0=null;
+  el.addEventListener('pointerdown',e=>{x0=e.clientX;el.setPointerCapture(e.pointerId)});
+  el.addEventListener('pointermove',e=>{if(x0==null)return;
+    const dx=e.clientX-x0;if(dx>0)el.style.transform=`translateX(${dx}px)`});
+  el.addEventListener('pointerup',e=>{const dx=e.clientX-x0;x0=null;
+    if(dx>90)onSwipe();else el.style.transform=''});
+}
+$('#mTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  S.mtab=b.dataset.m;
+  $('#mTabs').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+  renderMobile()});
+
+/* ================= routing ================= */
+function setPage(p){
+  S.page=p;
+  $$('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.p===p)));
+  $$('.page').forEach(el=>el.classList.toggle('on',el.dataset.page===p));
+  redrawPage();
+}
+$$('nav.tabs button').forEach(b=>b.onclick=()=>setPage(b.dataset.p));
+$('#home').onclick=()=>setPage('fleet');
+$('#home').onkeydown=e=>{if(e.key==='Enter')setPage('fleet')};
+$('#q').oninput=e=>{S.q=e.target.value.trim().toLowerCase();
+  if(S.page!=='fleet')setPage('fleet');else cards()};
+function redrawPage(){
+  if(S.page==='fleet'){kpis();tierFilters();tree();feed();cards();
+    animate(p=>donut(p),800)}
+  if(S.page==='asset')renderAsset();
+  if(S.page==='mobile'){renderMobile();
+    animate(p=>healthBand($('#mHealth'),30,undefined,p),700);
+    animate(p=>mTrends(p),750);
+    $('#mAssetFeed').innerHTML=`
+      <div class="mcard"><div class="row"><span class="chip c-alert">▲</span>
+        <div style="flex:1"><div class="nm" style="font-size:12.8px">Outer-race wear developing</div>
+        <div class="ty">F-102 · M. Winkeler · 2 comments</div></div>
+        <button class="btn sm" onclick="toast('Acknowledged')">Ack</button></div></div>
+      <div class="mcard"><div class="row"><span class="chip c-learn">⟲</span>
+        <div style="flex:1"><div class="nm" style="font-size:12.8px">Baseline reset</div>
+        <div class="ty">after impeller replacement · day −140</div></div></div></div>
+      <div class="mcard"><div class="row"><span class="chip c-mon">◔</span>
+        <div style="flex:1"><div class="nm" style="font-size:12.8px">Gate change · step</div>
+        <div class="ty">score 6.1 · frame d162 · auto</div></div></div></div>`;
+  }
+}
+let rsz;addEventListener('resize',()=>{clearTimeout(rsz);rsz=setTimeout(redrawPage,160)});
+applyTheme();
+</script>
