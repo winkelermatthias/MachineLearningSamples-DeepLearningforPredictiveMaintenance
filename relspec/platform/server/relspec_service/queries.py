@@ -3,8 +3,8 @@ out as base64 uint8 exactly in the explorer's frame format, so the explorer
 bundle is a pure DB read with no signal processing on the path.
 """
 from __future__ import annotations
-import base64, datetime as dt
-from . import db
+import base64, datetime as dt, json
+from . import db, health as health_mod
 
 B64 = lambda b: base64.b64encode(bytes(b)).decode()
 
@@ -66,6 +66,59 @@ def trend(cur, wsid: str, sensor_id: str, t0, t1) -> list[dict]:
                  acc_avg=r[4], acc_max=r[5], env_avg=r[6], env_max=r[7],
                  gate_max=r[8], bytes=r[9]) for r in rows]
 
+def sensor_health(cur, wsid: str, sensor_id: str, t0, t1) -> list[dict]:
+    """Health tier + drivers + fingerprint for EVERY acquisition — this
+    is the per-frame-resolution trend the daily buckets cannot give."""
+    rows = cur.execute(
+        '''SELECT ts, health, health_drivers, vel_rms, gate_score, fingerprint
+           FROM acquisition
+           WHERE workspace_id=%s AND sensor_id=%s AND ts>=%s AND ts<=%s
+           ORDER BY ts''', (wsid, sensor_id, t0, t1)).fetchall()
+    out = []
+    for ts, h, drv, vr, gs, fp in rows:
+        d = drv if isinstance(drv, dict) else (json.loads(drv) if drv else {})
+        out.append(dict(ts=ts.isoformat(), health=h,
+                        raw=d.get('raw'), drivers=d.get('drivers', []),
+                        vel_rms=vr, gate_score=gs,
+                        fp=health_mod.fp_decode(bytes(fp) if fp else None)))
+    return out
+
+def fleet_health(cur, wsid: str) -> dict:
+    """Latest health per sensor plus worst-of rollups: component and
+    asset take their worst sensor; plants report tier counts (a
+    distribution, not just the worst — '1 critical of 120' and '40
+    monitor of 120' are different mornings)."""
+    rows = cur.execute(
+        '''SELECT DISTINCT ON (a.sensor_id) a.sensor_id, a.ts, a.health,
+                  a.health_drivers, s.code, c.name, ast.tag, p.name
+           FROM acquisition a
+           JOIN sensor s ON s.sensor_id=a.sensor_id
+           JOIN component c ON c.component_id=s.component_id
+           JOIN asset ast ON ast.asset_id=c.asset_id
+           JOIN plant p ON p.plant_id=ast.plant_id
+           WHERE a.workspace_id=%s
+           ORDER BY a.sensor_id, a.ts DESC''', (wsid,)).fetchall()
+    sensors, assets, plants = [], {}, {}
+    for sid, ts, h, drv, code, comp, tag, plant in rows:
+        d = drv if isinstance(drv, dict) else (json.loads(drv) if drv else {})
+        sensors.append(dict(sensor_id=sid, code=code, component=comp,
+                            asset=tag, plant=plant, ts=ts.isoformat(),
+                            health=h, drivers=d.get('drivers', [])))
+        a = assets.setdefault(tag, dict(asset=tag, plant=plant, health=None,
+                                        sensors=0))
+        a['sensors'] += 1
+        if h is not None and (a['health'] is None or h > a['health']):
+            a['health'] = h
+        pl = plants.setdefault(plant, dict(plant=plant,
+                                           counts=[0, 0, 0, 0], learning=0))
+        if h is None: pl['learning'] += 1
+        else: pl['counts'][min(h, 3)] += 1
+    return dict(sensors=sensors, assets=sorted(
+                    assets.values(),
+                    key=lambda a: -1 if a['health'] is None else -a['health']),
+                plants=list(plants.values()),
+                tiers=list(health_mod.TIERS))
+
 def frames(cur, wsid: str, sensor_id: str, t0, t1, limit: int) -> list[dict]:
     rows = cur.execute(
         '''SELECT acq_id, ts, fr_est, tier, vel_rms, acc_rms, env_rms,
@@ -91,10 +144,11 @@ def spectra(cur, wsid: str, acq_id: str) -> dict | None:
             'SELECT rail, kind, payload, o, dec, own, res_share '
             'FROM spectrum_frame WHERE acq_id=%s', (acq_id,)).fetchall():
         pats = [dict(idx=r[0], t=r[1], kind=r[2], key=r[3], f0=r[4], sp=r[5],
-                     e=r[6], ed=r[7], share=r[8], nv=r[9], vc=r[10], vf=r[11])
+                     e=r[6], ed=r[7], share=r[8], nv=r[9], vc=r[10], vf=r[11],
+                     z=r[12])
                 for r in cur.execute(
                     '''SELECT idx, track_id, kind, key, f0, spacing, energy,
-                       energy_dec, share, ver_harm, ver_claimed, ver_frac
+                       energy_dec, share, ver_harm, ver_claimed, ver_frac, z
                        FROM pattern WHERE acq_id=%s AND rail=%s ORDER BY idx''',
                     (acq_id, rail)).fetchall()]
         out[rail] = dict(kind=kind, payload_bytes=len(payload),

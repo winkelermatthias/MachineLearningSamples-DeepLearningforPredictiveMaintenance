@@ -56,12 +56,14 @@ def mint_token(wsid: str, now: float | None = None) -> str:
     exp = int((now or time.time())+config.TOKEN_TTL_S)
     msg = f'{wsid}|{exp}'.encode()
     sig = hmac.new(_token_key(), msg, hashlib.sha256).digest()[:20]
-    return base64.urlsafe_b64encode(msg+b'|'+sig).decode()
+    # sig is fixed-length and appended raw: it is random bytes and may
+    # itself contain the delimiter, so it must never be split by one
+    return base64.urlsafe_b64encode(msg+sig).decode()
 
 def check_token(token: str) -> str | None:
     try:
         raw = base64.urlsafe_b64decode(token.encode())
-        msg, sig = raw.rsplit(b'|', 1)
+        msg, sig = raw[:-20], raw[-20:]
         if not hmac.compare_digest(
                 hmac.new(_token_key(), msg, hashlib.sha256).digest()[:20], sig):
             return None
@@ -79,12 +81,12 @@ def _key_token_key() -> bytes:
 def mint_key_token(wsid: str, key_id: str, scope: str) -> str:
     msg = f'{wsid}|{key_id}|{scope}'.encode()
     sig = hmac.new(_key_token_key(), msg, hashlib.sha256).digest()[:20]
-    return base64.urlsafe_b64encode(msg+b'|'+sig).decode()
+    return base64.urlsafe_b64encode(msg+sig).decode()
 
 def check_key_token(token: str) -> tuple[str, str, str] | None:
     try:
         raw = base64.urlsafe_b64decode(token.encode())
-        msg, sig = raw.rsplit(b'|', 1)
+        msg, sig = raw[:-20], raw[-20:]
         if not hmac.compare_digest(
                 hmac.new(_key_token_key(), msg, hashlib.sha256).digest()[:20], sig):
             return None

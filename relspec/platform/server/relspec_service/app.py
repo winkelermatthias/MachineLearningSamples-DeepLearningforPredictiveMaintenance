@@ -291,6 +291,25 @@ def trend(sensor_id: str, request: Request):
                            lambda: queries.trend(cur, pr.workspace_id,
                                                  sensor_id, t0, t1))
 
+@app.get('/v1/sensors/{sensor_id}/health')
+def sensor_health(sensor_id: str, request: Request):
+    t0, t1 = _t01(request)
+    with db.pool().connection() as conn:
+        cur = conn.cursor()
+        pr = principal(request, cur, 'read')
+        return cached_json(request, pr.workspace_id, cur,
+                           ('health', sensor_id, t0, t1),
+                           lambda: queries.sensor_health(
+                               cur, pr.workspace_id, sensor_id, t0, t1))
+
+@app.get('/v1/fleet/health')
+def fleet_health(request: Request):
+    with db.pool().connection() as conn:
+        cur = conn.cursor()
+        pr = principal(request, cur, 'read')
+        return cached_json(request, pr.workspace_id, cur, ('fleet_health',),
+                           lambda: queries.fleet_health(cur, pr.workspace_id))
+
 @app.get('/v1/sensors/{sensor_id}/frames')
 def frames(sensor_id: str, request: Request, limit: int = 500):
     t0, t1 = _t01(request)

@@ -7,7 +7,7 @@ import base64, collections, datetime as dt, hashlib, json, threading, time, uuid
 import numpy as np
 import psycopg.errors
 import zstandard
-from . import config, db, pipeline
+from . import config, db, health, pipeline
 
 class IngestError(Exception):
     def __init__(self, status: int, detail: str, retry_after: int | None = None):
@@ -172,6 +172,13 @@ def ingest_one(wsid: str, body: dict) -> dict:
         store, reason = significance(cur, sensor['sensor_id'], ts,
                                      res['gate'], _sig_params(ws_params))
 
+        # health model: z per pattern (mutates res), baselines, tier —
+        # all inside the sensor's advisory lock like the codec state
+        zmax, vanished = health.update_z(cur, sensor['sensor_id'], ts, res)
+        tier_h, drivers = health.compute(cur, sensor['sensor_id'], res,
+                                         zmax, vanished)
+        fp = health.fingerprint(res)
+
         acq_id = uuid.uuid4().hex
         pb = sum(len(res['frames'][r]['payload']) for r in pipeline.RAILS)
         kinds = [res['frames'][r]['kind'] for r in pipeline.RAILS]
@@ -182,14 +189,16 @@ def ingest_one(wsid: str, body: dict) -> dict:
                    client_ref, fs, n_samples, fr_est, tier, conf, vel_rms, acc_rms,
                    env_rms, acc_kurt, acc_crest, gate_score, gate_drift,
                    gate_decision, gate_kind, frame_kind, payload_bytes,
-                   waveform_stored, sig_reason)
+                   waveform_stored, sig_reason, health, health_drivers,
+                   fingerprint)
                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                           %s,%s,%s,%s,%s,%s)''',
+                           %s,%s,%s,%s,%s,%s,%s,%s,%s)''',
                 (wsid, acq_id, sensor['sensor_id'], ts, client_ref, fs, len(x),
                  res['fr'], res['tier'], res['conf'], res['vel_rms'],
                  res['acc_rms'], res['env_rms'], res['acc_kurt'], res['acc_crest'],
                  res['gate']['score'], res['gate']['drift'],
-                 res['gate']['decision'], res['gate']['kind'], fk, pb, store, reason))
+                 res['gate']['decision'], res['gate']['kind'], fk, pb, store,
+                 reason, tier_h, drivers, fp))
         except psycopg.errors.UniqueViolation:
             # backstop under the advisory lock: cannot normally trigger
             raise IngestError(409, 'sensor already has an acquisition at this ts')
@@ -204,11 +213,12 @@ def ingest_one(wsid: str, body: dict) -> dict:
                 cur.execute(
                     '''INSERT INTO pattern (acq_id, rail, idx, track_id, kind,
                        key, f0, spacing, energy, energy_dec, share, ver_harm,
-                       ver_claimed, ver_frac)
-                       VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)''',
+                       ver_claimed, ver_frac, z)
+                       VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)''',
                     (acq_id, rail, p['idx'], p['track_id'], p['kind'], p['key'],
                      p['f0'], p['spacing'], p['energy'], p['energy_dec'],
-                     p['share'], p['ver_harm'], p['ver_claimed'], p['ver_frac']))
+                     p['share'], p['ver_harm'], p['ver_claimed'], p['ver_frac'],
+                     p.get('z')))
             for t in tracks[rail]:
                 if t.get('new'):
                     cur.execute(
