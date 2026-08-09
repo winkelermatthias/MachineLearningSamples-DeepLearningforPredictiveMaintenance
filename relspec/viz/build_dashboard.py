@@ -15,11 +15,9 @@ SRC = HERE / 'dashboard_mockup_src.html'
 OUT = HERE / 'dashboard_mockup.html'
 
 FACES = [
-    ('Instrument Sans', 400, 'instrument-sans-400'),
-    ('Instrument Sans', 500, 'instrument-sans-500'),
-    ('Instrument Sans', 600, 'instrument-sans-600'),
-    ('Sora', 600, 'sora-600'),
-    ('Sora', 700, 'sora-700'),
+    ('Space Grotesk', 400, 'space-grotesk-400'),
+    ('Space Grotesk', 500, 'space-grotesk-500'),
+    ('Space Grotesk', 700, 'space-grotesk-700'),
     ('IBM Plex Mono', 400, 'ibm-plex-mono-400'),
     ('IBM Plex Mono', 500, 'ibm-plex-mono-500'),
     ('IBM Plex Mono', 600, 'ibm-plex-mono-600'),
