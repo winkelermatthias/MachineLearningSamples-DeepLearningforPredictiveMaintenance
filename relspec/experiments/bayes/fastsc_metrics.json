@@ -1,0 +1,2870 @@
+{
+ "selfcheck": {
+  "alpha_true": 87.3,
+  "alpha_hat": 87.40790354989953,
+  "da": 0.2511721366376423,
+  "peak": 0.12766050553006145,
+  "floor_med": 0.054959736736527716,
+  "stationary_max": 0.07236932537332481,
+  "stationary_med": 0.055155713220001075
+ },
+ "params": {
+  "sev": [
+   0.05,
+   0.1,
+   0.15,
+   0.2
+  ],
+  "noise": [
+   1.0,
+   4.0,
+   10.0
+  ],
+  "seeds": [
+   0,
+   1,
+   2
+  ],
+  "machines": [
+   "centrifugal_pump",
+   "induction_motor",
+   "vfd_pump"
+  ],
+  "seconds": 4.0,
+  "alpha_max": 285.0,
+  "f_lo": 400.0,
+  "f_hi_frac": 0.94,
+  "detect_db": 6.0,
+  "nw": 256,
+  "hop": 32,
+  "guard_hz": 12.0,
+  "noise_hz": 90.0
+ },
+ "synth_rows": [
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.0,
+   "noise": 1.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": -1.2108066198127778,
+   "ies": 0.6017406307024353,
+   "ies_band": 1.7049302958588664,
+   "band": [
+    1710.0,
+    2365.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.0,
+   "noise": 1.0,
+   "seed": 0,
+   "line": "BPFI",
+   "base": 0.43424218744750415,
+   "ies": 0.9225961420705976,
+   "ies_band": 3.324791283968417,
+   "band": [
+    1710.0,
+    2365.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.05,
+   "noise": 1.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": -0.2544485017842985,
+   "ies": 16.9300483835407,
+   "ies_band": 3.9805789573793984,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.1,
+   "noise": 1.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 1.2089650756394754,
+   "ies": 19.625061838061995,
+   "ies_band": 4.541745018842487,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.15,
+   "noise": 1.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 16.040102124501008,
+   "ies": 15.387867928838768,
+   "ies_band": 19.46662592136959,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.2,
+   "noise": 1.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 9.17547342670715,
+   "ies": 22.25655337681227,
+   "ies_band": 5.7395489887725,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.0,
+   "noise": 1.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": -0.892273667145962,
+   "ies": 0.9836272973878403,
+   "ies_band": 2.404133043154667,
+   "band": [
+    3020.0,
+    3675.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.0,
+   "noise": 1.0,
+   "seed": 1,
+   "line": "BPFI",
+   "base": -1.0404249975010356,
+   "ies": 0.8852084460480163,
+   "ies_band": 3.7668973660660403,
+   "band": [
+    3020.0,
+    3675.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.05,
+   "noise": 1.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 24.25711186896171,
+   "ies": 15.583957890595938,
+   "ies_band": 12.511017595081945,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.1,
+   "noise": 1.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 18.837228645049365,
+   "ies": 17.53255414088818,
+   "ies_band": 27.18194144948547,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.15,
+   "noise": 1.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 19.82358105805107,
+   "ies": 16.681460607158133,
+   "ies_band": 26.038970956022474,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.2,
+   "noise": 1.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 15.209244153010621,
+   "ies": 19.317530676692122,
+   "ies_band": 14.422763351317112,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.0,
+   "noise": 1.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": -0.17576808675356534,
+   "ies": 0.6644390246611008,
+   "ies_band": 1.0533179483262956,
+   "band": [
+    2365.0,
+    3020.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.0,
+   "noise": 1.0,
+   "seed": 2,
+   "line": "BPFI",
+   "base": 1.0883812132009414,
+   "ies": 1.0749872066211865,
+   "ies_band": 1.9754344092476903,
+   "band": [
+    2365.0,
+    3020.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.05,
+   "noise": 1.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 24.328268248337366,
+   "ies": 15.646529670090711,
+   "ies_band": 8.085778968448938,
+   "band": [
+    2365.0,
+    3020.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.1,
+   "noise": 1.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 14.37182081815122,
+   "ies": 18.42538595858982,
+   "ies_band": 20.32048372497647,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.15,
+   "noise": 1.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 1.88692525326539,
+   "ies": 21.11888527738077,
+   "ies_band": 4.05097007454278,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.2,
+   "noise": 1.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 0.6250252515525266,
+   "ies": 21.96945277498061,
+   "ies_band": 7.338673759542806,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.0,
+   "noise": 4.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": -0.13802918408845816,
+   "ies": 1.018343915670039,
+   "ies_band": 2.2981866130603694,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.0,
+   "noise": 4.0,
+   "seed": 0,
+   "line": "BPFI",
+   "base": 0.3302465935511344,
+   "ies": 1.0711629980145496,
+   "ies_band": 2.7841551069709807,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.05,
+   "noise": 4.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": -1.1405418692373965,
+   "ies": 7.814545661200692,
+   "ies_band": 1.6216650710816412,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.1,
+   "noise": 4.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 18.516701898461562,
+   "ies": 10.934562730446133,
+   "ies_band": 24.369667547996613,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.15,
+   "noise": 4.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 18.693269783210866,
+   "ies": 12.297663044780878,
+   "ies_band": 25.385676826557862,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.2,
+   "noise": 4.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 8.682266264042887,
+   "ies": 15.363446429911697,
+   "ies_band": 7.687869076820788,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.0,
+   "noise": 4.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 0.2947868171372615,
+   "ies": 0.7898283662579695,
+   "ies_band": 1.9274985986589057,
+   "band": [
+    1710.0,
+    2365.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.0,
+   "noise": 4.0,
+   "seed": 1,
+   "line": "BPFI",
+   "base": -0.9102915159643952,
+   "ies": 0.7603203793112454,
+   "ies_band": 2.7473974571303126,
+   "band": [
+    1710.0,
+    2365.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.05,
+   "noise": 4.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": -1.2931878855355707,
+   "ies": 7.363369099412318,
+   "ies_band": 2.222888407619201,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.1,
+   "noise": 4.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 14.008179786463437,
+   "ies": 7.757103349206611,
+   "ies_band": 19.131965607631173,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.15,
+   "noise": 4.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 17.77389163760303,
+   "ies": 12.6743826528765,
+   "ies_band": 25.149889705359662,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.2,
+   "noise": 4.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 17.07456298607742,
+   "ies": 12.202863696158492,
+   "ies_band": 19.72469580489517,
+   "band": [
+    3020.0,
+    3675.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.0,
+   "noise": 4.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": -3.7017625466826996,
+   "ies": 1.1014350740990324,
+   "ies_band": 2.958261368679139,
+   "band": [
+    1710.0,
+    2365.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.0,
+   "noise": 4.0,
+   "seed": 2,
+   "line": "BPFI",
+   "base": 0.8420493869589203,
+   "ies": 0.6716790424403896,
+   "ies_band": 2.5604169690628313,
+   "band": [
+    1710.0,
+    2365.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.05,
+   "noise": 4.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 12.57373712808296,
+   "ies": 5.871178338311105,
+   "ies_band": 17.392699259672465,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.1,
+   "noise": 4.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 21.277467894413853,
+   "ies": 10.622991949491567,
+   "ies_band": 2.5964165893893574,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.15,
+   "noise": 4.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 16.30282090874876,
+   "ies": 10.68591722536997,
+   "ies_band": 17.6123394741606,
+   "band": [
+    3675.0,
+    4330.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.2,
+   "noise": 4.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 8.13596710842088,
+   "ies": 15.470611925065132,
+   "ies_band": 7.806726320140811,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.0,
+   "noise": 10.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": -3.378212623098104,
+   "ies": 0.4358570678722135,
+   "ies_band": 0.7903148020988561,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.0,
+   "noise": 10.0,
+   "seed": 0,
+   "line": "BPFI",
+   "base": 0.6826221607972218,
+   "ies": 0.6895454639557269,
+   "ies_band": 2.696483511117162,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.05,
+   "noise": 10.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": -0.3585547531379004,
+   "ies": 3.5824724640385175,
+   "ies_band": 1.4925929781186076,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.1,
+   "noise": 10.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 2.933433199191256,
+   "ies": 4.368943234403012,
+   "ies_band": 6.975625276488952,
+   "band": [
+    3020.0,
+    3675.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.15,
+   "noise": 10.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": -0.8259337734156009,
+   "ies": 7.58613115243234,
+   "ies_band": 1.7268664929486943,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.2,
+   "noise": 10.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 7.506964783336358,
+   "ies": 6.49521461675041,
+   "ies_band": 2.558071136138116,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.0,
+   "noise": 10.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 0.1090891837853476,
+   "ies": 0.8877917398412251,
+   "ies_band": 1.9171209515433252,
+   "band": [
+    2365.0,
+    3020.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.0,
+   "noise": 10.0,
+   "seed": 1,
+   "line": "BPFI",
+   "base": -0.7146130152526885,
+   "ies": 0.976491234745906,
+   "ies_band": 1.592664676043091,
+   "band": [
+    2365.0,
+    3020.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.05,
+   "noise": 10.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 5.506063866522628,
+   "ies": 2.4854725662689177,
+   "ies_band": 2.9716195736399262,
+   "band": [
+    1710.0,
+    2365.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.1,
+   "noise": 10.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 13.475602289293626,
+   "ies": 6.05850475673029,
+   "ies_band": 18.54074544338655,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.15,
+   "noise": 10.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": -1.1872761002025243,
+   "ies": 7.02018891416485,
+   "ies_band": 2.80292052591052,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.2,
+   "noise": 10.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 16.153413666314805,
+   "ies": 9.057439426812039,
+   "ies_band": 21.758189373159095,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.0,
+   "noise": 10.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": -0.2059435242747068,
+   "ies": 0.7401122535863787,
+   "ies_band": 1.516963130138763,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.0,
+   "noise": 10.0,
+   "seed": 2,
+   "line": "BPFI",
+   "base": -0.0744302286184691,
+   "ies": 0.5754137772078862,
+   "ies_band": 3.1185382590593536,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.05,
+   "noise": 10.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 0.5203868789947986,
+   "ies": 2.9439636353090064,
+   "ies_band": 3.593551143479126,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.1,
+   "noise": 10.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 13.297847109851562,
+   "ies": 5.984486673007282,
+   "ies_band": 18.491746665337686,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.15,
+   "noise": 10.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 11.907656147892745,
+   "ies": 5.267858780503488,
+   "ies_band": 15.536290722909554,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "centrifugal_pump",
+   "sev": 0.2,
+   "noise": 10.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 18.367651294578845,
+   "ies": 8.053053883868305,
+   "ies_band": 16.586661840821744,
+   "band": [
+    3675.0,
+    4330.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.0,
+   "noise": 1.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": -0.13721813078007025,
+   "ies": 0.7044706730655945,
+   "ies_band": 1.528394222752206,
+   "band": [
+    1055.0,
+    1710.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.0,
+   "noise": 1.0,
+   "seed": 0,
+   "line": "BPFI",
+   "base": -1.3138587533935453,
+   "ies": 0.7219886686540484,
+   "ies_band": 1.8052033916926333,
+   "band": [
+    1055.0,
+    1710.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.05,
+   "noise": 1.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 20.771850193638937,
+   "ies": 16.33693975226518,
+   "ies_band": 22.95716885852255,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.1,
+   "noise": 1.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 16.57438090474607,
+   "ies": 22.325397798681866,
+   "ies_band": 23.97669231165327,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.15,
+   "noise": 1.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 23.129034142483373,
+   "ies": 20.114397481873954,
+   "ies_band": 21.47677313059355,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.2,
+   "noise": 1.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 18.54713124010831,
+   "ies": 21.195135460110937,
+   "ies_band": 21.538114337205492,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.0,
+   "noise": 1.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 0.5036045123382481,
+   "ies": 0.4073937697831675,
+   "ies_band": 3.2431535850633693,
+   "band": [
+    1055.0,
+    1710.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.0,
+   "noise": 1.0,
+   "seed": 1,
+   "line": "BPFI",
+   "base": 0.13602072548539593,
+   "ies": 0.8704553081212036,
+   "ies_band": 1.2420579289275475,
+   "band": [
+    1055.0,
+    1710.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.05,
+   "noise": 1.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 14.526420881650415,
+   "ies": 19.1834011037524,
+   "ies_band": 22.496415293669365,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.1,
+   "noise": 1.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 16.387145488464373,
+   "ies": 16.01638262229448,
+   "ies_band": 9.030580297851444,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.15,
+   "noise": 1.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 18.369278856607483,
+   "ies": 24.70209163699848,
+   "ies_band": 26.157923795935428,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.2,
+   "noise": 1.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 13.31401903345829,
+   "ies": 9.321262581551945,
+   "ies_band": 16.883892582303453,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.0,
+   "noise": 1.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": -0.3013888712610989,
+   "ies": 0.844232767253304,
+   "ies_band": 3.0883277199756924,
+   "band": [
+    3675.0,
+    4330.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.0,
+   "noise": 1.0,
+   "seed": 2,
+   "line": "BPFI",
+   "base": 0.32218486578079236,
+   "ies": 0.8191636573999861,
+   "ies_band": 1.2858084641838943,
+   "band": [
+    3675.0,
+    4330.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.05,
+   "noise": 1.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 12.634042581987927,
+   "ies": 17.682119423687038,
+   "ies_band": 22.15544524105573,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.1,
+   "noise": 1.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 23.53511920462397,
+   "ies": 20.238094891453464,
+   "ies_band": 24.93354386922121,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.15,
+   "noise": 1.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 16.70108341040398,
+   "ies": 23.206777021961198,
+   "ies_band": 26.070255321171857,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.2,
+   "noise": 1.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 21.548266344194502,
+   "ies": 24.192090196523313,
+   "ies_band": 26.44621310892068,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.0,
+   "noise": 4.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": -0.9833252919594297,
+   "ies": 1.0994923782624457,
+   "ies_band": 1.5057809041486168,
+   "band": [
+    3675.0,
+    4330.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.0,
+   "noise": 4.0,
+   "seed": 0,
+   "line": "BPFI",
+   "base": 1.3503050561950336,
+   "ies": 1.5825762128879668,
+   "ies_band": 2.249114559588514,
+   "band": [
+    3675.0,
+    4330.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.05,
+   "noise": 4.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 15.27017917609087,
+   "ies": 6.584410142369942,
+   "ies_band": 0.8129494222439704,
+   "band": [
+    400.0,
+    1055.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.1,
+   "noise": 4.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 14.054349491734811,
+   "ies": 5.691834473861794,
+   "ies_band": 16.833063266747384,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.15,
+   "noise": 4.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 10.211626446741738,
+   "ies": 6.772936653740232,
+   "ies_band": 15.796027000618974,
+   "band": [
+    3020.0,
+    3675.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.2,
+   "noise": 4.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 18.798602988684788,
+   "ies": 14.657277824007567,
+   "ies_band": 23.95750940344747,
+   "band": [
+    3020.0,
+    3675.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.0,
+   "noise": 4.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": -1.014710673676186,
+   "ies": 0.6408839142027545,
+   "ies_band": 1.2189228543456136,
+   "band": [
+    3020.0,
+    3675.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.0,
+   "noise": 4.0,
+   "seed": 1,
+   "line": "BPFI",
+   "base": -0.15422346579999466,
+   "ies": 0.7076546736375555,
+   "ies_band": 2.5215814746827654,
+   "band": [
+    3020.0,
+    3675.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.05,
+   "noise": 4.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 9.460174503184186,
+   "ies": 6.9530170551156605,
+   "ies_band": 1.7133200984715202,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.1,
+   "noise": 4.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 18.40247148945029,
+   "ies": 13.115799771507913,
+   "ies_band": 15.578496592037377,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.15,
+   "noise": 4.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 19.679248916294977,
+   "ies": 12.666311174444706,
+   "ies_band": 18.64438599325581,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.2,
+   "noise": 4.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 14.53759000795867,
+   "ies": 14.229997102292835,
+   "ies_band": 19.694440963854035,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.0,
+   "noise": 4.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 0.0282303981513305,
+   "ies": 0.9412729631661296,
+   "ies_band": 1.5498983249134748,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.0,
+   "noise": 4.0,
+   "seed": 2,
+   "line": "BPFI",
+   "base": 1.1267570706849728,
+   "ies": 0.88445991535515,
+   "ies_band": 2.3038088887546597,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.05,
+   "noise": 4.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 12.514609970852709,
+   "ies": 8.053710504365785,
+   "ies_band": 13.759391313628864,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.1,
+   "noise": 4.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 17.02111432782643,
+   "ies": 11.552599357728209,
+   "ies_band": 17.491656634012447,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.15,
+   "noise": 4.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 13.777978035187095,
+   "ies": 13.265147781328913,
+   "ies_band": 20.55930497920744,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.2,
+   "noise": 4.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 21.489361230287344,
+   "ies": 14.806909971222957,
+   "ies_band": 20.43899792186863,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.0,
+   "noise": 10.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": -1.5363999382809448,
+   "ies": 0.41660567224094974,
+   "ies_band": 2.946966695589894,
+   "band": [
+    1055.0,
+    1710.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.0,
+   "noise": 10.0,
+   "seed": 0,
+   "line": "BPFI",
+   "base": -0.920735897671269,
+   "ies": 0.5912110725307671,
+   "ies_band": 4.172221617803636,
+   "band": [
+    1055.0,
+    1710.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.05,
+   "noise": 10.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 2.8090038521629705,
+   "ies": 2.8551306563442997,
+   "ies_band": 4.076630102417422,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.1,
+   "noise": 10.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 9.631235234455303,
+   "ies": 5.9508687339525315,
+   "ies_band": 14.033667529458855,
+   "band": [
+    3020.0,
+    3675.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.15,
+   "noise": 10.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 9.495382152015736,
+   "ies": 3.0372974483084776,
+   "ies_band": 12.813432465141084,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.2,
+   "noise": 10.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 17.6945598075976,
+   "ies": 10.128066955245565,
+   "ies_band": 16.88563691316026,
+   "band": [
+    3675.0,
+    4330.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.0,
+   "noise": 10.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 1.841209590785882,
+   "ies": 1.1475915721759584,
+   "ies_band": 2.7619739132383714,
+   "band": [
+    2365.0,
+    3020.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.0,
+   "noise": 10.0,
+   "seed": 1,
+   "line": "BPFI",
+   "base": -0.9078807812920265,
+   "ies": 0.5805101712503157,
+   "ies_band": 1.6606052961327915,
+   "band": [
+    2365.0,
+    3020.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.05,
+   "noise": 10.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 1.856011022914774,
+   "ies": 2.920306476344599,
+   "ies_band": 3.1524916938839747,
+   "band": [
+    1055.0,
+    1710.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.1,
+   "noise": 10.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 4.23673311544456,
+   "ies": 0.6036278455467028,
+   "ies_band": 1.1754110745030417,
+   "band": [
+    400.0,
+    1055.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.15,
+   "noise": 10.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 13.220004317762875,
+   "ies": 7.37806177608121,
+   "ies_band": 18.35801009232959,
+   "band": [
+    3020.0,
+    3675.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.2,
+   "noise": 10.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 12.754407394699532,
+   "ies": 3.9404008190373805,
+   "ies_band": 2.0494339091291076,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.0,
+   "noise": 10.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": -0.5517040669723384,
+   "ies": 0.9812015239307271,
+   "ies_band": 2.3376951684513205,
+   "band": [
+    3675.0,
+    4330.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.0,
+   "noise": 10.0,
+   "seed": 2,
+   "line": "BPFI",
+   "base": 0.4052337498042331,
+   "ies": 1.173599648749535,
+   "ies_band": 2.688213185853516,
+   "band": [
+    3675.0,
+    4330.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.05,
+   "noise": 10.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 1.3433951732571348,
+   "ies": 2.4878990530706586,
+   "ies_band": 1.742884152777815,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.1,
+   "noise": 10.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 11.997369178139596,
+   "ies": 5.262590099666835,
+   "ies_band": 15.141128692993677,
+   "band": [
+    3020.0,
+    3675.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.15,
+   "noise": 10.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 13.137989382049284,
+   "ies": 7.483277476578357,
+   "ies_band": 10.233512104276805,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "induction_motor",
+   "sev": 0.2,
+   "noise": 10.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 17.707909037436156,
+   "ies": 10.40660605823324,
+   "ies_band": 17.785223509814006,
+   "band": [
+    3675.0,
+    4330.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.0,
+   "noise": 1.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": -0.07718794790694972,
+   "ies": 1.0224619843488054,
+   "ies_band": 3.2992021344189792,
+   "band": [
+    1710.0,
+    2365.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.0,
+   "noise": 1.0,
+   "seed": 0,
+   "line": "BPFI",
+   "base": 1.2264584938801162,
+   "ies": 1.1169087958319757,
+   "ies_band": 3.6305702259189827,
+   "band": [
+    1710.0,
+    2365.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.05,
+   "noise": 1.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 2.259819962357488,
+   "ies": 16.994479232794784,
+   "ies_band": 2.800915147441775,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.1,
+   "noise": 1.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 19.055276114462878,
+   "ies": 14.39095195802534,
+   "ies_band": 25.684577920062324,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.15,
+   "noise": 1.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 5.894771532989437,
+   "ies": 21.30879348111055,
+   "ies_band": 5.575007689466602,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.2,
+   "noise": 1.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 10.120552302628758,
+   "ies": 15.788125986588103,
+   "ies_band": 26.39302000599958,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.0,
+   "noise": 1.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": -0.061549909580256426,
+   "ies": 0.6762141668639866,
+   "ies_band": 2.0274899085779396,
+   "band": [
+    2365.0,
+    3020.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.0,
+   "noise": 1.0,
+   "seed": 1,
+   "line": "BPFI",
+   "base": -0.6029442734427606,
+   "ies": 0.6534903557999907,
+   "ies_band": 2.5633451693808356,
+   "band": [
+    2365.0,
+    3020.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.05,
+   "noise": 1.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 16.484248251460436,
+   "ies": 12.36221529321453,
+   "ies_band": 13.543454897599116,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.1,
+   "noise": 1.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 0.15849197550590477,
+   "ies": 18.403091872502255,
+   "ies_band": 4.830888523679355,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.15,
+   "noise": 1.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 13.668930586084993,
+   "ies": 17.966022223607066,
+   "ies_band": 17.14984294927992,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.2,
+   "noise": 1.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 7.879944554381366,
+   "ies": 19.997980616694708,
+   "ies_band": 10.67478994891009,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.0,
+   "noise": 1.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": -0.19981491994305087,
+   "ies": 0.9411833001421898,
+   "ies_band": 3.237611412160865,
+   "band": [
+    3675.0,
+    4330.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.0,
+   "noise": 1.0,
+   "seed": 2,
+   "line": "BPFI",
+   "base": 0.021055827489627095,
+   "ies": 0.5977895986861289,
+   "ies_band": 2.183030459165212,
+   "band": [
+    3675.0,
+    4330.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.05,
+   "noise": 1.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 0.4225701326943656,
+   "ies": 15.39999770611491,
+   "ies_band": 6.158706607010762,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.1,
+   "noise": 1.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": -1.612845215812512,
+   "ies": 18.4199390244676,
+   "ies_band": 4.888671075212341,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.15,
+   "noise": 1.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 4.26563873421243,
+   "ies": 21.61282023379337,
+   "ies_band": 6.375052665072655,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.2,
+   "noise": 1.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 6.85343133624552,
+   "ies": 23.07337210360771,
+   "ies_band": 5.93145533456771,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.0,
+   "noise": 4.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": -0.5443968145309565,
+   "ies": 0.8090063248056165,
+   "ies_band": 1.459898430015984,
+   "band": [
+    400.0,
+    1055.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.0,
+   "noise": 4.0,
+   "seed": 0,
+   "line": "BPFI",
+   "base": -0.4254896299693741,
+   "ies": 0.8009940719970533,
+   "ies_band": 2.643531481685833,
+   "band": [
+    400.0,
+    1055.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.05,
+   "noise": 4.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": -1.0781120422110955,
+   "ies": 6.396248549913052,
+   "ies_band": 2.555771313896855,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.1,
+   "noise": 4.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 12.354122763903106,
+   "ies": 6.877924776977973,
+   "ies_band": 18.90455945756494,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.15,
+   "noise": 4.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 17.823464962270744,
+   "ies": 10.600644590878456,
+   "ies_band": 24.513246126105138,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.2,
+   "noise": 4.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 13.385776255828485,
+   "ies": 9.175241700693096,
+   "ies_band": 19.461787900205497,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.0,
+   "noise": 4.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 1.600913861419461,
+   "ies": 1.0940078404520275,
+   "ies_band": 1.745899848403131,
+   "band": [
+    3020.0,
+    3675.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.0,
+   "noise": 4.0,
+   "seed": 1,
+   "line": "BPFI",
+   "base": 1.9913735057884212,
+   "ies": 0.5489552430371438,
+   "ies_band": 2.2147791724433565,
+   "band": [
+    3020.0,
+    3675.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.05,
+   "noise": 4.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": -2.615691486927552,
+   "ies": 7.213189420773972,
+   "ies_band": 1.6760958195352262,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.1,
+   "noise": 4.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 14.832122457269833,
+   "ies": 7.771734487815531,
+   "ies_band": 16.181660662233686,
+   "band": [
+    3675.0,
+    4330.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.15,
+   "noise": 4.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 21.798508272885687,
+   "ies": 12.10585954381995,
+   "ies_band": 23.344761708365553,
+   "band": [
+    3675.0,
+    4330.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.2,
+   "noise": 4.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 18.203236052418344,
+   "ies": 11.678647074844031,
+   "ies_band": 24.916366318470477,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.0,
+   "noise": 4.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": -1.2762846887535826,
+   "ies": 0.7403628433785414,
+   "ies_band": 2.0459441043630795,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.0,
+   "noise": 4.0,
+   "seed": 2,
+   "line": "BPFI",
+   "base": 1.7075522256574924,
+   "ies": 0.9476449753654448,
+   "ies_band": 2.4901785816464757,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.05,
+   "noise": 4.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": -1.5496017168577039,
+   "ies": 7.680467510894104,
+   "ies_band": 2.457154268158294,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.1,
+   "noise": 4.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": -1.6835761900833248,
+   "ies": 10.582769575271803,
+   "ies_band": 3.9311617152673666,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.15,
+   "noise": 4.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 14.965878639412791,
+   "ies": 9.434243248629103,
+   "ies_band": 6.11360048697759,
+   "band": [
+    2365.0,
+    3020.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.2,
+   "noise": 4.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 10.903785239429888,
+   "ies": 11.460869160042684,
+   "ies_band": 9.008133490299556,
+   "band": [
+    3675.0,
+    4330.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.0,
+   "noise": 10.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 1.6851353148722747,
+   "ies": 1.0943603743809722,
+   "ies_band": 1.5979188233368826,
+   "band": [
+    2365.0,
+    3020.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.0,
+   "noise": 10.0,
+   "seed": 0,
+   "line": "BPFI",
+   "base": -1.1956107554628201,
+   "ies": 1.0782080069995157,
+   "ies_band": 2.6452275866427453,
+   "band": [
+    2365.0,
+    3020.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.05,
+   "noise": 10.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 3.785922301241124,
+   "ies": 1.9290046088670936,
+   "ies_band": 1.8498926766523982,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.1,
+   "noise": 10.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 7.924665480968879,
+   "ies": 3.4098740556849974,
+   "ies_band": 0.7875463043192993,
+   "band": [
+    1710.0,
+    2365.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.15,
+   "noise": 10.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 13.199654940545178,
+   "ies": 6.397555754550198,
+   "ies_band": 19.39698708019823,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.2,
+   "noise": 10.0,
+   "seed": 0,
+   "line": "BPFO",
+   "base": 2.706536803679913,
+   "ies": 5.959044707831001,
+   "ies_band": 2.051310745436055,
+   "band": [
+    3675.0,
+    4330.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.0,
+   "noise": 10.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": -0.012903356538321285,
+   "ies": 0.4520055116962082,
+   "ies_band": 0.8946621889001463,
+   "band": [
+    3675.0,
+    4330.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.0,
+   "noise": 10.0,
+   "seed": 1,
+   "line": "BPFI",
+   "base": -0.3679734506762019,
+   "ies": 1.8222793820541745,
+   "ies_band": 3.2997279789410556,
+   "band": [
+    3675.0,
+    4330.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.05,
+   "noise": 10.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 1.8077555591520778,
+   "ies": 3.3705213341478544,
+   "ies_band": 3.6921977876667604,
+   "band": [
+    1055.0,
+    1710.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.1,
+   "noise": 10.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 11.181370976639052,
+   "ies": 5.105225735219019,
+   "ies_band": 16.277454626437276,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.15,
+   "noise": 10.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 0.8480928663091797,
+   "ies": 4.312461886448372,
+   "ies_band": 1.479167667042732,
+   "band": [
+    1710.0,
+    2365.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.2,
+   "noise": 10.0,
+   "seed": 1,
+   "line": "BPFO",
+   "base": 11.922662084421901,
+   "ies": 5.620354335688878,
+   "ies_band": 15.761100465695684,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.0,
+   "noise": 10.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": -0.018542493971434943,
+   "ies": 0.9141531928803024,
+   "ies_band": 3.2591398284089372,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.0,
+   "noise": 10.0,
+   "seed": 2,
+   "line": "BPFI",
+   "base": 0.23850759855901932,
+   "ies": 0.7801448112790632,
+   "ies_band": 2.246490820624144,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.05,
+   "noise": 10.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 2.939552677218858,
+   "ies": 1.7373259724324295,
+   "ies_band": 2.50757367185541,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.1,
+   "noise": 10.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 11.180868538526221,
+   "ies": 4.5704106235618545,
+   "ies_band": 2.016582677247116,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.15,
+   "noise": 10.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 11.967636689362301,
+   "ies": 4.786954436405863,
+   "ies_band": 12.676651516951969,
+   "band": [
+    3675.0,
+    4330.0
+   ]
+  },
+  {
+   "corpus": "synth",
+   "machine": "vfd_pump",
+   "sev": 0.2,
+   "noise": 10.0,
+   "seed": 2,
+   "line": "BPFO",
+   "base": 15.086928989207637,
+   "ies": 7.742855623298134,
+   "ies_band": 21.701009786212797,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  }
+ ],
+ "cwru_rows": [
+  {
+   "corpus": "cwru",
+   "state": "normal",
+   "file": "100",
+   "group": "normal_L3",
+   "sev": 0.0,
+   "line": "BPFO",
+   "base": -1.5125483641998294,
+   "ies": 0.6585809309602184,
+   "ies_band": 1.8369534088334913,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "normal",
+   "file": "100",
+   "group": "normal_L3",
+   "sev": 0.0,
+   "line": "BPFI",
+   "base": -0.4738663550260363,
+   "ies": 4.741158452274351,
+   "ies_band": 1.185813067408414,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "normal",
+   "file": "97",
+   "group": "normal_L0",
+   "sev": 0.0,
+   "line": "BPFO",
+   "base": -0.748477388981136,
+   "ies": 0.919062817040696,
+   "ies_band": 1.2253955797334217,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "normal",
+   "file": "97",
+   "group": "normal_L0",
+   "sev": 0.0,
+   "line": "BPFI",
+   "base": -0.17938824072172033,
+   "ies": 5.738563619641979,
+   "ies_band": 2.686011001605586,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "normal",
+   "file": "98",
+   "group": "normal_L1",
+   "sev": 0.0,
+   "line": "BPFO",
+   "base": -0.4619146246762596,
+   "ies": 1.2160859923261007,
+   "ies_band": 1.137535321672051,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "normal",
+   "file": "98",
+   "group": "normal_L1",
+   "sev": 0.0,
+   "line": "BPFI",
+   "base": 1.3803238677451757,
+   "ies": 2.826983163346773,
+   "ies_band": 1.627633114549256,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "normal",
+   "file": "99",
+   "group": "normal_L2",
+   "sev": 0.0,
+   "line": "BPFO",
+   "base": -0.4619146246762596,
+   "ies": 4.4625207180996265,
+   "ies_band": 1.6340118706560465,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "normal",
+   "file": "99",
+   "group": "normal_L2",
+   "sev": 0.0,
+   "line": "BPFI",
+   "base": 1.3803238677451757,
+   "ies": 1.2697564787768056,
+   "ies_band": 1.5013014998709826,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "IR007",
+   "file": "105",
+   "group": "IR007_L0",
+   "sev": -1.0,
+   "line": "BPFI",
+   "base": 21.1635386628953,
+   "ies": 29.145387058896986,
+   "ies_band": 26.30083255756594,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "IR007",
+   "file": "106",
+   "group": "IR007_L1",
+   "sev": -1.0,
+   "line": "BPFI",
+   "base": 20.78856275376618,
+   "ies": 29.57922258249873,
+   "ies_band": 26.4335496660081,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "IR007",
+   "file": "107",
+   "group": "IR007_L2",
+   "sev": -1.0,
+   "line": "BPFI",
+   "base": 21.904172838386145,
+   "ies": 27.78256050618478,
+   "ies_band": 22.67374009017971,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "IR007",
+   "file": "108",
+   "group": "IR007_L3",
+   "sev": -1.0,
+   "line": "BPFI",
+   "base": 24.36733775435772,
+   "ies": 28.23536790346948,
+   "ies_band": 24.504210580555828,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "OR007_12",
+   "file": "156",
+   "group": "OR007_12_L0",
+   "sev": -1.0,
+   "line": "BPFO",
+   "base": 10.820548790631301,
+   "ies": 21.2744287451714,
+   "ies_band": 22.79208192985664,
+   "band": [
+    2365.0,
+    3020.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "OR007_12",
+   "file": "158",
+   "group": "OR007_12_L1",
+   "sev": -1.0,
+   "line": "BPFO",
+   "base": 9.203925302921801,
+   "ies": 16.018154140210264,
+   "ies_band": 17.393216126728447,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "OR007_12",
+   "file": "159",
+   "group": "OR007_12_L2",
+   "sev": -1.0,
+   "line": "BPFO",
+   "base": 12.433845245556011,
+   "ies": 23.456652978693263,
+   "ies_band": 26.43149173251368,
+   "band": [
+    2365.0,
+    3020.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "OR007_12",
+   "file": "160",
+   "group": "OR007_12_L3",
+   "sev": -1.0,
+   "line": "BPFO",
+   "base": 13.342765104448638,
+   "ies": 21.880353168065668,
+   "ies_band": 25.767093285742767,
+   "band": [
+    4330.0,
+    4985.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "OR007_3",
+   "file": "144",
+   "group": "OR007_3_L0",
+   "sev": -1.0,
+   "line": "BPFO",
+   "base": 15.14129136440135,
+   "ies": 26.357310373647238,
+   "ies_band": 28.815830365586965,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "OR007_3",
+   "file": "145",
+   "group": "OR007_3_L1",
+   "sev": -1.0,
+   "line": "BPFO",
+   "base": 17.029800594214,
+   "ies": 25.928813856194086,
+   "ies_band": 30.54916353141487,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "OR007_3",
+   "file": "146",
+   "group": "OR007_3_L2",
+   "sev": -1.0,
+   "line": "BPFO",
+   "base": 14.038795163886311,
+   "ies": 26.68200735894036,
+   "ies_band": 31.542036766993515,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "OR007_3",
+   "file": "147",
+   "group": "OR007_3_L3",
+   "sev": -1.0,
+   "line": "BPFO",
+   "base": 14.547088240397837,
+   "ies": 24.685119715971368,
+   "ies_band": 29.69631404218974,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "OR007_6",
+   "file": "130",
+   "group": "OR007_6_L0",
+   "sev": -1.0,
+   "line": "BPFO",
+   "base": 20.00909929485687,
+   "ies": 30.07231547387841,
+   "ies_band": 29.27818285029394,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "OR007_6",
+   "file": "131",
+   "group": "OR007_6_L1",
+   "sev": -1.0,
+   "line": "BPFO",
+   "base": 20.709441686791628,
+   "ies": 31.9050242398408,
+   "ies_band": 33.26596876087015,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "OR007_6",
+   "file": "132",
+   "group": "OR007_6_L2",
+   "sev": -1.0,
+   "line": "BPFO",
+   "base": 21.436067181279736,
+   "ies": 30.37376555111207,
+   "ies_band": 30.586261917362748,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  },
+  {
+   "corpus": "cwru",
+   "state": "OR007_6",
+   "file": "133",
+   "group": "OR007_6_L3",
+   "sev": -1.0,
+   "line": "BPFO",
+   "base": 19.06806289003853,
+   "ies": 30.505163232630377,
+   "ies_band": 30.83989243285437,
+   "band": [
+    4985.0,
+    5640.0
+   ]
+  }
+ ],
+ "gate": {
+  "gain_sev005": 1.1445038798135239,
+  "gain_sev010": -4.664324156437537,
+  "g1_median_gain": false,
+  "extra_detects": 18,
+  "lost_detects": 13,
+  "false_lines_base": 0,
+  "false_lines_ies": 0,
+  "new_false_lines": 0,
+  "g2_extra_detects": true,
+  "proved": true,
+  "threshold_robustness": {
+   "6.0": {
+    "extra": 18,
+    "healthy_false": 0
+   },
+   "8.0": {
+    "extra": 13,
+    "healthy_false": 0
+   },
+   "10.0": {
+    "extra": 17,
+    "healthy_false": 0
+   }
+  },
+  "band_variant": {
+   "gain_sev005": 1.851147731256508,
+   "gain_sev010": 4.4024322950035515,
+   "extra_detects": 4,
+   "new_false_lines": 0
+  }
+ },
+ "runtime_s": 39.09929537773132
+}

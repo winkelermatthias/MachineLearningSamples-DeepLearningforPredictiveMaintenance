@@ -112,6 +112,17 @@ def hps_grid(x, fs, lo=5.0, hi=90.0, nh=3, step=0.01, band=None):
         hps *= np.maximum(np.interp(grid*h, f, A), 1e-12)
     return grid, hps**(1/nh)
 
+def acc_comb_surface(x, fs, fgrid, nh=6):
+    """pipeline2.acc_comb_speed's score over an explicit grid: geometric mean
+    of the full-record FFT magnitude over nh shaft harmonics. Kept as a
+    surface (not an argmax) so a posterior can consume the whole row."""
+    a = np.abs(np.fft.rfft(x*np.hanning(len(x))))
+    f = np.fft.rfftfreq(len(x), 1/fs)
+    sc = np.ones_like(fgrid)
+    for h in range(1, nh+1):
+        sc *= np.maximum(np.interp(fgrid*h, f, a), 1e-12)
+    return sc**(1/nh)
+
 def _default_env(x, fs):
     sos = butter(6, [min(2000., 0.35*fs/2)/(fs/2), min(5000., 0.8*fs/2)/(fs/2)],
                  btype='band', output='sos')

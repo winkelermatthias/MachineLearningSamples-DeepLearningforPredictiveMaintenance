@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 import pathlib
-from . import auth, cache, config, db, ingest, migrations, queries
+from . import auth, cache, config, db, ies, ingest, migrations, queries
 
 app = FastAPI(title='relspec service', version='1.0')
 
@@ -440,6 +440,44 @@ def waveform(acq_id: str, request: Request):
                             content={'detail': 'no stored waveform for this acquisition'})
     return Response(json.dumps(out), media_type='application/json',
                     headers={'Cache-Control': 'max-age=31536000, immutable'})
+
+@app.get('/v1/acquisitions/{acq_id}/ies')
+def ies_view(acq_id: str, request: Request):
+    """Fast-SC Improved Envelope Spectrum — a read-only second opinion
+    computed from the stored raw waveform. Codec-only acquisitions 404
+    honestly: the codec payload cannot reconstruct the raw signal."""
+    with db.pool().connection() as conn:
+        cur = conn.cursor()
+        pr = principal(request, cur, 'read')
+        own = cur.execute(
+            'SELECT fr_est FROM acquisition WHERE acq_id=%s AND workspace_id=%s',
+            (acq_id, pr.workspace_id)).fetchone()
+        if not own:
+            return JSONResponse(status_code=404, content={'detail': 'not found'})
+        etag = f'"ies-{acq_id}"'   # waveforms are immutable, so the id is the tag
+        if request.headers.get('if-none-match') == etag:
+            return Response(status_code=304)
+        row = cur.execute(
+            'SELECT encoding, scale, fs, data FROM waveform WHERE acq_id=%s',
+            (acq_id,)).fetchone()
+    if row is None:
+        return JSONResponse(status_code=404, content={'detail':
+            'no stored raw waveform for this acquisition (codec frames and '
+            'features only) — the IES needs the raw signal'})
+    key = ('ies', acq_id)
+    body = cache.CACHE.get(key)
+    if body is None:
+        try:
+            x = ies.decode_stored(row[0], row[1], row[3])
+            out = ies.compute(x, float(row[2]), own[0])
+        except ies.IesError as e:
+            return JSONResponse(status_code=e.status, content={'detail': e.detail})
+        out['acq_id'] = acq_id
+        body = json.dumps(out).encode()
+        cache.CACHE.put(key, body)
+    return Response(body, media_type='application/json',
+                    headers={'ETag': etag,
+                             'Cache-Control': 'max-age=31536000, immutable'})
 
 @app.get('/v1/meta')
 def meta():
